@@ -38,7 +38,7 @@ interface TargetMapProps {
   setContextMenuLocation: (location: { lat: number; lon: number } | null) => void;
 }
 
-const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalContent, modalContent, selectedTarget, setTargetsWithoutLocation, setContextMenuLocation }) => {
+const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalContent, modalContent, selectedTarget, setTargetsWithoutLocation }) => {
   const dispatch = useDispatch();
   const selectedBoard = useSelector(selectLoadedTargetBoard);
   const targets = useSelector(selectTargetBoardTargets);
