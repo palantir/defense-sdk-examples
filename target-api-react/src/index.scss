@@ -1,0 +1,406 @@
+/*
+ * (c) Copyright 2018 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@import "../node_modules/@blueprintjs/core/lib/scss/variables";
+@import '@blueprintjs/core/lib/css/blueprint.css';
+
+body {
+  background-color: $dark-gray1;
+  color: white;
+  font-family: 'Inconsolata', sans-serif;
+  font-size: 16px;
+  overflow-y: auto;
+}
+
+h1 {
+  color: $vermilion4;
+  font-family: 'Helvetica', sans-serif;
+  font-size: 32px;
+  margin-left: 20px;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.content-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.left-container {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-container {
+  flex: 1;
+  margin: 0 20px 10px 20px;
+  position: relative;
+}
+
+.leaflet-map {
+  height: 600px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.target-view {
+  margin: 20px;
+  color: white;
+  position: relative;
+}
+
+.target-details {
+  margin-left: 20px;
+}
+
+.target-placeholder {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 18px;
+  color: $gray4;
+}
+
+.target-name {
+  color: $vermilion4;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.target-board-selector-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.target-board-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  
+  input {
+    font-family: 'Inconsolata', sans-serif;
+    font-size: 16px;
+    padding: 8px;
+    background-color: $dark-gray2;
+    color: white;
+    border: 1px solid $dark-gray1;
+    border-radius: 4px;
+    width: 400px;
+  }
+}
+
+.target-table-container {
+  flex: 1;
+  margin: 20px;
+  overflow-y: auto;
+}
+
+.target-table-container h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.target-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.target-table th,
+.target-table td {
+  border: 1px solid $dark-gray1;
+  padding: 8px;
+  text-align: left;
+}
+
+.target-table th {
+  background-color: $dark-gray2;
+  color: white;
+}
+
+.target-table tbody tr:hover {
+  background-color: $cerulean4;
+  cursor: pointer;
+}
+
+.target-table tbody tr td img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.map-info {
+  text-align: right;
+  margin-top: 10px;
+  font-family: 'Inconsolata', sans-serif;
+  font-size: 14px;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: $dark-gray1;
+}
+
+.leaflet-popup-content {
+  font-family: 'Inconsolata', sans-serif;
+  font-size: 16px;
+  color: white;
+}
+
+.leaflet-popup-content strong {
+  color: $vermilion4;
+}
+
+.leaflet-popup-content p {
+  margin: 0;
+}
+
+.leaflet-contextmenu {
+  background-color: $dark-gray1 !important;
+  border: 2px solid darkslategray;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.leaflet-contextmenu-item {
+  color: white !important;
+  font-family: 'Inconsolata', sans-serif !important;
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+  display: block;
+  position: relative;
+  
+  &:hover {
+    background-color: transparent !important;
+  }
+}
+
+.leaflet-contextmenu-item:hover::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: $cerulean4 !important;
+  border-radius: 2px;
+  padding: 12px 16px;
+  z-index: -1;
+}
+
+.input-container {
+  margin: 20px 40px 10px 40px;
+}
+
+.add-observation-button {
+  background-color: $vermilion4;
+  color: $dark-gray1;
+  font-weight: bold;
+  border: 1px solid $dark-gray1;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  display: block;
+  margin-left: auto;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-popout {
+  background: $dark-gray1;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+  width: 60%;
+  position: relative;
+  z-index: 1100;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.modal-title {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.required-fields-note {
+  text-align: center;
+  font-style: italic;
+  font-size: 0.8em;
+  margin-bottom: 20px;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  width: 60%;
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+
+  label {
+    flex: 0 0 200px;
+    margin-bottom: 0;
+    margin-right: 20px;
+    font-weight: bold;
+    text-align: right;
+  }
+
+  input,
+  select,
+  textarea {
+    flex: 1;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+}
+
+.results-container {
+  margin-top: 20px;
+  word-wrap: break-word;
+}
+
+.submit-button {
+  display: block;
+  margin: 20px auto;
+  background-color: $vermilion4;
+  color: black;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: nowrap;
+}
+
+.button-container button {
+  width: 150px;
+  margin-right: 10px;
+  background-color: $vermilion4;
+  color: $dark-gray1;
+  font-weight: bold;
+  border: 1px solid $dark-gray1;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.button-container .description {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px;
+  box-sizing: border-box;
+  color: white;
+}
+
+.error {
+  border: 2px solid $vermilion4;
+}
+
+.error-message {
+  color: $vermilion4;
+}
+
+.add-observation-button {
+  background-color: $vermilion4;
+  color: $dark-gray1;
+  font-weight: bold;
+  border: 1px solid $dark-gray1;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.response-panel {
+  flex: 1;
+  padding-left: 70px;
+  word-wrap: break-word;
+}
+
+.response-message {
+  color: green;
+  white-space: pre-wrap;
+}
+
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
