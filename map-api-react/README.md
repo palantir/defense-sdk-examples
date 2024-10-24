@@ -58,7 +58,7 @@ Click the [localhost](http://localhost:8080/) link to access the application!
 Enter a Gaia map ID into the input at the top.  You can get an ID for a map in Gaia via the Help menu &rarr; Developer &rarr; Copy id.  Once you have a map, you can input a layer ID or drag a layer from that map into the input to set the layer ID.  
   - We use the [Spatial Illusions milsym library](https://github.com/spatialillusions/milsymbol) to render the military symbology elements in the layer.
 
-To learn more about the Gaia Map API, refer to the `gaia-api.yml` located in the public/ folder in this project or check out (Palantir's API documentation)[https://www.palantir.com/docs/gotham/api/map-resources/maps] for the Gaia Map API Gateway.
+To learn more about the Gaia Map API, refer to the `gaia-api.yml` located in the public/ folder in this project or check out [Palantir's API documentation](https://www.palantir.com/docs/gotham/api/map-resources/maps) for the Gaia Map API Gateway.
 
 The Gaia Map API Gateway logic is all contained to maptApiGateway.saga.ts.  In that file, check out:
 
