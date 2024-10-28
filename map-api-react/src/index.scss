@@ -15,6 +15,7 @@
  */
 @import "../node_modules/@blueprintjs/core/lib/scss/variables";
 @import '@blueprintjs/core/lib/css/blueprint.css';
+@import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 
 body {
   background-color: $dark-gray1;
@@ -236,4 +237,9 @@ input {
 .feature-item span {
   margin-left: 8px;
   margin-top: 5px;
+}
+
+.customIcon {
+  color: black;
+  font-family: blueprint-icons-20;
 }

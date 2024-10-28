@@ -39,14 +39,9 @@ const useLoadLayerIfValid = () => {
 };
 
 const getMil2525Icon = (sidc: string | null) => {
-  console.log("getting mil2525 icon")
   if (!sidc) {
-    sidc = "10031500001405000000"
-  }
-  if (!sidc) {
-    console.log("return 1")
     return L.divIcon({
-      className: 'bullseye-icon',
+      className: 'bullseye customIcon',
       iconSize: [20, 20],
       iconAnchor: [10, 10],
     });
@@ -59,7 +54,6 @@ const getMil2525Icon = (sidc: string | null) => {
 
   const iconUrl = `data:image/svg+xml;base64,${btoa(symbol.asSVG())}`;
 
-  console.log("return 2")
   return L.icon({
     iconUrl: iconUrl,
     iconSize: [40, 40],
@@ -138,7 +132,6 @@ const LayerMap: React.FC<LayerMapProps> = () => {
           message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
           intent: Intent.DANGER,
         });
-        console.log("invalid drag payload 1")
       }
     } catch (error) {
       AppToaster.show({
@@ -164,7 +157,6 @@ const LayerMap: React.FC<LayerMapProps> = () => {
       const layers = loadLayerResponse.layers;
 
       Object.values(layers).forEach((layer: any) => {
-        console.log("handling layer")
         if (layer?.elements) {
           layer.elements.forEach((element: LayerElement) => {
             element.features.forEach((feature) => {
@@ -188,7 +180,6 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         features,
       };
 
-      console.log("constructing geojson")
       const geoJsonLayer = L.geoJSON(geoJsonData, {
         pointToLayer: (feature, latlng) => {
           const { sidc, label } = feature.properties;
