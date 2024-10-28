@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { Feature, FeatureCollection } from 'geojson';
+import { Intent, Position, Toaster } from '@blueprintjs/core';
 import L from 'leaflet';
 import 'leaflet-contextmenu';
 import 'leaflet/dist/leaflet.css';
@@ -67,9 +68,9 @@ const getMil2525Icon = (sidc: string | null) => {
   });
 };
 
-// const AppToaster = Toaster.create({
-//   position: Position.TOP,
-// });
+const AppToaster = Toaster.create({
+  position: Position.TOP,
+});
 
 const LayerMap: React.FC<LayerMapProps> = () => {
   const dispatch = useDispatch();
@@ -133,17 +134,17 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         dispatch(setMapId(mapId));
         loadLayerIfValid();
       } else {
-        // AppToaster.show({
-        //   message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
-        //   intent: Intent.DANGER,
-        // });
+        AppToaster.show({
+          message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
+          intent: Intent.DANGER,
+        });
         console.log("invalid drag payload 1")
       }
     } catch (error) {
-      // AppToaster.show({
-      //   message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
-      //   intent: Intent.DANGER,
-      // });
+      AppToaster.show({
+        message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
+        intent: Intent.DANGER,
+      });
       console.error('Failed to parse drag data:', error);
     }
   };
