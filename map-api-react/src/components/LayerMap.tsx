@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Intent, Position, Toaster } from '@blueprintjs/core';
 import { Feature, FeatureCollection } from 'geojson';
 import L from 'leaflet';
 import 'leaflet-contextmenu';
@@ -39,7 +38,12 @@ const useLoadLayerIfValid = () => {
 };
 
 const getMil2525Icon = (sidc: string | null) => {
+  console.log("getting mil2525 icon")
   if (!sidc) {
+    sidc = "10031500001405000000"
+  }
+  if (!sidc) {
+    console.log("return 1")
     return L.divIcon({
       className: 'bullseye-icon',
       iconSize: [20, 20],
@@ -54,6 +58,7 @@ const getMil2525Icon = (sidc: string | null) => {
 
   const iconUrl = `data:image/svg+xml;base64,${btoa(symbol.asSVG())}`;
 
+  console.log("return 2")
   return L.icon({
     iconUrl: iconUrl,
     iconSize: [40, 40],
@@ -62,9 +67,9 @@ const getMil2525Icon = (sidc: string | null) => {
   });
 };
 
-const AppToaster = Toaster.create({
-  position: Position.TOP,
-});
+// const AppToaster = Toaster.create({
+//   position: Position.TOP,
+// });
 
 const LayerMap: React.FC<LayerMapProps> = () => {
   const dispatch = useDispatch();
@@ -128,16 +133,17 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         dispatch(setMapId(mapId));
         loadLayerIfValid();
       } else {
-        AppToaster.show({
-          message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
-          intent: Intent.DANGER,
-        });
+        // AppToaster.show({
+        //   message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
+        //   intent: Intent.DANGER,
+        // });
+        console.log("invalid drag payload 1")
       }
     } catch (error) {
-      AppToaster.show({
-        message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
-        intent: Intent.DANGER,
-      });
+      // AppToaster.show({
+      //   message: "Invalid drag payload. Payload must contain 'application/x-vnd.palantir.rid.gotham-artifact.artifact'. Drag a Gaia map from the title.",
+      //   intent: Intent.DANGER,
+      // });
       console.error('Failed to parse drag data:', error);
     }
   };
@@ -157,13 +163,10 @@ const LayerMap: React.FC<LayerMapProps> = () => {
       const layers = loadLayerResponse.layers;
 
       Object.values(layers).forEach((layer: any) => {
+        console.log("handling layer")
         if (layer?.elements) {
           layer.elements.forEach((element: LayerElement) => {
             element.features.forEach((feature) => {
-              const icon = feature.style?.symbol?.symbol?.sidc
-                ? getMil2525Icon(feature.style.symbol.symbol.sidc)
-                : getMil2525Icon(null);
-
               features.push({
                 type: 'Feature',
                 geometry: feature.geometry,
@@ -171,7 +174,7 @@ const LayerMap: React.FC<LayerMapProps> = () => {
                   ...feature.style,
                   id: element.id,
                   label: element.label,
-                  icon,
+                  sidc: feature.style?.symbol?.symbol?.sidc
                 },
               });
             });
@@ -184,9 +187,12 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         features,
       };
 
+      console.log("constructing geojson")
       const geoJsonLayer = L.geoJSON(geoJsonData, {
         pointToLayer: (feature, latlng) => {
-          const { icon, label } = feature.properties as { icon: L.Icon<L.IconOptions> | L.DivIcon; label: string };
+          const { sidc, label } = feature.properties;
+          const icon = getMil2525Icon(sidc);
+          console.log(icon)
           const marker = L.marker(latlng, { icon } as L.MarkerOptions);
           marker.bindTooltip(label, { permanent: false, direction: 'top' });
           return marker;
