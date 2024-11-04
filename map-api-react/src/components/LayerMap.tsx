@@ -40,8 +40,12 @@ const useLoadLayerIfValid = () => {
 
 const getMil2525Icon = (sidc: string | null) => {
   if (!sidc) {
+    sidc = "10031500001405000000"
+  }
+
+  if (!sidc) {
     return L.divIcon({
-      className: 'bullseye customIcon',
+      className: 'bp5-icon-bullseye custom-map-icon',
       iconSize: [20, 20],
       iconAnchor: [10, 10],
     });
@@ -184,7 +188,6 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         pointToLayer: (feature, latlng) => {
           const { sidc, label } = feature.properties;
           const icon = getMil2525Icon(sidc);
-          console.log(icon)
           const marker = L.marker(latlng, { icon } as L.MarkerOptions);
           marker.bindTooltip(label, { permanent: false, direction: 'top' });
           return marker;
