@@ -160,11 +160,14 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         if (layer?.elements) {
           layer.elements.forEach((element: LayerElement) => {
             element.features.forEach((feature) => {
+              const icon = feature.style?.symbol?.symbol?.sidc
+                ? getMil2525Icon(feature.style.symbol.symbol.sidc)
+                : getMil2525Icon(null);
               const props = {
                 ...feature.style,
                 id: element.id,
                 label: element.label,
-                sidc: feature.style?.symbol?.symbol?.sidc,
+                icon,
               }
               if (feature.geometry.type == "Feature") {
                 features.push({
@@ -197,8 +200,7 @@ const LayerMap: React.FC<LayerMapProps> = () => {
 
       const geoJsonLayer = L.geoJSON(geoJsonData, {
         pointToLayer: (feature, latlng) => {
-          const { sidc, label } = feature.properties;
-          const icon = getMil2525Icon(sidc);
+          const { icon, label } = feature.properties as { icon: L.Icon<L.IconOptions> | L.DivIcon; label: string };
           const marker = L.marker(latlng, { icon } as L.MarkerOptions);
           marker.bindTooltip(label, { permanent: false, direction: 'top' });
           return marker;
