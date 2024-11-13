@@ -40,10 +40,6 @@ const useLoadLayerIfValid = () => {
 
 const getMil2525Icon = (sidc: string | null) => {
   if (!sidc) {
-    sidc = "10031500001405000000"
-  }
-
-  if (!sidc) {
     return L.divIcon({
       className: 'bp5-icon-bullseye custom-map-icon',
       iconSize: [20, 20],
