@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Feature, FeatureCollection, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon } from 'geojson';
+import { Feature, FeatureCollection, Geometry } from 'geojson';
 
 export interface LayerFeature {
-  geometry: Feature | FeatureCollection | Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon | GeometryCollection;
+  geometry: Feature | FeatureCollection | Geometry;
   style?: {
     fill?: {
       opacity: number;
