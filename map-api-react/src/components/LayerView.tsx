@@ -17,7 +17,7 @@ import { Icon, Intent, Position, Toaster } from '@blueprintjs/core';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLayerId, selectLoadLayerError, selectLoadLayerResponse, selectMapId } from '../features/mapApiGateway/mapApiGateway.selectors';
-import { Feature, LayerElement, loadLayer, setLayerId } from '../features/mapApiGateway/mapApiGateway.slice';
+import { LayerFeature, LayerElement, loadLayer, setLayerId } from '../features/mapApiGateway/mapApiGateway.slice';
 
 interface LayerViewProps {}
 
@@ -113,7 +113,7 @@ const LayerView: React.FC<LayerViewProps> = () => {
     }
   };
 
-  const getIconForGeometryType = (feature: Feature) => {
+  const getIconForGeometryType = (feature: LayerFeature) => {
     console.log(feature);
     switch (feature.geometry.type) {
       case 'Point':
@@ -137,7 +137,7 @@ const LayerView: React.FC<LayerViewProps> = () => {
       </div>
     ));
 
-    function getListElementForFeature(index: number, feature: Feature) {
+    function getListElementForFeature(index: number, feature: LayerFeature) {
       {
         if (feature.geometry.type === "FeatureCollection" && feature.geometry.features.length === 1) {
           feature = feature.geometry.features[0];

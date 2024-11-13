@@ -1,0 +1,831 @@
+openapi: 3.0.1
+info:
+  description: The API for Gotham
+  title: Gotham API Gateway
+  version: 1.0.0
+servers:
+  - url: /api
+x-resources:
+  - component: Gaia
+    namespace: GaiaApiGatewayService
+    staticOperations:
+      - exportKmz
+      - searchMaps
+      - addObjectsToMap
+      - addEmlsToMap
+      - addArtifactsToMap
+      - loadMap
+      - loadLayers
+
+paths:
+  /gotham/v1/maps/{mapId}/kmz:
+    post:
+      description: |
+        :::callout{theme=warning title=Warning}
+        This endpoint is in preview and may be modified or removed at any time.
+        To use this endpoint, add `preview=true` to the request query parameters.
+        :::
+        
+        Export all map elements from a Gaia map to a KMZ file suitable for rendering in external applications such as e.g. Google Earth. There are no schema compatibility guarantees provided for internal KMZ content exported by this endpoint.
+        Only local map elements will be exported i.e. no elements from linked maps.
+      operationId: exportKmz
+      parameters:
+        - description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          name: preview
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+        - description: |
+            The locator (value after the last period) of the RID of the Gaia map being exported. The export call will download all elements in the referenced map.
+          in: path
+          name: mapId
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapId'
+          example: a1A2bcD3e45fg6h7ij
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GaiaExportRequest'
+            example:
+              name: Example file name
+      responses:
+        "200":
+          content:
+            "*/*":
+              schema:
+                format: binary
+                type: string
+          description: Success response.
+      security:
+        - BearerAuth: [ ]
+
+  /gotham/v1/maps:
+    get:
+      description: |
+        :::callout{theme=warning title=Warning}
+        This endpoint is in preview and may be modified or removed at any time.
+        To use this endpoint, add `preview=true` to the request query parameters.
+        :::
+
+        Retrieves all published maps containing the mapName (does not have to be exact).
+      operationId: searchMaps
+      parameters:
+        - description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          name: preview
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+        - description: |
+            The name of the map(s) to be queried.
+          in: query
+          name: mapName
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapName'
+          example: Example Map Name
+        - description: |
+            The maximum number of matching Gaia maps to return. Defaults to 50.
+          in: query
+          name: pageSize
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PageSize'
+          example: 10
+        - description: |
+            The page token indicates where to start paging. This should be omitted from the first page's request.
+          in: query
+          name: pageToken
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PageToken'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchMapsResponse'
+              example:
+                results:
+                  - mapRid: ri..map.a1A2bcD3e45fg6h7ij
+                    name: Example Map Name
+                    createAt: 2023-03-21T01:14:20.326Z
+                    lastModified: 2023-03-23T17:38:29.323Z
+                    numLayers: 1
+                    numElements: 5
+          description: Success response.
+      security:
+        - BearerAuth: [ ]
+
+  /gotham/v1/maps/{mapRid}/layers/objects:
+    post:
+      description: |
+        :::callout{theme=warning title=Warning}
+        This endpoint is in preview and may be modified or removed at any time.
+        To use this endpoint, add `preview=true` to the request query parameters.
+        :::
+
+        Add objects to a map. Currently only Foundry-managed object types may be added. If unknown objects 
+        or objects that don't satisfy the security requirements are provided, the entire request will fail.
+        This creates a new layer that includes all the provided objects per request, thus not idempotent.
+        Returns the ID of the layer created.
+      operationId: addObjectsToMap
+      parameters:
+        - description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          name: preview
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+        - description: |
+            The RID of the Gaia map that you wish to add objects to.
+          in: path
+          name: mapRid
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapRid'
+          example: ri.gaia..map.a1A2bcD3e45fg6h7ij
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddObjectsToMapRequest'
+            example:
+              objectRids:
+                - ri.phonograph2-objects.main.object.example1
+                - ri.phonograph2-objects.main.object.example2
+              label: Example layer name.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddObjectsToMapResponse'
+              example:
+                dataLayerIds:
+                  - exampleLayerId
+          description: Success response.
+      security:
+        - BearerAuth: [ ]
+
+  /gotham/v1/maps/{mapRid}/layers/emls:
+    post:
+      description: |
+        :::callout{theme=warning title=Warning}
+        This endpoint is in preview and may be modified or removed at any time.
+        To use this endpoint, add `preview=true` to the request query parameters.
+        :::
+
+        Add enterprise map layers to a map. If unknown enterprise map layers or enterprise map layers that don't 
+        satisfy the security requirements are provided, the entire request will fail. For each request, a new layer 
+        is created for each enterprise map layer provided, thus not idempotent.
+        Returns the IDs of the layers created.
+      operationId: addEmlsToMap
+      parameters:
+        - description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          name: preview
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+        - description: |
+            The RID of the Gaia map that you wish to add objects to.
+          in: path
+          name: mapRid
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapRid'
+          example: ri.gaia..map.a1A2bcD3e45fg6h7ij
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEnterpriseMapLayersToMapRequest'
+            example:
+              emlIds:
+                - 0123456789012345678901234567890123456789012345678901234567890123
+                - 1234567890123456789012345678901234567890123456789012345678901234
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddEnterpriseMapLayersToMapResponse'
+              example:
+                dataLayerIds:
+                  - exampleLayerId
+          description: Success response.
+      security:
+        - BearerAuth: [ ]
+
+  /gotham/v1/maps/{mapRid}/layers/artifacts:
+    post:
+      description: |
+        :::callout{theme=warning title=Warning}
+        This endpoint is in preview and may be modified or removed at any time.
+        To use this endpoint, add `preview=true` to the request query parameters.
+        :::
+
+        Add artifacts to a map. Currently only target collection artifacts may be added. If unknown artifacts
+        or artifacts that don't satisfy the security requirements are provided, the entire request will fail.
+        For each request, a new layer is created for each artifact, thus not idempotent.
+        Returns the IDs of the layers created.
+      operationId: addArtifactsToMap
+      parameters:
+        - description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          name: preview
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+        - description: |
+            The RID of the Gaia map that you wish to add artifacts to.
+          in: path
+          name: mapRid
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapRid'
+          example: ri.gaia..map.a1A2bcD3e45fg6h7ij
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddArtifactsToMapRequest'
+            example:
+              artifactGids:
+                - ri.gotham-artifact.instance.service-type.a1A2bcD3e45fg6h7ij
+              label: Example layer name.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddArtifactsToMapResponse'
+              example:
+                dataLayerIds:
+                  - exampleLayerId
+          description: Success response.
+      security:
+        - BearerAuth: [ ]
+
+  /gotham/v1/maps/load/{mapGid}:
+    get:
+      description: |
+        :::callout{theme=warning title=Warning}
+        This endpoint is in preview and may be modified or removed at any time.
+        To use this endpoint, add `preview=true` to the request query parameters.
+        :::
+        
+        Loads the structure and basic metadata of a Gaia map, given a map GID. Metadata includes the map's title and 
+        layer labels.
+
+        The response contains a mapping of all layers contained in the map. The map's layer hierarchy can be recreated 
+        by using the `rootLayerIds` in the response along with the `subLayerIds` field in the layer's metadata.
+      operationId: loadMap
+      parameters:
+        - name: preview
+          description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+
+        - name: mapGid
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapGid'
+          description: |
+            The GID of the map to be loaded.
+          example: ri.gotham-artifact.0-1.gaia-map.a1A2bcD3e45fg6h7ij
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadMapResponse'
+              example:
+                title: Example Gaia Map Title
+                rootLayerIds:
+                  - exampleRootLayerId
+                layers:
+                  exampleRootLayerId:
+                    id: exampleRootLayerId
+                    subLayerIds:
+                      - exampleNestedLayerId
+                    label: Root layer label
+                  exampleNestedLayerId:
+                    id: exampleNestedLayerId
+                    label: Nested layer label
+          description: A successful map load response.
+
+  /gotham/v1/maps/load/{mapGid}/layers:
+    put:
+      description: |
+        Loads the elements contained in the requested layers of a Gaia map. The response includes the geometries 
+        associated with the elements.
+      operationId: loadLayers
+      parameters:
+        - description: |
+            Represents a boolean value that restricts an endpoint to preview mode when set to true.
+          in: query
+          name: preview
+          required: false
+          schema:
+            $ref: './common-api.yml#/components/schemas/PreviewMode'
+          example: true
+
+        - name: mapGid
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/GaiaMapGid'
+          description: |
+            The GID of the map containing the layers to be loaded.
+          example: ri.gotham-artifact.0-1.gaia-map.a1A2bcD3e45fg6h7ij
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadLayersRequest'
+            example:
+              layerIds:
+                - exampleLayerId
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadLayersResponse'
+              example:
+                layers:
+                  exampleLayerId:
+                    id: exampleLayerId
+                    elements:
+                      - id: exampleElementId
+                        parentId: exampleLayerId
+                        features:
+                          - geometry:
+                              type: Point
+                              coordinates:
+                                - 0
+                                - 0
+          description: A successful load layers response.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Gaia:
+      # Root object for static operations
+      x-namespace: Gaia
+      type: object
+
+    # Request/Response Objects
+    GaiaExportRequest:
+      x-namespace: Gaia
+      description: |
+        The request body to export elements to a KMZ/SHP file.
+      type: object
+      properties:
+        name:
+          type: string
+          x-safety: unsafe
+          description: |
+            The name of the exported file. Defaults to 'palantir-export'.
+
+    SearchMapsResponse:
+      x-namespace: Gaia
+      description: |
+        The response body containing the queried Gaia maps
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaMapMetadata'
+        nextPageToken:
+          $ref: './common-api.yml#/components/schemas/PageToken'
+
+    AddObjectsToMapRequest:
+      x-namespace: Gaia
+      description: |
+        The request body to add objects to a map.
+      type: object
+      properties:
+        objectRids:
+          type: array
+          items:
+            description: The RID of an object
+            format: rid
+            type: string
+            x-safety: unsafe
+        label:
+          type: string
+          description: |
+            The name of the layer to be created
+          x-safety: unsafe
+      required:
+        - label
+
+    AddObjectsToMapResponse:
+      x-namespace: Gaia
+      description: |
+        The response body to add objects to a map, containing the ID of the created layer.
+      type: object
+      properties:
+        dataLayerIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaLayerId'
+
+    AddEnterpriseMapLayersToMapRequest:
+      x-namespace: Gaia
+      description: |
+        The request body to add enterprise map layers to a map
+      type: object
+      properties:
+        emlIds:
+          type: array
+          description: |
+            The IDs of the enterprise map layers to be added to the map.
+          items:
+            $ref: '#/components/schemas/EmlId'
+
+    AddEnterpriseMapLayersToMapResponse:
+      x-namespace: Gaia
+      description: |
+        The response body to add enterprise map layers to a map, containing the IDs of the created layers.
+      type: object
+      properties:
+        dataLayerIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaLayerId'
+
+    AddArtifactsToMapRequest:
+      x-namespace: Gaia
+      description: |
+        The request body to add artifacts to a map
+      type: object
+      properties:
+        artifactGids:
+          type: array
+          description: |
+            The GIDs of the artifacts to be added to the map.
+          items:
+            $ref: './common-api.yml#/components/schemas/ArtifactGid'
+        label:
+          type: string
+          description: |
+            The name of the layer to be created
+          x-safety: unsafe
+      required:
+        - label
+
+    AddArtifactsToMapResponse:
+      x-namespace: Gaia
+      description: |
+        The response body to add artifacts to a map, containing the ID of the created layer.
+      type: object
+      properties:
+        dataLayerIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaLayerId'
+
+    LoadMapResponse:
+      x-namespace: Gaia
+      description: |
+        Contains information related to a Gaia map's structure and basic metadata.
+      type: object
+      properties:
+        title:
+          description: |
+            The title of the loaded Gaia map.
+          type: string
+          x-safety: unsafe
+        rootLayerIds:
+          description: |
+            The **root** layers of the loaded Gaia map. This does not include sub-layers, i.e. layers nested within a parent
+            layer in a Gaia map.
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaLayerId'
+        layers:
+          description: |
+            A mapping of **all** the layers contained in the Gaia map. Includes layers nested under the root layers.
+          type: object
+          x-mapKey:
+            $ref: '#/components/schemas/GaiaLayerId'
+          additionalProperties:
+            $ref: '#/components/schemas/GaiaLayerMetadata'
+      required:
+        - title
+
+    LoadLayersRequest:
+      x-namespace: Gaia
+      type: object
+      properties:
+        layerIds:
+          description: |
+            The set of layer IDs to load from a Gaia map.
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaLayerId'
+
+    LoadLayersResponse:
+      x-namespace: Gaia
+      type: object
+      properties:
+        layers:
+          description: |
+            A mapping of the requested layer IDs to a Gaia layer. Any invalid layer IDs will be omitted from this field.
+          type: object
+          x-mapKey:
+            $ref: '#/components/schemas/GaiaLayerId'
+          additionalProperties:
+            $ref: '#/components/schemas/GaiaLayer'
+
+    # ids
+    GaiaMapId:
+      x-namespace: Gaia
+      # This description is only true in the context of export
+      description: |
+        The locator (value after the last period) of a Gaia Map RID.
+      type: string
+      x-safety: safe
+
+    GaiaMapRid:
+      x-namespace: Gaia
+      description: |
+        The RID of a Gaia Map.
+      type: string
+      x-safety: safe
+
+    GaiaMapGid:
+      x-namespace: Gaia
+      description: |
+        The GID of a Gaia map
+      type: string
+      x-safety: safe
+
+    GaiaLayerId:
+      x-namespace: Gaia
+      description: |
+        The ID of a layer in a Gaia map.
+      type: string
+      x-safety: unsafe
+
+    EmlId:
+      x-namespace: Gaia
+      description: |
+        The ID of a enterprise map layer
+      type: string
+      x-safety: unsafe
+
+    GaiaMapName:
+      x-namespace: Gaia
+      description: |
+        The name of the Gaia map.
+      type: string
+      x-safety: unsafe
+
+    GaiaMapMetadata:
+      x-namespace: Gaia
+      type: object
+      properties:
+        mapRid:
+          description: |
+            Note: this field is deprecated and will be removed. Please use the returned mapGid field.
+          $ref: '#/components/schemas/GaiaMapRid'
+          deprecated: true
+        mapGid:
+          $ref: '#/components/schemas/GaiaMapGid'
+        name:
+          type: string
+          x-safety: unsafe
+        createdAt:
+          description: |
+            The time when the map was first created, based on UTC timezone.
+          format: date-time
+          type: string
+          x-safety: safe
+        lastModified:
+          description: |
+            The last time the map was modified, based on UTC timezone.
+          format: date-time
+          type: string
+          x-safety: safe
+        numLayers:
+          description: |
+            The number of layers on the map.
+          type: integer
+          format: int64
+          x-safety: safe
+        numElements:
+          description: |
+            The number of elements on the map.
+          type: integer
+          format: int64
+          x-safety: safe
+      required:
+        - mapRid
+        - mapGid
+        - name
+        - createdAt
+        - lastModified
+
+    # Map read objects
+    GaiaLayerMetadata:
+      x-namespace: Gaia
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/GaiaLayerId'
+        subLayerIds:
+          description: |
+            A list of layer IDs nested under this layer.
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaLayerId'
+        label:
+          type: string
+          x-safety: unsafe
+      required:
+        - id
+        - label
+
+    GaiaLayer:
+      x-namespace: Gaia
+      description: |
+        A representation of a layer in a Gaia map. A layer can contain multiple sub-layers and elements. Each layer has 
+        a unique ID within the context of a map.
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/GaiaLayerId'
+        elements:
+          description: |
+            A list of elements contained within the layer.
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaElement'
+      required:
+        - id
+
+    GaiaElement:
+      x-namespace: Gaia
+      description: |
+        A representation of an element in a Gaia map. An element can be thought as a leaf node in the structure of a
+        map. It contains information such as the geometry of a feature. An element has one or more features.
+
+        Each element has an ID unique within the context of its parent layer; the ID is not guaranteed to be unique
+        within the context of a map.
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/GaiaElementId'
+        parentId:
+          description: |
+            The ID of the layer containing this element.
+          $ref: '#/components/schemas/GaiaLayerId'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaiaFeature'
+          minItems: 1
+        label:
+          type: string
+          x-safety: unsafe
+      required:
+        - id
+        - parentId
+        - label
+
+    GaiaFeature:
+      x-namespace: Gaia
+      description: |
+        Features are the objects you see on a Gaia map. This includes information such as geometry.
+      type: object
+      properties:
+        geometry:
+          $ref: './geojson.yml#/components/schemas/GeoJsonObject'
+        style:
+          $ref: '#/components/schemas/GaiaStyle'
+      required:
+        - geometry
+
+    GaiaElementId:
+      x-namespace: Gaia
+      description: |
+        The ID of an element in a map.
+      type: string
+      x-safety: unsafe
+
+    GaiaStyle:
+      x-namespace: Gaia
+      type: object
+      properties:
+        symbol:
+          description: |
+            Styling information related to the feature's symbol.
+          $ref: '#/components/schemas/SymbolStyle'
+        fill:
+          $ref: '#/components/schemas/FillStyle'
+        stroke:
+          $ref: '#/components/schemas/StrokeStyle'
+
+    FillStyle:
+      x-namespace: Gaia
+      type: object
+      properties:
+        opacity:
+          description: |
+            The opacity of the polygon, if applicable, between 0 and 1.
+          type: number
+          format: double
+          x-safety: unsafe
+        color:
+          description: |
+            A 6 character hexadecimal string describing the color filling the geometry. The leading # is required, 
+            e.g. "#FF00FF"
+          type: string
+          x-safety: unsafe
+
+    StrokeStyle:
+      x-namespace: Gaia
+      type: object
+      properties:
+        width:
+          description: |
+            The width of the outline in pixels.
+          type: integer
+          format: int64
+          x-safety: unsafe
+        opacity:
+          description: |
+            The opacity of the outline between 0 and 1.
+          type: number
+          format: double
+          x-safety: unsafe
+        color:
+          description: |
+            A 6 character hexadecimal string describing the color outlining the geometry. The leading # is required, 
+            e.g. "#FF00FF"
+          type: string
+          x-safety: unsafe
+
+    SymbolStyle:
+      x-namespace: Gaia
+      type: object
+      properties:
+        symbol:
+          $ref: '#/components/schemas/GaiaSymbol'
+      required:
+        - symbol
+
+    GaiaSymbol:
+      x-namespace: Gaia
+      discriminator:
+        propertyName: type
+        mapping:
+          "MilsymSymbol": '#/components/schemas/MilsymSymbol'
+      oneOf:
+        - $ref: '#/components/schemas/MilsymSymbol'
+      type: object
+      properties:
+        'type':
+          type: string
+          enum:
+            - MilsymSymbol
+
+    MilsymSymbol:
+      x-namespace: Gaia
+      type: object
+      properties:
+        sidc:
+          description: |
+            The SIDC of the MIL-2525-C symbol.
+          type: string
+          x-safety: unsafe
+      required:
+        - sidc
