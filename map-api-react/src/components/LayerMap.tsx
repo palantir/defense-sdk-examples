@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Feature, FeatureCollection } from 'geojson';
+import { FeatureCollection, Feature } from 'geojson';
 import { Intent, Position, Toaster } from '@blueprintjs/core';
 import L from 'leaflet';
 import 'leaflet-contextmenu';
@@ -160,16 +160,31 @@ const LayerMap: React.FC<LayerMapProps> = () => {
         if (layer?.elements) {
           layer.elements.forEach((element: LayerElement) => {
             element.features.forEach((feature) => {
-              features.push({
-                type: 'Feature',
-                geometry: feature.geometry,
-                properties: {
-                  ...feature.style,
-                  id: element.id,
-                  label: element.label,
-                  sidc: feature.style?.symbol?.symbol?.sidc
-                },
-              });
+              const props = {
+                ...feature.style,
+                id: element.id,
+                label: element.label,
+                sidc: feature.style?.symbol?.symbol?.sidc,
+              }
+              if (feature.geometry.type == "Feature") {
+                features.push({
+                  ...feature.geometry,
+                  properties: props,
+              })
+              } else if (feature.geometry.type == "FeatureCollection") {
+                feature.geometry.features.forEach((innerFeature) => {
+                  features.push({
+                    ...innerFeature,
+                    properties: props,
+                  })
+                })
+              } else {
+                features.push({
+                  type: 'Feature',
+                  geometry: feature.geometry,
+                  properties: props,
+                });
+              }
             });
           });
         }
