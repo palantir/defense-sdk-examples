@@ -137,11 +137,6 @@ const LayerView: React.FC<LayerViewProps> = () => {
     ));
 
     function getListElementForFeature(index: number, feature: LayerFeature) {
-      {
-        if (feature.geometry.type === "FeatureCollection" && feature.geometry.features.length === 1) {
-          feature = feature.geometry.features[0];
-        }
-      }
       return <li key={index} className="feature-item">
         <div>
           {feature.style?.symbol?.symbol.sidc && (
