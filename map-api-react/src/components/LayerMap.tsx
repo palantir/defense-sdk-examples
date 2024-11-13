@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { FeatureCollection, Feature } from 'geojson';
 import { Intent, Position, Toaster } from '@blueprintjs/core';
+import { FeatureCollection, Feature } from 'geojson';
 import L from 'leaflet';
 import 'leaflet-contextmenu';
 import 'leaflet/dist/leaflet.css';
