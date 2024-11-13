@@ -131,28 +131,26 @@ const LayerView: React.FC<LayerViewProps> = () => {
       <div key={element.id} className="layer-element">
         <h3 className="layer-element-label">{element.label}</h3>
         <ul className="features-list">
-          {element.features.map((feature, index) => getListElementForFeature(index, feature))}
+          {element.features.map((feature, index) => (
+              <li key={index} className="feature-item">
+                <div>
+                  {feature.style?.symbol?.symbol.sidc && (
+                    <span>
+                      {`${feature.style.symbol.symbol.sidc}`}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <Icon icon={getIconForGeometryType(feature)} />
+                  <span>
+                    {feature.geometry.type}
+                  </span>
+                </div>
+              </li>
+            ))}
         </ul>
       </div>
     ));
-
-    function getListElementForFeature(index: number, feature: LayerFeature) {
-      return <li key={index} className="feature-item">
-        <div>
-          {feature.style?.symbol?.symbol.sidc && (
-            <span>
-              {`${feature.style.symbol.symbol.sidc}`}
-            </span>
-          )}
-        </div>
-        <div>
-          <Icon icon={getIconForGeometryType(feature)} />
-          <span>
-            {feature.geometry.type}
-          </span>
-        </div>
-      </li>;
-    }
   };
 
   return (
