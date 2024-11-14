@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Feature, FeatureCollection, Geometry } from 'geojson';
+import { GeoJSON } from 'geojson';
 
 export interface LayerFeature {
-  geometry: Feature | FeatureCollection | Geometry;
+  geometry: GeoJSON;
   style?: {
     fill?: {
       opacity: number;
