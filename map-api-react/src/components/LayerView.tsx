@@ -17,7 +17,7 @@ import { Icon, Intent, Position, Toaster } from '@blueprintjs/core';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLayerId, selectLoadLayerError, selectLoadLayerResponse, selectMapId } from '../features/mapApiGateway/mapApiGateway.selectors';
-import { LayerElement, loadLayer, setLayerId } from '../features/mapApiGateway/mapApiGateway.slice';
+import { LayerFeature, LayerElement, loadLayer, setLayerId } from '../features/mapApiGateway/mapApiGateway.slice';
 
 interface LayerViewProps {}
 
@@ -113,8 +113,8 @@ const LayerView: React.FC<LayerViewProps> = () => {
     }
   };
 
-  const getIconForGeometryType = (type: string) => {
-    switch (type) {
+  const getIconForGeometryType = (feature: LayerFeature) => {
+    switch (feature.geometry.type) {
       case 'Point':
         return 'map-marker';
       case 'LineString':
@@ -141,7 +141,7 @@ const LayerView: React.FC<LayerViewProps> = () => {
                 )}
               </div>
               <div>
-                <Icon icon={getIconForGeometryType(feature.geometry.type)} />
+                <Icon icon={getIconForGeometryType(feature)} />
                 <span>
                   {feature.geometry.type}
                 </span>

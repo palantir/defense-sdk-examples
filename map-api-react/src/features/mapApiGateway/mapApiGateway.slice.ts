@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Geometry } from 'geojson';
+import { GeoJSON } from 'geojson';
 
-export interface Feature {
-  geometry: Geometry;
+export interface LayerFeature {
+  geometry: GeoJSON;
   style?: {
     fill?: {
       opacity: number;
@@ -40,7 +40,7 @@ export interface Feature {
 export interface LayerElement {
   id: string;
   parentId: string;
-  features: Feature[];
+  features: LayerFeature[];
   label: string;
 }
 

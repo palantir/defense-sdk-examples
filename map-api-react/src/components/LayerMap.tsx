@@ -41,7 +41,7 @@ const useLoadLayerIfValid = () => {
 const getMil2525Icon = (sidc: string | null) => {
   if (!sidc) {
     return L.divIcon({
-      className: 'bullseye-icon',
+      className: 'bp5-icon-bullseye custom-map-icon',
       iconSize: [20, 20],
       iconAnchor: [10, 10],
     });
@@ -163,17 +163,31 @@ const LayerMap: React.FC<LayerMapProps> = () => {
               const icon = feature.style?.symbol?.symbol?.sidc
                 ? getMil2525Icon(feature.style.symbol.symbol.sidc)
                 : getMil2525Icon(null);
-
-              features.push({
-                type: 'Feature',
-                geometry: feature.geometry,
-                properties: {
-                  ...feature.style,
-                  id: element.id,
-                  label: element.label,
-                  icon,
-                },
-              });
+              const props = {
+                ...feature.style,
+                id: element.id,
+                label: element.label,
+                icon,
+              }
+              if (feature.geometry.type == "Feature") {
+                features.push({
+                  ...feature.geometry,
+                  properties: props,
+              })
+              } else if (feature.geometry.type == "FeatureCollection") {
+                feature.geometry.features.forEach((innerFeature) => {
+                  features.push({
+                    ...innerFeature,
+                    properties: props,
+                  })
+                })
+              } else {
+                features.push({
+                  type: 'Feature',
+                  geometry: feature.geometry,
+                  properties: props,
+                });
+              }
             });
           });
         }
