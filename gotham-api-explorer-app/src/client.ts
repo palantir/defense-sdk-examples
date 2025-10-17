@@ -25,22 +25,20 @@ checkEnv(url, "VITE_FOUNDRY_API_URL");
 checkEnv(clientId, "VITE_FOUNDRY_CLIENT_ID");
 checkEnv(redirectUrl, "VITE_FOUNDRY_REDIRECT_URL");
 const scopes = [
-	"api:read-data",
-	"api:write-data",
-	"api:admin-read",
-	"api:admin-write",
-	"api:datasets-read",
-	"api:datasets-write",
-	"api:filesystem-read",
-	"api:filesystem-write",
-	"api:mediasets-read",
-	"api:mediasets-write",
-	"api:map-read",
-	"api:map-write",
-	"api:target-read",
-	"api:target-write",
-	"api:geotime-read",
-	"api:geotime-write"
+	"api:use-ontologies-read",
+	"api:use-ontologies-write",
+	"api:use-admin-read",
+	"api:use-admin-write",
+	"api:use-datasets-read",
+	"api:use-datasets-write",
+	"api:use-filesystem-read",
+	"api:use-filesystem-write",
+	"api:use-map-read",
+	"api:use-map-write",
+	"api:use-target-read",
+	"api:use-target-write",
+	"api:use-geotime-read",
+	"api:use-geotime-write"
 ]
 
 function checkEnv(

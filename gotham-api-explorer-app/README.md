@@ -37,6 +37,12 @@ After you create a Developer Console application, you can run it locally by navi
 
       <br />
 
+3. Navigate to the Resources page then the Platform SDK resources
+   1. Add the following Operations under Client-allowed-operations: 
+   ontologies-read, ontologies-write, admin-read, admin-write, datasets-read, datasets-write, filesystem-read, filesystem-write, map-read, map-write, target-read, target-write, geotime-read, and geotime-write
+   ![Add Platform SDK Scopes](./public/platform_sdk.png)
+   <br />
+
 3. Edit the `.env.development` file in this cloned repository and set the values:
 
    ```
