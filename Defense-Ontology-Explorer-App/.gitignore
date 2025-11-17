@@ -25,3 +25,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Domain mapping generation script (development utility)
+generate-domain-mappings.cjs
