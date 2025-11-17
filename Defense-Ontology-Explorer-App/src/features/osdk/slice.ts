@@ -15,10 +15,51 @@
  */
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DomainCategory, DomainMetadata, OsdkState } from "./types";
+import { DOMAIN_INTERFACE_MAPPINGS } from "./domainMappings";
+
+// Create static domain map from the generated mappings
+const staticDomainMap: { [key in DomainCategory]?: DomainMetadata } = {
+  [DomainCategory.targetingFires]: {
+    title: "Targeting and Fires",
+    description: "Domain for targeting, fires, and collateral concerns",
+    interfaces: DOMAIN_INTERFACE_MAPPINGS["Targeting and Fires"],
+    status: "tag-add",
+  },
+  [DomainCategory.protection]: {
+    title: "Protection",
+    description: "Domain for protection and defensive measures",
+    interfaces: DOMAIN_INTERFACE_MAPPINGS["Protection"],
+    status: "tag-add",
+  },
+  [DomainCategory.sustainment]: {
+    title: "Sustainment",
+    description: "Domain for sustainment, logistics, and unit management",
+    interfaces: DOMAIN_INTERFACE_MAPPINGS["Sustainment"],
+    status: "tag-add",
+  },
+  [DomainCategory.missionPlanning]: {
+    title: "Mission Planning",
+    description: "Domain for mission planning and task management",
+    interfaces: DOMAIN_INTERFACE_MAPPINGS["Mission Planning"],
+    status: "tag-add",
+  },
+  [DomainCategory.orderOfBattle]: {
+    title: "Order of Battle",
+    description: "Domain for order of battle and equipment tracking",
+    interfaces: DOMAIN_INTERFACE_MAPPINGS["Order of Battle"],
+    status: "tag-add",
+  },
+  [DomainCategory.intelligence]: {
+    title: "Intelligence",
+    description: "Domain for intelligence gathering and analysis",
+    interfaces: DOMAIN_INTERFACE_MAPPINGS["Intelligence"],
+    status: "tag-add",
+  },
+};
 
 const initialState: OsdkState = {
   selectedDomain: null as DomainCategory | null,
-  domainMap: {},
+  domainMap: staticDomainMap,
   errors: {
     fetchDomains: null,
     fetchInterfaceObjects: null,
@@ -43,14 +84,15 @@ const osdkSlice = createSlice({
       state.selectedDomain = action.payload;
     },
     fetchDomainsStart(state) {
-      state.loadingInterfaces = true;
+      // No longer needed - using static mappings
+      state.loadingInterfaces = false;
       state.errors.fetchDomains = null;
     },
     fetchDomainsSuccess(
       state,
       action: PayloadAction<{ [key in DomainCategory]?: DomainMetadata }>
     ) {
-      state.domainMap = action.payload;
+      // No longer needed - using static mappings
       state.loadingInterfaces = false;
     },
     fetchDomainsFailure(state, action: PayloadAction<string>) {
