@@ -31,7 +31,7 @@ export enum DomainCategory {
 export interface DomainMetadata {
   title: string;
   description: string;
-  interfaces: string[];
+  interfaces: readonly string[];
   status: string;
 }
 
@@ -53,3 +53,9 @@ export interface OsdkState {
   loadingObjects: boolean;
   loadingObjectDetails: boolean;
 }
+
+// Type-safe domain mapping based on generated mappings
+export type DomainKey =
+  keyof typeof import("./domainMappings").DOMAIN_INTERFACE_MAPPINGS;
+export type InterfaceList<T extends DomainKey> =
+  typeof import("./domainMappings").DOMAIN_INTERFACE_MAPPINGS[T];
