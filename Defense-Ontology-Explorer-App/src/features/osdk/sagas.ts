@@ -15,7 +15,6 @@
  */
 import { call, put, takeLatest, select, all } from "redux-saga/effects";
 import client from "../../client";
-import { DefenseOntologyMetadata } from "@defense-ontology-explorer-app/sdk";
 import {
   fetchDomainsSuccess,
   fetchDomainsFailure,
@@ -26,50 +25,45 @@ import {
   fetchInterfaceObjectsStart,
 } from "./slice";
 import { DomainCategory, DomainMetadata } from "./types";
-import { Osdk } from "@osdk/client";
 import {
   selectSelectedInterface,
   selectSelectedObjectType,
   selectSelectedObjectPrimaryKey,
+  selectDomainMap,
 } from "./selectors";
 import * as $DefenseOntology from "@defense-ontology-explorer-app/sdk";
 import { SagaIterator } from "redux-saga";
 
 function* fetchDomainsSaga(): SagaIterator {
   try {
-    const fetchObjects = async () => {
-      const objects: Osdk.Instance<DefenseOntologyMetadata>[] = [];
-      for await (const obj of client(DefenseOntologyMetadata).asyncIter()) {
-        objects.push(obj);
-      }
-      return objects;
-    };
-
-    const objects: Osdk.Instance<DefenseOntologyMetadata>[] = yield call(
-      fetchObjects
-    );
+    const objects =  yield select(selectDomainMap);
+    console.log("todo got objects: ", objects);
 
     const domainMap: { [key in DomainCategory]?: DomainMetadata } = {};
-    objects.forEach((obj) => {
-      let status: string;
-      switch (obj.status) {
-        case "COMING_SOON":
-          status = "time";
-          break;
-        case "UNDER_DEVELOPMENT":
-          status = "build";
-          break;
-        case "PUBLISHED":
-          status = "tag-add";
-          break;
-        default:
-          status = "unknown";
-      }
 
-      const categoryKey = obj.$primaryKey as keyof typeof DomainCategory;
+    Object.keys(objects).forEach((key) => {
+  const obj: DomainMetadata = objects[key];
+  console.log("todo domain: ", obj);
+
+    let status: string;
+    switch (obj.status) {
+      case "COMING_SOON":
+        status = "time";
+        break;
+      case "UNDER_DEVELOPMENT":
+        status = "build";
+        break;
+      case "PUBLISHED":
+        status = "tag-add";
+        break;
+      default:
+        status = "unknown";
+    }
+
+      const categoryKey = obj.title as keyof typeof DomainCategory;
       if (DomainCategory[categoryKey]) {
         domainMap[DomainCategory[categoryKey]] = {
-          title: obj.domainCategoryDisplayName || "Untitled",
+          title: obj.title || "Untitled",
           description: obj.description || "No description available",
           interfaces: obj.interfaces || [],
           status: status,
