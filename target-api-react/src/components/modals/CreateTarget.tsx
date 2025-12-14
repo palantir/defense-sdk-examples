@@ -51,7 +51,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   const [formData, setFormData] = useState({
     latitude: initialLat.toString(),
     longitude: initialLon.toString(),
-    classificationMarkings: "UNCLASSIFIED",
+    classificationMarkings: "U",
     observationTimestamp: getCurrentUTCTimestamp(),
     targetBoardId: selectedBoard || "",
     name: "",

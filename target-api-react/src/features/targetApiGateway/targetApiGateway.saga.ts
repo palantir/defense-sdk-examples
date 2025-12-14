@@ -81,6 +81,7 @@ function* fetchAuthToken(): any {
 
     if (response.ok) {
       const data = yield response.json();
+
       const token = data.access_token;
       yield put(setClientToken(token));
       return token;
@@ -381,10 +382,10 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
         manualLocation: {
           lat: action.payload.latitude,
           lng: action.payload.longitude,
-          circularErrorInMeters: action.payload.radius || 100,
-          hae: 0, 
-          msl: 0, 
-          agl: 0   
+          circularErrorInMeters: action.payload.radius || 100.0,
+          hae: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
+          msl: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
+          agl: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
         }
       },
       security: {
@@ -393,6 +394,7 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
       targetType: action.payload.targetType || "Unknown",
       description: action.payload.description || "",
     };
+
 
     const response: Response = yield call(() =>
       fetch(
