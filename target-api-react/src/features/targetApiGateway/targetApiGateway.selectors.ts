@@ -15,7 +15,6 @@
  */
 import { RootState } from "../../app/store";
 
-export const selectServiceUserToken = (state: RootState) => state.targetApiGateway.serviceUserToken;
 export const selectLoadedTargetBoard = (state: RootState) => state.targetApiGateway.loadedTargetBoardArtifactId;
 export const selectTargetBoardTargets = (state: RootState) => state.targetApiGateway.targetBoardTargets;
 export const selectLoadedTarget = (state: RootState) => state.targetApiGateway.loadedTargetRid;

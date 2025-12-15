@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 export const THIRD_PARTY_APP = {
-    CLIENT_URL: import.meta.env.VITE_CLIENT_URL,
-    CLIENT_ID: import.meta.env.VITE_CLIENT_ID,
-    CLIENT_SECRET: import.meta.env.VITE_CLIENT_SECRET,
-    REDIRECT_URL: import.meta.env.VITE_REDIRECT_URL,
+    CLIENT_URL: import.meta.env.VITE_FOUNDRY_API_URL,
+    CLIENT_ID: import.meta.env.VITE_FOUNDRY_CLIENT_ID,
+    REDIRECT_URL: import.meta.env.VITE_FOUNDRY_REDIRECT_URL,
 }
