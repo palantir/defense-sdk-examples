@@ -15,7 +15,7 @@
  */
 import { Spinner } from '@blueprintjs/core';
 import { SpinnerSize } from '@blueprintjs/core/lib/esm/components/spinner/spinner';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client'; // <-- updated for React 18+
 import { Provider, useSelector } from 'react-redux';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
@@ -24,8 +24,37 @@ import NoLocationTable from './components/NoLocationTable';
 import TargetMap from './components/TargetMap';
 import TargetView from './components/TargetView';
 import { selectLoading } from './features/targetApiGateway/targetApiGateway.selectors';
-import AuthCallback from './AuthCallback'; // <-- import your AuthCallback
+import AuthCallback from './AuthCallback';
+import auth from './auth'; // <-- import your auth client
 import './index.scss';
+
+// Inline AppAuthGate component using auth.refresh()
+const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    auth.refresh()
+      .then(token => {
+        if (cancelled) return;
+        if (!token) {
+          auth.signIn();
+        } else {
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) auth.signIn();
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!ready) {
+    return <div>Signing in...</div>;
+  }
+
+  return <>{children}</>;
+};
 
 // Your main App component as before
 const App: React.FC = () => {
@@ -73,11 +102,15 @@ const App: React.FC = () => {
   );
 };
 
-// Create the router
+// Create the router, wrapping App in AppAuthGate
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: (
+      <AppAuthGate>
+        <App />
+      </AppAuthGate>
+    ),
   },
   {
     path: '/auth/callback',

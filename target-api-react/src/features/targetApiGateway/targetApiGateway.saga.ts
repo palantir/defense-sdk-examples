@@ -36,9 +36,9 @@ import auth from "../../auth"
 function* fetchTargetDetails(targetRid: string): any {
   try {
     const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
-    const token = tokenObj.accessToken;
-
+    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
+    const token = tokenObj.access_token;
+    
     const response: Response = yield call(() =>
       fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`, {
         method: 'GET',
@@ -66,8 +66,9 @@ function* fetchTargetDetails(targetRid: string): any {
 function* fetchTargetsForBoard(): any {
   try {
     const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
-    const token = tokenObj.accessToken;
+    console.log("token obj: ", tokenObj);
+    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
+    const token = tokenObj.access_token;
     
     const boardRid = yield select(selectLoadedTargetBoard);
 
@@ -118,10 +119,9 @@ function* fetchTargetsForBoard(): any {
 function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   try {
     const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
-    const token = tokenObj.accessToken;
+    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
+    const token = tokenObj.access_token;
     
-
     const payload = {
       name: action.payload.name,
       targetBoard: action.payload.targetBoardId,
@@ -171,9 +171,8 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
 function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
   try {
     const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
-    const token = tokenObj.accessToken;
-    
+    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
+    const token = tokenObj.access_token;
 
     const payload = {
       name: action.payload.name,
