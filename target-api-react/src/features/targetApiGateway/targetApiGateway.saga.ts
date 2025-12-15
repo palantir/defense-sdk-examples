@@ -66,7 +66,6 @@ function* fetchTargetDetails(targetRid: string): any {
 function* fetchTargetsForBoard(): any {
   try {
     const tokenObj = yield call([auth, auth.refresh]);
-    console.log("token obj: ", tokenObj);
     if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
     const token = tokenObj.access_token;
     
