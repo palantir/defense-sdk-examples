@@ -27,6 +27,7 @@ const REDIRECT_URI = import.meta.env.VITE_FOUNDRY_REDIRECT_URL;
 const API_URL = import.meta.env.VITE_FOUNDRY_API_URL;
 const AUTH_URL = `${API_URL}/multipass/api/oauth2/authorize`;
 const TOKEN_URL = `${API_URL}/multipass/api/oauth2/token`;
+const TARGET_SCOPES = 'api:target-read api:target-write';
 
 function getAuthUrl(codeChallenge: string, state: string) {
   const params = new URLSearchParams({
@@ -36,7 +37,7 @@ function getAuthUrl(codeChallenge: string, state: string) {
     state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
-    scope: 'api:target-read api:target-write',
+    scope: TARGET_SCOPES
   });
   return `${AUTH_URL}?${params.toString()}`;
 }
