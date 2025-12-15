@@ -81,32 +81,75 @@ function* fetchTargetsForBoard(): any {
         },
       })
     );
+
     if (response.ok) {
       const data: any = yield response.json();
-      if (data.collection && data.collection.columns) {
+      if (data.targetBoard && data.targetBoard.targets) {
         const targets: Target[] = [];
-        for (const column of data.collection.columns) {
-          for (const target of column.targets) {
-            const targetDetails = yield call(fetchTargetDetails, target.targetRid);
-            if (targetDetails) {
-              const targetObj: Target = {
-                rid: targetDetails.target.rid,
-                name: targetDetails.target.name,
-                column: column.name,
-                location: targetDetails.target.location ? {
-                  latitude: targetDetails.target.location.center.latitude,
-                  longitude: targetDetails.target.location.center.longitude,
-                  radius: targetDetails.target.location.radius,
-                  elevation: targetDetails.target.location.center.elevation
-                } : undefined,
-                baseRevisionId: targetDetails.baseRevisionId
-              };
-              targets.push(targetObj);
+        const targetRids = data.targetBoard.targets;
+        const targetColumnIds = data.targetBoard.targetColumnIds || {};
+        const columns = data.targetBoard.configuration?.columns || [];
+
+        for (const targetRid of targetRids) {
+          // Find the column for this target
+          const targetColumnMapping = targetColumnIds[targetRid];
+          const columnId = targetColumnMapping?.columnId;
+          const column = columns.find((c: any) => c.id === columnId);
+          const columnName = column?.name || columnId || "Unknown";
+
+          const targetDetails = yield call(fetchTargetDetails, targetRid);
+          if (targetDetails && targetDetails.target) {
+            // Normalize location
+            let location: Target["location"] | undefined = undefined;
+            const loc = targetDetails.target.location;
+            if (loc) {
+              if (
+                typeof loc.latitude === "number" &&
+                typeof loc.longitude === "number"
+              ) {
+                location = {
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                  radius: loc.radius ?? 100,
+                  elevation: loc.elevation ?? 0,
+                };
+              } else if (
+                loc.manualLocation &&
+                typeof loc.manualLocation.lat === "number" &&
+                typeof loc.manualLocation.lng === "number"
+              ) {
+                location = {
+                  latitude: loc.manualLocation.lat,
+                  longitude: loc.manualLocation.lng,
+                  radius: loc.radius ?? 100,
+                  elevation: loc.manualLocation.elevation ?? 0,
+                };
+              } else if (
+                loc.center &&
+                typeof loc.center.latitude === "number" &&
+                typeof loc.center.longitude === "number"
+              ) {
+                location = {
+                  latitude: loc.center.latitude,
+                  longitude: loc.center.longitude,
+                  radius: loc.radius ?? 100,
+                  elevation: loc.center.elevation ?? 0,
+                };
+              }
             }
+            const targetObj: Target = {
+              rid: targetDetails.target.rid,
+              name: targetDetails.target.name,
+              column: columnName,
+              location,
+              baseRevisionId: targetDetails.baseRevisionId,
+            };
+            targets.push(targetObj);
           }
         }
         yield put(setTargets(targets));
       }
+
     } else {
       const error = yield response.json();
       console.error('Error fetching targets for board:', error);
@@ -115,6 +158,7 @@ function* fetchTargetsForBoard(): any {
     console.error('Error in fetchTargetsForBoard saga: ', error);
   }
 }
+
 
 function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   try {
