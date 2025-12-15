@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PayloadAction } from '@reduxjs/toolkit';
-import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
-import { THIRD_PARTY_APP } from '../../config';
-import { selectLoadedTargetBoard } from './targetApiGateway.selectors';
+import { PayloadAction } from "@reduxjs/toolkit";
+import { call, delay, put, select, takeLatest } from "redux-saga/effects";
+import { THIRD_PARTY_APP } from "../../config";
+import { selectLoadedTargetBoard } from "./targetApiGateway.selectors";
 import {
   addObservation,
   AddObservationPayload,
@@ -29,24 +29,27 @@ import {
   setCreateTargetError,
   setCreateTargetResponse,
   setTargets,
-  Target
-} from './targetApiGateway.slice';
-import auth from "../../auth"
+  Target,
+} from "./targetApiGateway.slice";
+import auth from "../../client/auth";
 
 function* fetchTargetDetails(targetRid: string): any {
   try {
-    const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
-    const token = tokenObj.access_token;
-    
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
     );
 
     if (response.ok) {
@@ -54,31 +57,34 @@ function* fetchTargetDetails(targetRid: string): any {
       return target;
     } else {
       const error = yield response.json();
-      console.error('Error fetching target details:', error);
+      console.error("Error fetching target details:", error);
       return null;
     }
   } catch (error) {
-    console.error('Error in fetchTargetDetails saga:', error);
+    console.error("Error in fetchTargetDetails saga:", error);
     return null;
   }
 }
 
 function* fetchTargetsForBoard(): any {
   try {
-    const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
-    const token = tokenObj.access_token;
-    
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
     const boardRid = yield select(selectLoadedTargetBoard);
 
     const response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
     );
 
     if (response.ok) {
@@ -148,23 +154,21 @@ function* fetchTargetsForBoard(): any {
         }
         yield put(setTargets(targets));
       }
-
     } else {
       const error = yield response.json();
-      console.error('Error fetching targets for board:', error);
+      console.error("Error fetching targets for board:", error);
     }
   } catch (error) {
-    console.error('Error in fetchTargetsForBoard saga: ', error);
+    console.error("Error in fetchTargetsForBoard saga: ", error);
   }
 }
 
-
 function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   try {
-    const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
-    const token = tokenObj.access_token;
-    
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
     const payload = {
       name: action.payload.name,
       targetBoard: action.payload.targetBoardId,
@@ -174,10 +178,10 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
           lat: action.payload.latitude,
           lng: action.payload.longitude,
           circularErrorInMeters: action.payload.radius || 100.0,
-          hae: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
-          msl: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
-          agl: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
-        }
+          hae: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
+          msl: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
+          agl: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
+        },
       },
       security: {
         portionMarkings: action.payload.classificationMarkings || [],
@@ -187,14 +191,17 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
     };
 
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target?preview=true`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target?preview=true`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      )
     );
 
     if (response.ok) {
@@ -206,16 +213,21 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
       throw new Error(error.message);
     }
   } catch (error: any) {
-    yield put(setCreateTargetError(error.message || 'An error occurred while creating target.'));
-    console.error('Error in createNewTarget saga: ', error);
+    yield put(
+      setCreateTargetError(
+        error.message || "An error occurred while creating target."
+      )
+    );
+    console.error("Error in createNewTarget saga: ", error);
   }
 }
 
 function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
   try {
-    const tokenObj = yield call([auth, auth.refresh]);
-    if (!tokenObj || !tokenObj.access_token) throw new Error('Authentication failed');
-    const token = tokenObj.access_token;
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
 
     const payload = {
       name: action.payload.name,
@@ -226,19 +238,22 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
           latitude: action.payload.latitude,
           elevation: action.payload.elevation,
         },
-        radius: action.payload.radius
-      }
+        radius: action.payload.radius,
+      },
     };
 
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${action.payload.targetId}?preview=true`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${action.payload.targetId}?preview=true`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      )
     );
 
     if (response.ok) {
@@ -250,23 +265,33 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       throw new Error(error.message);
     }
   } catch (error: any) {
-    yield put(setAddObservationError(error.message || 'An error occurred while adding observation.'));
-    console.error('Error in addNewObservation saga: ', error);
+    yield put(
+      setAddObservationError(
+        error.message || "An error occurred while adding observation."
+      )
+    );
+    console.error("Error in addNewObservation saga: ", error);
   }
 }
 
 export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
-  yield takeLatest(loadTargets.type, function*() {
+  yield takeLatest(loadTargets.type, function* () {
     yield fetchTargetsForBoard();
   });
-  yield takeLatest(loadTargetsWithoutLoading.type, function*() {
+  yield takeLatest(loadTargetsWithoutLoading.type, function* () {
     yield delay(3000);
     yield fetchTargetsForBoard();
   });
-  yield takeLatest(createTarget.type, function* (action: PayloadAction<CreateTargetPayload>) {
-    yield createNewTarget(action);
-  });
-  yield takeLatest(addObservation.type, function* (action: PayloadAction<AddObservationPayload>) {
-    yield addNewObservation(action);
-  });
+  yield takeLatest(
+    createTarget.type,
+    function* (action: PayloadAction<CreateTargetPayload>) {
+      yield createNewTarget(action);
+    }
+  );
+  yield takeLatest(
+    addObservation.type,
+    function* (action: PayloadAction<AddObservationPayload>) {
+      yield addNewObservation(action);
+    }
+  );
 }

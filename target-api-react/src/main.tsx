@@ -13,44 +13,76 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Spinner } from '@blueprintjs/core';
-import { SpinnerSize } from '@blueprintjs/core/lib/esm/components/spinner/spinner';
-import React, { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom/client'; // <-- updated for React 18+
-import { Provider, useSelector } from 'react-redux';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import store from './app/store';
-import NoLocationTable from './components/NoLocationTable';
-import TargetMap from './components/TargetMap';
-import TargetView from './components/TargetView';
-import { selectLoading } from './features/targetApiGateway/targetApiGateway.selectors';
-import AuthCallback from './AuthCallback';
-import auth from './auth'; // <-- import your auth client
-import './index.scss';
+import { Spinner } from "@blueprintjs/core";
+import { SpinnerSize } from "@blueprintjs/core/lib/esm/components/spinner/spinner";
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom/client"; // <-- updated for React 18+
+import { Provider, useSelector } from "react-redux";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import store from "./app/store";
+import NoLocationTable from "./components/NoLocationTable";
+import TargetMap from "./components/TargetMap";
+import TargetView from "./components/TargetView";
+import { selectLoading } from "./features/targetApiGateway/targetApiGateway.selectors";
+import AuthCallback from "./AuthCallback";
+import auth from "./client/auth"; // <-- import your auth client
+import "./index.scss";
 
-// Inline AppAuthGate component using auth.refresh()
+// Simple AppAuthGate component
 const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [ready, setReady] = useState(false);
+  const [authState, setAuthState] = useState<
+    "loading" | "authenticated" | "unauthenticated"
+  >("loading");
 
   useEffect(() => {
-    let cancelled = false;
-    auth.refresh()
-      .then(token => {
-        if (cancelled) return;
-        if (!token) {
-          auth.signIn();
-        } else {
-          setReady(true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) auth.signIn();
-      });
-    return () => { cancelled = true; };
+    // Skip auth check on callback page
+    if (window.location.pathname === "/auth/callback") {
+      return;
+    }
+
+    // Check for token
+    const hasToken = auth.getToken() !== undefined;
+
+    if (hasToken) {
+      setAuthState("authenticated");
+    } else {
+      // Try to sign in
+      auth
+        .signIn()
+        .then(() => setAuthState("authenticated"))
+        .catch(() => setAuthState("unauthenticated"));
+    }
   }, []);
 
-  if (!ready) {
-    return <div>Signing in...</div>;
+  if (authState === "loading") {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <div style={{ marginBottom: "20px" }}>Signing in...</div>
+        <Spinner intent="primary" size={SpinnerSize.LARGE} />
+      </div>
+    );
+  }
+
+  if (authState === "unauthenticated") {
+    return (
+      <div style={{ textAlign: "center", padding: "20px" }}>
+        <h2>Authentication Required</h2>
+        <button
+          onClick={() => auth.signIn()}
+          style={{ padding: "10px 20px", fontSize: "16px" }}
+        >
+          Sign In
+        </button>
+      </div>
+    );
   }
 
   return <>{children}</>;
@@ -61,8 +93,13 @@ const App: React.FC = () => {
   const loading = useSelector(selectLoading);
   const [modalContent, setModalContent] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<any>(null);
-  const [targetsWithoutLocation, setTargetsWithoutLocation] = useState<any[]>([]);
-  const [contextMenuLocation, setContextMenuLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [targetsWithoutLocation, setTargetsWithoutLocation] = useState<any[]>(
+    []
+  );
+  const [contextMenuLocation, setContextMenuLocation] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
 
   return (
     <div className="main-container">
@@ -102,10 +139,10 @@ const App: React.FC = () => {
   );
 };
 
-// Create the router, wrapping App in AppAuthGate
+// Create the router with improved routes
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: (
       <AppAuthGate>
         <App />
@@ -113,13 +150,24 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/auth/callback',
+    path: "/auth/callback",
     element: <AuthCallback />,
+  },
+  // Fallback route to handle any other paths
+  {
+    path: "*",
+    element: (
+      <div style={{ textAlign: "center", padding: "20px" }}>
+        <h2>Page Not Found</h2>
+        <p>The page you're looking for doesn't exist.</p>
+        <a href="/">Go Home</a>
+      </div>
+    ),
   },
 ]);
 
 // Render with RouterProvider and Provider
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
     <RouterProvider router={router} />
   </Provider>
