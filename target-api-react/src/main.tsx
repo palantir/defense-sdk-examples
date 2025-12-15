@@ -16,15 +16,18 @@
 import { Spinner } from '@blueprintjs/core';
 import { SpinnerSize } from '@blueprintjs/core/lib/esm/components/spinner/spinner';
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client'; // <-- updated for React 18+
 import { Provider, useSelector } from 'react-redux';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import store from './app/store';
 import NoLocationTable from './components/NoLocationTable';
 import TargetMap from './components/TargetMap';
 import TargetView from './components/TargetView';
 import { selectLoading } from './features/targetApiGateway/targetApiGateway.selectors';
+import AuthCallback from './AuthCallback'; // <-- import your AuthCallback
 import './index.scss';
 
+// Your main App component as before
 const App: React.FC = () => {
   const loading = useSelector(selectLoading);
   const [modalContent, setModalContent] = useState<string | null>(null);
@@ -58,24 +61,33 @@ const App: React.FC = () => {
             modalContent={modalContent}
             contextMenuLocation={contextMenuLocation}
           />
-          {
-            targetsWithoutLocation.length > 0 && (
-              <NoLocationTable
-                targetsWithoutLocation={targetsWithoutLocation}
-                setSelectedTarget={setSelectedTarget}
-              />
-            )
-          }
+          {targetsWithoutLocation.length > 0 && (
+            <NoLocationTable
+              targetsWithoutLocation={targetsWithoutLocation}
+              setSelectedTarget={setSelectedTarget}
+            />
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const container = document.getElementById('root');
-ReactDOM.render(
+// Create the router
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />,
+  },
+]);
+
+// Render with RouterProvider and Provider
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
-    <App />
-  </Provider>,
-  container
+    <RouterProvider router={router} />
+  </Provider>
 );

@@ -16,7 +16,7 @@
 import { PayloadAction } from '@reduxjs/toolkit';
 import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
 import { THIRD_PARTY_APP } from '../../config';
-import { selectLoadedTargetBoard, selectServiceUserToken } from './targetApiGateway.selectors';
+import { selectLoadedTargetBoard } from './targetApiGateway.selectors';
 import {
   addObservation,
   AddObservationPayload,
@@ -28,47 +28,16 @@ import {
   setAddObservationResponse,
   setCreateTargetError,
   setCreateTargetResponse,
-  setServiceUserToken,
   setTargets,
   Target
 } from './targetApiGateway.slice';
-
-function* fetchAuthToken(): any {
-  try {
-    const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/multipass/api/oauth2/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: THIRD_PARTY_APP.CLIENT_ID,
-          client_secret: THIRD_PARTY_APP.CLIENT_SECRET,
-        }),
-      })
-    );
-
-    if (response.ok) {
-      const data = yield response.json();
-      const token = data.access_token;
-      yield put(setServiceUserToken(token));
-      return token;
-    } else {
-      const error = yield response.json();
-      console.error('Error fetching auth token:', error);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error in fetchAuthToken saga:', error);
-    return null;
-  }
-}
+import auth from "../../auth"
 
 function* fetchTargetDetails(targetRid: string): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
+    const tokenObj = yield call([auth, auth.refresh]);
+    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
+    const token = tokenObj.accessToken;
 
     const response: Response = yield call(() =>
       fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`, {
@@ -96,9 +65,10 @@ function* fetchTargetDetails(targetRid: string): any {
 
 function* fetchTargetsForBoard(): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
-
+    const tokenObj = yield call([auth, auth.refresh]);
+    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
+    const token = tokenObj.accessToken;
+    
     const boardRid = yield select(selectLoadedTargetBoard);
 
     const response = yield call(() =>
@@ -147,8 +117,10 @@ function* fetchTargetsForBoard(): any {
 
 function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
+    const tokenObj = yield call([auth, auth.refresh]);
+    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
+    const token = tokenObj.accessToken;
+    
 
     const payload = {
       name: action.payload.name,
@@ -198,8 +170,10 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
 
 function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
+    const tokenObj = yield call([auth, auth.refresh]);
+    if (!tokenObj || !tokenObj.accessToken) throw new Error('Authentication failed');
+    const token = tokenObj.accessToken;
+    
 
     const payload = {
       name: action.payload.name,
@@ -241,20 +215,16 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
 
 export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
   yield takeLatest(loadTargets.type, function*() {
-    yield fetchAuthToken();
     yield fetchTargetsForBoard();
   });
   yield takeLatest(loadTargetsWithoutLoading.type, function*() {
-    yield fetchAuthToken();
     yield delay(3000);
     yield fetchTargetsForBoard();
   });
   yield takeLatest(createTarget.type, function* (action: PayloadAction<CreateTargetPayload>) {
-    yield fetchAuthToken();
     yield createNewTarget(action);
   });
   yield takeLatest(addObservation.type, function* (action: PayloadAction<AddObservationPayload>) {
-    yield fetchAuthToken();
     yield addNewObservation(action);
   });
 }

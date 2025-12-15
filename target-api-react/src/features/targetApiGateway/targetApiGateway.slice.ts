@@ -52,7 +52,6 @@ export interface AddObservationPayload {
 }
 
 interface TargetApiGatewayState {
-  serviceUserToken: string | null;
   loadedTargetBoardArtifactId: string | null;
   targetBoardTargets: Target[];
   loadedTargetRid: string;
@@ -64,7 +63,6 @@ interface TargetApiGatewayState {
 }
 
 const initialState: TargetApiGatewayState = {
-  serviceUserToken: null,
   loadedTargetBoardArtifactId: null,
   targetBoardTargets: [],
   loadedTargetRid: 'ri.gotham-artifact.3736180562172569377-2123486733096639170.cosmos-situation.E1EMjnkk73B6GkYsAr',
@@ -86,9 +84,6 @@ const targetApiGatewaySlice = createSlice({
     loadTarget: (_state) => {},
     createTarget: (_state, _action: PayloadAction<CreateTargetPayload>) => {},
     addObservation: (_state, _action: PayloadAction<AddObservationPayload>) => {},
-    setServiceUserToken: (state, action: PayloadAction<string>) => {
-      state.serviceUserToken = action.payload;
-    },
     setSelectedTargetBoard: (state, action: PayloadAction<string>) => {
       state.loadedTargetBoardArtifactId = action.payload;
     },
@@ -128,7 +123,6 @@ export const {
   loadTarget,
   createTarget,
   addObservation,
-  setServiceUserToken,
   setSelectedTargetBoard,
   setTargets,
   setSelectedTarget,

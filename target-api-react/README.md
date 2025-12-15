@@ -3,20 +3,15 @@
 ### Try It Out!
 This application demonstrates how to use Palantir's Target API Gateway in React (Typescript).  
 
-To try this yourself, navigate to the **Developer Console** application in your Foundry enrollment.  If you don't already have a third party app (confidential client).  You will need to copy the client secret when it's provided and use it in the next step. 
+To try this yourself, navigate to the **Developer Console** application in your Foundry enrollment.  You will need to make an **unscoped public OAuth client**.  To do this, select "No, I will not use an Ontology SDK" and a "Client-facing application" for the application type.  Be sure to set autofill the redirect URL with http://localhost:8080/auth/callback.  Once you create the client, you will need to copy the client ID from the "OAuth & permissions" tab and use in the next step.
 
 <br>
 
 Next, create a `.env` file at the project folder target-api-react/ and populate it with:
-    
 
-    VITE_CLIENT_URL=https://<foundry hostname>
-    VITE_CLIENT_ID=<client id>
-    VITE_CLIENT_SECRET=<client secret>
-    VITE_REDIRECT_URL=http://localhost:8080/auth/callback
-
-
-  You can get the `<client id>` value from your developer console third party application &rarr; Permissions &rarr; OAuth & Scopes &rarr; copy the Client ID value.
+    VITE_FOUNDRY_CLIENT_ID=<client id>
+    VITE_FOUNDRY_REDIRECT_URL=http://localhost:8080/auth/callback
+    VITE_FOUNDRY_API_URL=https://<foundry hostname>
 
 If applicable to your enrollment, make sure that you set your DOD root certificate, e.g.:
 
