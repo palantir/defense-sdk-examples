@@ -13,11 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Icon, IconSize } from '@blueprintjs/core';
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectCreateTargetError, selectCreateTargetResponse } from '../../features/targetApiGateway/targetApiGateway.selectors';
-import { clearCreateTargetResponse, createTarget, CreateTargetPayload, loadTargetsWithoutLoading } from '../../features/targetApiGateway/targetApiGateway.slice';
+import { Icon, IconSize } from "@blueprintjs/core";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  selectCreateTargetError,
+  selectCreateTargetResponse,
+} from "../../features/targetApiGateway/targetApiGateway.selectors";
+import {
+  clearCreateTargetResponse,
+  createTarget,
+  CreateTargetPayload,
+  loadTargetsWithoutLoading,
+} from "../../features/targetApiGateway/targetApiGateway.slice";
 
 interface CreateTargetProps {
   selectedBoard: string | null;
@@ -26,7 +34,12 @@ interface CreateTargetProps {
   initialLon: number;
 }
 
-const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, initialLat, initialLon }) => {
+const CreateTarget: React.FC<CreateTargetProps> = ({
+  selectedBoard,
+  onClose,
+  initialLat,
+  initialLon,
+}) => {
   const dispatch = useDispatch();
   const createTargetResponse = useSelector(selectCreateTargetResponse);
   const createTargetError = useSelector(selectCreateTargetError);
@@ -48,11 +61,15 @@ const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, ini
     column: "DRAFT",
   });
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
-  const [hasDispatchedLoadTargets, setHasDispatchedLoadTargets] = useState(false);
+  const [hasDispatchedLoadTargets, setHasDispatchedLoadTargets] =
+    useState(false);
 
   useEffect(() => {
     if (selectedBoard) {
-      setFormData(prevState => ({ ...prevState, targetBoardId: selectedBoard }));
+      setFormData((prevState) => ({
+        ...prevState,
+        targetBoardId: selectedBoard,
+      }));
     }
   }, [selectedBoard]);
 
@@ -66,19 +83,28 @@ const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, ini
     if (createTargetResponse && !hasDispatchedLoadTargets) {
       dispatch(loadTargetsWithoutLoading());
       setHasDispatchedLoadTargets(true);
+      onClose();
     }
-  }, [createTargetResponse, dispatch, hasDispatchedLoadTargets]);
+  }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: name === 'classificationMarkings' ? value.split(',').map(item => item.trim()).join(',') : value
+      [name]:
+        name === "classificationMarkings"
+          ? value
+              .split(",")
+              .map((item) => item.trim())
+              .join(",")
+          : value,
     }));
     if (errors[name]) {
-      setErrors(prevState => ({
+      setErrors((prevState) => ({
         ...prevState,
-        [name]: false
+        [name]: false,
       }));
     }
     dispatch(clearCreateTargetResponse());
@@ -87,11 +113,20 @@ const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, ini
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const requiredFields: (keyof typeof formData)[] = ['targetBoardId', 'classificationMarkings', 'name', 'description', 'targetType', 'observationTimestamp', 'latitude', 'longitude'];
+    const requiredFields: (keyof typeof formData)[] = [
+      "targetBoardId",
+      "classificationMarkings",
+      "name",
+      "description",
+      "targetType",
+      "observationTimestamp",
+      "latitude",
+      "longitude",
+    ];
     const newErrors: { [key: string]: boolean } = {};
     let hasErrors = false;
 
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!formData[field]) {
         newErrors[field] = true;
         hasErrors = true;
@@ -106,8 +141,10 @@ const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, ini
         latitude: parseFloat(formData.latitude),
         longitude: parseFloat(formData.longitude),
         radius: parseFloat(formData.radius),
-        classificationMarkings: formData.classificationMarkings.split(',').map(item => item.trim()),
-        observationTimestamp: formData.observationTimestamp
+        classificationMarkings: formData.classificationMarkings
+          .split(",")
+          .map((item) => item.trim()),
+        observationTimestamp: formData.observationTimestamp,
       };
 
       dispatch(createTarget(payload));
@@ -124,36 +161,74 @@ const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, ini
         <div className="form-container">
           <form className="modal-form" onSubmit={handleSubmit}>
             {[
-              { name: 'targetBoardId', type: 'text', placeholder: 'Enter Target Board ID' },
-              { name: 'column', type: 'text', placeholder: 'Enter Target Board Column' },
-              { name: 'classificationMarkings', type: 'text', placeholder: 'Enter Classification Markings (comma-separated)' },
-              { name: 'name', type: 'text', placeholder: 'Enter Name' },
-              { name: 'description', type: 'text', placeholder: 'Enter Description' },
-              { name: 'targetType', type: 'text', placeholder: 'Enter Target Type' },
-              { name: 'observationTimestamp', type: 'text', placeholder: 'Enter Observation Timestamp' },
-              { name: 'latitude', type: 'number', placeholder: 'Enter Latitude' },
-              { name: 'longitude', type: 'number', placeholder: 'Enter Longitude' },
-              { name: 'radius', type: 'number', placeholder: 'Enter Radius' }
-            ].map(input => (
+              {
+                name: "targetBoardId",
+                type: "text",
+                placeholder: "Enter Target Board ID",
+              },
+              {
+                name: "column",
+                type: "text",
+                placeholder: "Enter Target Board Column",
+              },
+              {
+                name: "classificationMarkings",
+                type: "text",
+                placeholder: "Enter Classification Markings (comma-separated)",
+              },
+              { name: "name", type: "text", placeholder: "Enter Name" },
+              {
+                name: "description",
+                type: "text",
+                placeholder: "Enter Description",
+              },
+              {
+                name: "targetType",
+                type: "text",
+                placeholder: "Enter Target Type",
+              },
+              {
+                name: "observationTimestamp",
+                type: "text",
+                placeholder: "Enter Observation Timestamp",
+              },
+              {
+                name: "latitude",
+                type: "number",
+                placeholder: "Enter Latitude",
+              },
+              {
+                name: "longitude",
+                type: "number",
+                placeholder: "Enter Longitude",
+              },
+              { name: "radius", type: "number", placeholder: "Enter Radius" },
+            ].map((input) => (
               <div key={input.name} className="form-group">
                 <label htmlFor={input.name}>{input.name}</label>
                 <input
                   type={input.type}
                   id={input.name}
                   name={input.name}
-                  value={formData[input.name as keyof typeof formData] || ''}
+                  value={formData[input.name as keyof typeof formData] || ""}
                   placeholder={input.placeholder}
                   onChange={handleInputChange}
                   required
-                  className={errors[input.name] ? 'input-error' : ''}
+                  className={errors[input.name] ? "input-error" : ""}
                 />
-                {errors[input.name] && <span className="error-text">This field is required</span>}
+                {errors[input.name] && (
+                  <span className="error-text">This field is required</span>
+                )}
               </div>
             ))}
-            <button type="submit" className="submit-button">Submit</button>
+            <button type="submit" className="submit-button">
+              Submit
+            </button>
           </form>
           <div className="response-panel">
-            {createTargetError && <div className="error-message">{createTargetError}</div>}
+            {createTargetError && (
+              <div className="error-message">{createTargetError}</div>
+            )}
             {createTargetResponse && (
               <div className="response-message">
                 <pre>{JSON.stringify(createTargetResponse, null, 2)}</pre>
