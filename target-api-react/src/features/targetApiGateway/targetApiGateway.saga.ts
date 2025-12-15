@@ -71,7 +71,7 @@ function* fetchTargetDetails(targetRid: string): any {
     if (!token) throw new Error('Authentication failed');
 
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/target/${targetRid}?preview=true`, {
+      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -102,7 +102,7 @@ function* fetchTargetsForBoard(): any {
     const boardRid = yield select(selectLoadedTargetBoard);
 
     const response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/targetCollection/${boardRid}?preview=true`, {
+      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -152,24 +152,27 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
 
     const payload = {
       name: action.payload.name,
-      collection: action.payload.targetBoardId,
+      targetBoard: action.payload.targetBoardId,
       column: action.payload.column,
       location: {
-        center: {
-          longitude: action.payload.longitude,
-          latitude: action.payload.latitude
-        },
-        radius: action.payload.radius
+        manualLocation: {
+          lat: action.payload.latitude,
+          lng: action.payload.longitude,
+          circularErrorInMeters: action.payload.radius || 100.0,
+          hae: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
+          msl: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
+          agl: { elevationInMeters: 0.0, "linearErrorInMeters": 0.0 },
+        }
       },
       security: {
-        portionMarkings: action.payload.classificationMarkings || []
+        portionMarkings: action.payload.classificationMarkings || [],
       },
-      targetType: action.payload.targetType || 'Unknown',  
-      description: action.payload.description || ''
+      targetType: action.payload.targetType || "Unknown",
+      description: action.payload.description || "",
     };
 
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/target?preview=true`, {
+      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target?preview=true`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -212,7 +215,7 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
     };
 
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/target/${action.payload.targetId}?preview=true`, {
+      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${action.payload.targetId}?preview=true`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

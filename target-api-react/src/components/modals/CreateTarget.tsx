@@ -38,14 +38,14 @@ const CreateTarget: React.FC<CreateTargetProps> = ({ selectedBoard, onClose, ini
   const [formData, setFormData] = useState({
     latitude: initialLat.toString(),
     longitude: initialLon.toString(),
-    classificationMarkings: 'MU',
+    classificationMarkings: "U",
     observationTimestamp: getCurrentUTCTimestamp(),
-    targetBoardId: selectedBoard || '',
-    name: '',
-    targetType: '',
-    description: '',
+    targetBoardId: selectedBoard || "",
+    name: "",
+    targetType: "ADA",
+    description: "",
     radius: "1.0",
-    column: 'DRAFT',
+    column: "DRAFT",
   });
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [hasDispatchedLoadTargets, setHasDispatchedLoadTargets] = useState(false);
