@@ -179,14 +179,12 @@ function* fetchTargetsForBoard(): any {
         const targetColumnIds = data.targetBoard.targetColumnIds || {};
         const columns = data.targetBoard.configuration?.columns || [];
 
-        // Extract column IDs for dropdown
         if (columns && columns.length > 0) {
           const columnIds = columns.map((column: any) => column.id);
           yield put(setTargetBoardColumns(columnIds));
         }
 
         for (const targetRid of targetRids) {
-          // Find the column for this target
           const targetColumnMapping = targetColumnIds[targetRid];
           const columnId = targetColumnMapping?.columnId;
           const column = columns.find((c: any) => c.id === columnId);
@@ -301,106 +299,13 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
 
     if (response.ok) {
       const data = yield response.json();
-      const targetRid = data.targetRid; // Use the correct property name
+      const targetRid = data.targetRid;
       console.log("Target created successfully. Target RID:", targetRid);
       yield put(setCreateTargetResponse(data));
       yield put(setCreateTargetError(null));
 
-      // If we have a target ID, load the target details to get complete information
       if (targetRid) {
-        console.log("Fetching details for newly created target:", targetRid);
-        try {
-          // Debug: Explicitly fetch the target details
-          let fetchToken = yield call(auth.getToken);
-          const targetResponse: Response = yield call(() =>
-            fetch(
-              `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`,
-              {
-                method: "GET",
-                headers: {
-                  Authorization: `Bearer ${fetchToken}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            )
-          );
-
-          if (targetResponse.ok) {
-            const targetData = yield targetResponse.json();
-            console.log("Target details fetched:", targetData);
-
-            // Process target data
-            if (targetData && targetData.target) {
-              // Normalize location for state update
-              let location: Target["location"] | undefined = undefined;
-              const loc = targetData.target.location;
-              if (loc) {
-                if (
-                  typeof loc.latitude === "number" &&
-                  typeof loc.longitude === "number"
-                ) {
-                  location = {
-                    latitude: loc.latitude,
-                    longitude: loc.longitude,
-                    radius: loc.radius ?? 100,
-                    elevation: loc.elevation ?? 0,
-                  };
-                } else if (
-                  loc.manualLocation &&
-                  typeof loc.manualLocation.lat === "number" &&
-                  typeof loc.manualLocation.lng === "number"
-                ) {
-                  location = {
-                    latitude: loc.manualLocation.lat,
-                    longitude: loc.manualLocation.lng,
-                    radius: loc.radius ?? 100,
-                    elevation: loc.manualLocation.elevation ?? 0,
-                  };
-                } else if (
-                  loc.center &&
-                  typeof loc.center.latitude === "number" &&
-                  typeof loc.center.longitude === "number"
-                ) {
-                  location = {
-                    latitude: loc.center.latitude,
-                    longitude: loc.center.longitude,
-                    radius: loc.radius ?? 100,
-                    elevation: loc.center.elevation ?? 0,
-                  };
-                }
-              }
-
-              // If no location found in the response, use the values from the form
-              if (!location) {
-                location = {
-                  latitude: action.payload.latitude,
-                  longitude: action.payload.longitude,
-                  radius: action.payload.radius || 100,
-                  elevation: 0,
-                };
-              }
-
-              // Create target object
-              const targetObj: Target = {
-                rid: targetRid,
-                name: targetData.target.name || action.payload.name,
-                column: action.payload.column,
-                location,
-                baseRevisionId: targetData.baseRevisionId || 0,
-              };
-
-              console.log("Updating state with target:", targetObj);
-              yield put(updateSingleTarget(targetObj));
-            }
-          } else {
-            console.error("Failed to fetch target details after creation");
-          }
-        } catch (fetchError) {
-          console.error(
-            "Error fetching target details after creation:",
-            fetchError
-          );
-        }
+        yield call(fetchTargetDetails, targetRid, true);
       }
     } else {
       const error = yield response.json();
@@ -454,7 +359,6 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       yield put(setAddObservationResponse(data));
       yield put(setAddObservationError(null));
 
-      // Reload just the updated target
       yield call(fetchTargetDetails, action.payload.targetId, true);
     } else {
       const error = yield response.json();
