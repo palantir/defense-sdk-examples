@@ -28,6 +28,7 @@ import {
   setAddObservationResponse,
   setCreateTargetError,
   setCreateTargetResponse,
+  setTargetBoardColumns,
   setTargets,
   Target,
 } from "./targetApiGateway.slice";
@@ -94,6 +95,12 @@ function* fetchTargetsForBoard(): any {
         const targetRids = data.targetBoard.targets;
         const targetColumnIds = data.targetBoard.targetColumnIds || {};
         const columns = data.targetBoard.configuration?.columns || [];
+
+        // Extract column IDs for dropdown
+        if (columns && columns.length > 0) {
+          const columnIds = columns.map((column: any) => column.id);
+          yield put(setTargetBoardColumns(columnIds));
+        }
 
         for (const targetRid of targetRids) {
           // Find the column for this target

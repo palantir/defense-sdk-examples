@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Target {
-  rid: string,
-  name: string,
-  column: string,
+  rid: string;
+  name: string;
+  column: string;
   location?: {
     latitude: number;
     longitude: number;
     radius: number;
     elevation: number;
-  },
+  };
   baseRevisionId: number;
 }
 
@@ -54,6 +54,7 @@ export interface AddObservationPayload {
 interface TargetApiGatewayState {
   loadedTargetBoardArtifactId: string | null;
   targetBoardTargets: Target[];
+  targetBoardColumns: string[];
   loadedTargetRid: string;
   createTargetResponse: any | null;
   addObservationResponse: any | null;
@@ -65,7 +66,9 @@ interface TargetApiGatewayState {
 const initialState: TargetApiGatewayState = {
   loadedTargetBoardArtifactId: null,
   targetBoardTargets: [],
-  loadedTargetRid: 'ri.gotham-artifact.3736180562172569377-2123486733096639170.cosmos-situation.E1EMjnkk73B6GkYsAr',
+  targetBoardColumns: [],
+  loadedTargetRid:
+    "ri.gotham-artifact.3736180562172569377-2123486733096639170.cosmos-situation.E1EMjnkk73B6GkYsAr",
   createTargetResponse: null,
   addObservationResponse: null,
   createTargetError: null,
@@ -74,7 +77,7 @@ const initialState: TargetApiGatewayState = {
 };
 
 const targetApiGatewaySlice = createSlice({
-  name: 'targetApiGateway',
+  name: "targetApiGateway",
   initialState,
   reducers: {
     loadTargets: (state) => {
@@ -83,13 +86,19 @@ const targetApiGatewaySlice = createSlice({
     loadTargetsWithoutLoading: (_state) => {},
     loadTarget: (_state) => {},
     createTarget: (_state, _action: PayloadAction<CreateTargetPayload>) => {},
-    addObservation: (_state, _action: PayloadAction<AddObservationPayload>) => {},
+    addObservation: (
+      _state,
+      _action: PayloadAction<AddObservationPayload>
+    ) => {},
     setSelectedTargetBoard: (state, action: PayloadAction<string>) => {
       state.loadedTargetBoardArtifactId = action.payload;
     },
     setTargets: (state, action: PayloadAction<Target[]>) => {
       state.targetBoardTargets = action.payload;
       state.loading = false;
+    },
+    setTargetBoardColumns: (state, action: PayloadAction<string[]>) => {
+      state.targetBoardColumns = action.payload;
     },
     setSelectedTarget: (state, action: PayloadAction<string>) => {
       state.loadedTargetRid = action.payload;
@@ -132,6 +141,7 @@ export const {
   setAddObservationError,
   clearCreateTargetResponse,
   clearAddObservationResponse,
+  setTargetBoardColumns,
 } = targetApiGatewaySlice.actions;
 
 export default targetApiGatewaySlice.reducer;

@@ -15,11 +15,21 @@
  */
 import { RootState } from "../../app/store";
 
-export const selectLoadedTargetBoard = (state: RootState) => state.targetApiGateway.loadedTargetBoardArtifactId;
-export const selectTargetBoardTargets = (state: RootState) => state.targetApiGateway.targetBoardTargets;
-export const selectLoadedTarget = (state: RootState) => state.targetApiGateway.loadedTargetRid;
-export const selectAddObservationResponse = (state: RootState) => state.targetApiGateway.addObservationResponse;
-export const selectAddObservationError = (state: RootState) => state.targetApiGateway.addObservationError;
-export const selectCreateTargetResponse = (state: RootState) => state.targetApiGateway.createTargetResponse;
-export const selectCreateTargetError = (state: RootState) => state.targetApiGateway.createTargetError;
-export const selectLoading = (state: RootState) => state.targetApiGateway.loading;
+export const selectLoadedTargetBoard = (state: RootState) =>
+  state.targetApiGateway.loadedTargetBoardArtifactId;
+export const selectTargetBoardTargets = (state: RootState) =>
+  state.targetApiGateway.targetBoardTargets;
+export const selectTargetBoardColumns = (state: RootState) =>
+  state.targetApiGateway.targetBoardColumns;
+export const selectLoadedTarget = (state: RootState) =>
+  state.targetApiGateway.loadedTargetRid;
+export const selectAddObservationResponse = (state: RootState) =>
+  state.targetApiGateway.addObservationResponse;
+export const selectAddObservationError = (state: RootState) =>
+  state.targetApiGateway.addObservationError;
+export const selectCreateTargetResponse = (state: RootState) =>
+  state.targetApiGateway.createTargetResponse;
+export const selectCreateTargetError = (state: RootState) =>
+  state.targetApiGateway.createTargetError;
+export const selectLoading = (state: RootState) =>
+  state.targetApiGateway.loading;

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 @import "../node_modules/@blueprintjs/core/lib/scss/variables";
-@import '@blueprintjs/core/lib/css/blueprint.css';
+@import "@blueprintjs/core/lib/css/blueprint.css";
 
 body {
   background-color: $dark-gray1;
   color: white;
-  font-family: 'Inconsolata', sans-serif;
+  font-family: "Inconsolata", sans-serif;
   font-size: 16px;
   overflow-y: auto;
 }
 
 h1 {
   color: $vermilion4;
-  font-family: 'Helvetica', sans-serif;
+  font-family: "Helvetica", sans-serif;
   font-size: 32px;
   margin-left: 20px;
 }
@@ -106,9 +106,9 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  
+
   input {
-    font-family: 'Inconsolata', sans-serif;
+    font-family: "Inconsolata", sans-serif;
     font-size: 16px;
     padding: 8px;
     background-color: $dark-gray2;
@@ -117,6 +117,24 @@ h1 {
     border-radius: 4px;
     width: 400px;
   }
+}
+
+.create-target-btn {
+  background-color: $vermilion4;
+  color: $dark-gray1;
+  font-weight: bold;
+  border: 1px solid $dark-gray1;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-left: 10px;
+}
+
+.map-instructions {
+  color: white;
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 10px;
 }
 
 .target-table-container {
@@ -162,7 +180,7 @@ h1 {
 .map-info {
   text-align: right;
   margin-top: 10px;
-  font-family: 'Inconsolata', sans-serif;
+  font-family: "Inconsolata", sans-serif;
   font-size: 14px;
 }
 
@@ -172,7 +190,7 @@ h1 {
 }
 
 .leaflet-popup-content {
-  font-family: 'Inconsolata', sans-serif;
+  font-family: "Inconsolata", sans-serif;
   font-size: 16px;
   color: white;
 }
@@ -194,19 +212,19 @@ h1 {
 
 .leaflet-contextmenu-item {
   color: white !important;
-  font-family: 'Inconsolata', sans-serif !important;
+  font-family: "Inconsolata", sans-serif !important;
   font-size: 14px !important;
   padding: 8px 12px !important;
   display: block;
   position: relative;
-  
+
   &:hover {
     background-color: transparent !important;
   }
 }
 
 .leaflet-contextmenu-item:hover::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 8px;
   right: 8px;

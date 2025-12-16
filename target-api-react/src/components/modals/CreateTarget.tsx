@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   selectCreateTargetError,
   selectCreateTargetResponse,
+  selectTargetBoardColumns,
 } from "../../features/targetApiGateway/targetApiGateway.selectors";
 import {
   clearCreateTargetResponse,
@@ -30,8 +31,8 @@ import {
 interface CreateTargetProps {
   selectedBoard: string | null;
   onClose: () => void;
-  initialLat: number;
-  initialLon: number;
+  initialLat?: number;
+  initialLon?: number;
 }
 
 const CreateTarget: React.FC<CreateTargetProps> = ({
@@ -43,14 +44,15 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   const dispatch = useDispatch();
   const createTargetResponse = useSelector(selectCreateTargetResponse);
   const createTargetError = useSelector(selectCreateTargetError);
+  const targetBoardColumns = useSelector(selectTargetBoardColumns);
 
   const getCurrentUTCTimestamp = (): string => {
     return Date.now().toLocaleString();
   };
 
   const [formData, setFormData] = useState({
-    latitude: initialLat.toString(),
-    longitude: initialLon.toString(),
+    latitude: initialLat !== undefined ? initialLat.toString() : "",
+    longitude: initialLon !== undefined ? initialLon.toString() : "",
     classificationMarkings: "U",
     observationTimestamp: getCurrentUTCTimestamp(),
     targetBoardId: selectedBoard || "",
@@ -88,7 +90,9 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -168,8 +172,8 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
               },
               {
                 name: "column",
-                type: "text",
-                placeholder: "Enter Target Board Column",
+                type: "select",
+                placeholder: "Select Target Board Column",
               },
               {
                 name: "classificationMarkings",
@@ -206,16 +210,35 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
             ].map((input) => (
               <div key={input.name} className="form-group">
                 <label htmlFor={input.name}>{input.name}</label>
-                <input
-                  type={input.type}
-                  id={input.name}
-                  name={input.name}
-                  value={formData[input.name as keyof typeof formData] || ""}
-                  placeholder={input.placeholder}
-                  onChange={handleInputChange}
-                  required
-                  className={errors[input.name] ? "input-error" : ""}
-                />
+                {input.type === "select" ? (
+                  <select
+                    id={input.name}
+                    name={input.name}
+                    value={formData[input.name as keyof typeof formData] || ""}
+                    onChange={handleInputChange}
+                    required
+                    className={errors[input.name] ? "input-error" : ""}
+                  >
+                    <option value="">Select a column</option>
+                    {input.name === "column" &&
+                      targetBoardColumns.map((column) => (
+                        <option key={column} value={column}>
+                          {column}
+                        </option>
+                      ))}
+                  </select>
+                ) : (
+                  <input
+                    type={input.type}
+                    id={input.name}
+                    name={input.name}
+                    value={formData[input.name as keyof typeof formData] || ""}
+                    placeholder={input.placeholder}
+                    onChange={handleInputChange}
+                    required
+                    className={errors[input.name] ? "input-error" : ""}
+                  />
+                )}
                 {errors[input.name] && (
                   <span className="error-text">This field is required</span>
                 )}
