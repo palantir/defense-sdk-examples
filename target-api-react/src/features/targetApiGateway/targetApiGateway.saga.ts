@@ -240,12 +240,11 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       name: action.payload.name,
       baseRevisionId: action.payload.baseRevisionId,
       location: {
-        center: {
-          longitude: action.payload.longitude,
-          latitude: action.payload.latitude,
-          elevation: action.payload.elevation,
-        },
-        radius: action.payload.radius,
+        manualLocation: {
+          lat: action.payload.latitude,
+          lng: action.payload.longitude,
+          circularErrorInMeters: action.payload.radius ?? 0,
+        }
       },
     };
 

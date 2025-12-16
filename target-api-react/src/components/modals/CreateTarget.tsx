@@ -83,9 +83,13 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
 
   useEffect(() => {
     if (createTargetResponse && !hasDispatchedLoadTargets) {
-      dispatch(loadTargetsWithoutLoading());
-      setHasDispatchedLoadTargets(true);
-      onClose();
+      const timer = setTimeout(() => {
+        dispatch(loadTargetsWithoutLoading());
+        setHasDispatchedLoadTargets(true);
+        onClose();
+      }, 1500);
+
+      return () => clearTimeout(timer);
     }
   }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 

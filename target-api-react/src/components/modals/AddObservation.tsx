@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Icon, IconSize } from '@blueprintjs/core';
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectAddObservationError, selectAddObservationResponse } from '../../features/targetApiGateway/targetApiGateway.selectors';
-import { addObservation, AddObservationPayload, clearAddObservationResponse, loadTargetsWithoutLoading, Target } from '../../features/targetApiGateway/targetApiGateway.slice';
+import { Icon, IconSize } from "@blueprintjs/core";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  selectAddObservationError,
+  selectAddObservationResponse,
+} from "../../features/targetApiGateway/targetApiGateway.selectors";
+import {
+  addObservation,
+  AddObservationPayload,
+  clearAddObservationResponse,
+  loadTargetsWithoutLoading,
+  Target,
+} from "../../features/targetApiGateway/targetApiGateway.slice";
 
 interface AddObservationProps {
   selectedTarget: Target;
@@ -26,13 +35,19 @@ interface AddObservationProps {
   initialLon: number;
 }
 
-const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose, initialLat, initialLon }) => {
+const AddObservation: React.FC<AddObservationProps> = ({
+  selectedTarget,
+  onClose,
+  initialLat,
+  initialLon,
+}) => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const addObservationError = useSelector(selectAddObservationError);
   const addObservationResponse = useSelector(selectAddObservationResponse);
-  const [hasDispatchedLoadTargets, setHasDispatchedLoadTargets] = useState(false);
+  const [hasDispatchedLoadTargets, setHasDispatchedLoadTargets] =
+    useState(false);
 
   useEffect(() => {
     if (selectedTarget) {
@@ -44,7 +59,7 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
         longitude: initialLon.toString(),
         radius: selectedTarget.location?.radius.toString() || "1.0",
         elevation: selectedTarget.location?.elevation?.toString() || "0",
-        baseRevisionId: selectedTarget.baseRevisionId.toString()
+        baseRevisionId: selectedTarget.baseRevisionId.toString(),
       });
     }
   }, [selectedTarget, initialLat, initialLon]);
@@ -60,22 +75,25 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
       const timer = setTimeout(() => {
         dispatch(loadTargetsWithoutLoading());
         setHasDispatchedLoadTargets(true);
-      }, 3000);
+        onClose();
+      }, 1500);
 
       return () => clearTimeout(timer);
     }
-  }, [addObservationResponse, dispatch, hasDispatchedLoadTargets]);
+  }, [addObservationResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
     if (errors[name]) {
-      setErrors(prevState => ({
+      setErrors((prevState) => ({
         ...prevState,
-        [name]: false
+        [name]: false,
       }));
     }
     dispatch(clearAddObservationResponse());
@@ -88,11 +106,16 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const requiredFields = ['targetId', 'observationTimestamp', 'latitude', 'longitude'];
+    const requiredFields = [
+      "targetId",
+      "observationTimestamp",
+      "latitude",
+      "longitude",
+    ];
     const newErrors: { [key: string]: boolean } = {};
     let hasErrors = false;
 
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!formData[field]) {
         newErrors[field] = true;
         hasErrors = true;
@@ -104,8 +127,8 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
       const longitude = parseFloat(formData.longitude);
 
       if (!validateLatLon(latitude, longitude)) {
-        newErrors['latitude'] = true;
-        newErrors['longitude'] = true;
+        newErrors["latitude"] = true;
+        newErrors["longitude"] = true;
         hasErrors = true;
       }
     }
@@ -120,7 +143,7 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
         longitude: parseFloat(formData.longitude),
         radius: parseFloat(formData.radius),
         elevation: parseFloat(formData.elevation),
-        baseRevisionId: parseInt(formData.baseRevisionId)
+        baseRevisionId: parseInt(formData.baseRevisionId),
       };
       dispatch(addObservation(observationPayload));
     }
@@ -136,27 +159,53 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
         <div className="form-container">
           <form className="modal-form" onSubmit={handleSubmit}>
             {[
-              { name: 'targetId', type: 'text', placeholder: 'Enter Target ID', readOnly: true },
-              { name: 'name', type: 'text', placeholder: 'Enter Target Name', readOnly: true }, 
-              { name: 'latitude', type: 'number', placeholder: 'Enter Latitude' },
-              { name: 'longitude', type: 'number', placeholder: 'Enter Longitude' },
-              { name: 'radius', type: 'number', placeholder: 'Enter Radius' },
-              { name: 'elevation', type: 'number', placeholder: 'Enter Elevation' }
-            ].map(input => (
+              {
+                name: "targetId",
+                type: "text",
+                placeholder: "Enter Target ID",
+                readOnly: true,
+              },
+              {
+                name: "name",
+                type: "text",
+                placeholder: "Enter Target Name",
+                readOnly: true,
+              },
+              {
+                name: "latitude",
+                type: "number",
+                placeholder: "Enter Latitude",
+              },
+              {
+                name: "longitude",
+                type: "number",
+                placeholder: "Enter Longitude",
+              },
+              { name: "radius", type: "number", placeholder: "Enter Radius" },
+              {
+                name: "elevation",
+                type: "number",
+                placeholder: "Enter Elevation",
+              },
+            ].map((input) => (
               <div key={input.name} className="form-group">
                 <label htmlFor={input.name}>{input.name}</label>
                 <input
                   type={input.type}
                   id={input.name}
                   name={input.name}
-                  value={formData[input.name] || ''}
+                  value={formData[input.name] || ""}
                   placeholder={input.placeholder}
                   onChange={handleInputChange}
                   required
                   readOnly={input.readOnly || false}
-                  className={errors[input.name] ? 'input-error' : ''}
+                  className={errors[input.name] ? "input-error" : ""}
                 />
-                {errors[input.name] && <span className="error-text">This field is required or invalid</span>}
+                {errors[input.name] && (
+                  <span className="error-text">
+                    This field is required or invalid
+                  </span>
+                )}
               </div>
             ))}
             <div className="form-group">
@@ -165,18 +214,24 @@ const AddObservation: React.FC<AddObservationProps> = ({ selectedTarget, onClose
                 type="text"
                 id="observationTimestamp"
                 name="observationTimestamp"
-                value={formData.observationTimestamp || ''}
+                value={formData.observationTimestamp || ""}
                 placeholder="Enter Observation Timestamp"
                 onChange={handleInputChange}
                 required
-                className={errors['observationTimestamp'] ? 'input-error' : ''}
+                className={errors["observationTimestamp"] ? "input-error" : ""}
               />
-              {errors['observationTimestamp'] && <span className="error-text">This field is required</span>}
+              {errors["observationTimestamp"] && (
+                <span className="error-text">This field is required</span>
+              )}
             </div>
-            <button type="submit" className="submit-button">Submit</button>
+            <button type="submit" className="submit-button">
+              Submit
+            </button>
           </form>
           <div className="response-panel">
-            {addObservationError && <div className="error-message">{addObservationError}</div>}
+            {addObservationError && (
+              <div className="error-message">{addObservationError}</div>
+            )}
             {addObservationResponse && (
               <div className="response-message">
                 <pre>{JSON.stringify(addObservationResponse, null, 2)}</pre>
