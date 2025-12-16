@@ -13,245 +13,383 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PayloadAction } from '@reduxjs/toolkit';
-import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
-import { THIRD_PARTY_APP } from '../../config';
-import { selectLoadedTargetBoard, selectServiceUserToken } from './targetApiGateway.selectors';
+import { PayloadAction } from "@reduxjs/toolkit";
+import { call, put, select, takeLatest } from "redux-saga/effects";
+import { THIRD_PARTY_APP } from "../../config";
+import { selectLoadedTargetBoard } from "./targetApiGateway.selectors";
 import {
   addObservation,
   AddObservationPayload,
   createTarget,
   CreateTargetPayload,
+  loadTarget,
   loadTargets,
-  loadTargetsWithoutLoading,
   setAddObservationError,
   setAddObservationResponse,
   setCreateTargetError,
   setCreateTargetResponse,
-  setServiceUserToken,
+  setTargetBoardColumns,
   setTargets,
-  Target
-} from './targetApiGateway.slice';
+  Target,
+  updateSingleTarget,
+} from "./targetApiGateway.slice";
+import auth from "../../auth";
 
-function* fetchAuthToken(): any {
+function* fetchTargetDetails(targetRid: string, updateState = false): any {
   try {
-    const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/multipass/api/oauth2/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: THIRD_PARTY_APP.CLIENT_ID,
-          client_secret: THIRD_PARTY_APP.CLIENT_SECRET,
-        }),
-      })
-    );
-
-    if (response.ok) {
-      const data = yield response.json();
-      const token = data.access_token;
-      yield put(setServiceUserToken(token));
-      return token;
-    } else {
-      const error = yield response.json();
-      console.error('Error fetching auth token:', error);
-      return null;
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
     }
-  } catch (error) {
-    console.error('Error in fetchAuthToken saga:', error);
-    return null;
-  }
-}
-
-function* fetchTargetDetails(targetRid: string): any {
-  try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
-
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/target/${targetRid}?preview=true`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
     );
 
     if (response.ok) {
       const target = yield response.json();
+
+      if (updateState && target && target.target) {
+        // Normalize location for state update
+        let location: Target["location"] | undefined = undefined;
+        const loc = target.target.location;
+        if (loc) {
+          if (
+            typeof loc.latitude === "number" &&
+            typeof loc.longitude === "number"
+          ) {
+            location = {
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              radius: loc.radius ?? 100,
+              elevation: loc.elevation ?? 0,
+            };
+          } else if (
+            loc.manualLocation &&
+            typeof loc.manualLocation.lat === "number" &&
+            typeof loc.manualLocation.lng === "number"
+          ) {
+            location = {
+              latitude: loc.manualLocation.lat,
+              longitude: loc.manualLocation.lng,
+              radius: loc.radius ?? 100,
+              elevation: loc.manualLocation.elevation ?? 0,
+            };
+          } else if (
+            loc.center &&
+            typeof loc.center.latitude === "number" &&
+            typeof loc.center.longitude === "number"
+          ) {
+            location = {
+              latitude: loc.center.latitude,
+              longitude: loc.center.longitude,
+              radius: loc.radius ?? 100,
+              elevation: loc.center.elevation ?? 0,
+            };
+          }
+        }
+
+        const boardRid = yield select(selectLoadedTargetBoard);
+        // Get column information for this target
+        let tokenForBoard = yield call(auth.getToken);
+        const boardResponse = yield call(() =>
+          fetch(
+            `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${tokenForBoard}`,
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+
+        if (boardResponse.ok) {
+          const boardData: any = yield boardResponse.json();
+          const targetColumnIds = boardData.targetBoard.targetColumnIds || {};
+          const columns = boardData.targetBoard.configuration?.columns || [];
+
+          // Find the column for this target
+          const targetColumnMapping = targetColumnIds[targetRid];
+          const columnId = targetColumnMapping?.columnId;
+          const column = columns.find((c: any) => c.id === columnId);
+          const columnName = column?.name || columnId || "Unknown";
+
+          // Create target object for state update
+          const targetObj: Target = {
+            rid: target.target.rid,
+            name: target.target.name,
+            column: columnName,
+            location,
+            baseRevisionId: target.baseRevisionId,
+          };
+
+          yield put(updateSingleTarget(targetObj));
+        }
+      }
+
       return target;
     } else {
       const error = yield response.json();
-      console.error('Error fetching target details:', error);
+      console.error("Error fetching target details:", error);
       return null;
     }
   } catch (error) {
-    console.error('Error in fetchTargetDetails saga:', error);
+    console.error("Error in fetchTargetDetails saga:", error);
     return null;
   }
 }
 
 function* fetchTargetsForBoard(): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
-
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
     const boardRid = yield select(selectLoadedTargetBoard);
 
     const response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/targetCollection/${boardRid}?preview=true`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
     );
+
     if (response.ok) {
       const data: any = yield response.json();
-      if (data.collection && data.collection.columns) {
+      if (data.targetBoard && data.targetBoard.targets) {
         const targets: Target[] = [];
-        for (const column of data.collection.columns) {
-          for (const target of column.targets) {
-            const targetDetails = yield call(fetchTargetDetails, target.targetRid);
-            if (targetDetails) {
-              const targetObj: Target = {
-                rid: targetDetails.target.rid,
-                name: targetDetails.target.name,
-                column: column.name,
-                location: targetDetails.target.location ? {
-                  latitude: targetDetails.target.location.center.latitude,
-                  longitude: targetDetails.target.location.center.longitude,
-                  radius: targetDetails.target.location.radius,
-                  elevation: targetDetails.target.location.center.elevation
-                } : undefined,
-                baseRevisionId: targetDetails.baseRevisionId
-              };
-              targets.push(targetObj);
+        const targetRids = data.targetBoard.targets;
+        const targetColumnIds = data.targetBoard.targetColumnIds || {};
+        const columns = data.targetBoard.configuration?.columns || [];
+
+        if (columns && columns.length > 0) {
+          const columnIds = columns.map((column: any) => column.id);
+          yield put(setTargetBoardColumns(columnIds));
+        }
+
+        for (const targetRid of targetRids) {
+          const targetColumnMapping = targetColumnIds[targetRid];
+          const columnId = targetColumnMapping?.columnId;
+          const column = columns.find((c: any) => c.id === columnId);
+          const columnName = column?.name || columnId || "Unknown";
+
+          const targetDetails = yield call(
+            fetchTargetDetails,
+            targetRid,
+            false
+          );
+          if (targetDetails && targetDetails.target) {
+            // Normalize location
+            let location: Target["location"] | undefined = undefined;
+            const loc = targetDetails.target.location;
+            if (loc) {
+              if (
+                typeof loc.latitude === "number" &&
+                typeof loc.longitude === "number"
+              ) {
+                location = {
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                  radius: loc.radius ?? 100,
+                  elevation: loc.elevation ?? 0,
+                };
+              } else if (
+                loc.manualLocation &&
+                typeof loc.manualLocation.lat === "number" &&
+                typeof loc.manualLocation.lng === "number"
+              ) {
+                location = {
+                  latitude: loc.manualLocation.lat,
+                  longitude: loc.manualLocation.lng,
+                  radius: loc.radius ?? 100,
+                  elevation: loc.manualLocation.elevation ?? 0,
+                };
+              } else if (
+                loc.center &&
+                typeof loc.center.latitude === "number" &&
+                typeof loc.center.longitude === "number"
+              ) {
+                location = {
+                  latitude: loc.center.latitude,
+                  longitude: loc.center.longitude,
+                  radius: loc.radius ?? 100,
+                  elevation: loc.center.elevation ?? 0,
+                };
+              }
             }
+            const targetObj: Target = {
+              rid: targetDetails.target.rid,
+              name: targetDetails.target.name,
+              column: columnName,
+              location,
+              baseRevisionId: targetDetails.baseRevisionId,
+            };
+            targets.push(targetObj);
           }
         }
         yield put(setTargets(targets));
       }
     } else {
       const error = yield response.json();
-      console.error('Error fetching targets for board:', error);
+      console.error("Error fetching targets for board:", error);
     }
   } catch (error) {
-    console.error('Error in fetchTargetsForBoard saga: ', error);
+    console.error("Error in fetchTargetsForBoard saga: ", error);
   }
 }
 
 function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
-
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
     const payload = {
       name: action.payload.name,
-      collection: action.payload.targetBoardId,
+      targetBoard: action.payload.targetBoardId,
       column: action.payload.column,
       location: {
-        center: {
-          longitude: action.payload.longitude,
-          latitude: action.payload.latitude
+        manualLocation: {
+          lat: action.payload.latitude,
+          lng: action.payload.longitude,
+          circularErrorInMeters: action.payload.radius || 100.0,
+          hae: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
+          msl: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
+          agl: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
         },
-        radius: action.payload.radius
       },
       security: {
-        portionMarkings: action.payload.classificationMarkings || []
+        portionMarkings: action.payload.classificationMarkings || [],
       },
-      targetType: action.payload.targetType || 'Unknown',  
-      description: action.payload.description || ''
+      targetType: action.payload.targetType || "Unknown",
+      description: action.payload.description || "",
     };
 
+    console.log("Creating new target with payload:", payload);
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/target?preview=true`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target?preview=true`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      )
     );
 
     if (response.ok) {
       const data = yield response.json();
+      const targetRid = data.targetRid;
+      console.log("Target created successfully. Target RID:", targetRid);
       yield put(setCreateTargetResponse(data));
       yield put(setCreateTargetError(null));
+
+      if (targetRid) {
+        yield call(fetchTargetDetails, targetRid, true);
+      }
     } else {
       const error = yield response.json();
       throw new Error(error.message);
     }
   } catch (error: any) {
-    yield put(setCreateTargetError(error.message || 'An error occurred while creating target.'));
-    console.error('Error in createNewTarget saga: ', error);
+    yield put(
+      setCreateTargetError(
+        error.message || "An error occurred while creating target."
+      )
+    );
+    console.error("Error in createNewTarget saga: ", error);
   }
 }
 
 function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
   try {
-    const token = (yield select(selectServiceUserToken)) as string;
-    if (!token) throw new Error('Authentication failed');
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
 
     const payload = {
       name: action.payload.name,
       baseRevisionId: action.payload.baseRevisionId,
       location: {
-        center: {
-          longitude: action.payload.longitude,
-          latitude: action.payload.latitude,
-          elevation: action.payload.elevation,
+        manualLocation: {
+          lat: action.payload.latitude,
+          lng: action.payload.longitude,
+          circularErrorInMeters: action.payload.radius ?? 0,
         },
-        radius: action.payload.radius
-      }
+      },
     };
 
     const response: Response = yield call(() =>
-      fetch(`${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/cosmos/target/${action.payload.targetId}?preview=true`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${action.payload.targetId}?preview=true`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      )
     );
 
     if (response.ok) {
       const data = yield response.json();
       yield put(setAddObservationResponse(data));
       yield put(setAddObservationError(null));
+
+      yield call(fetchTargetDetails, action.payload.targetId, true);
     } else {
       const error = yield response.json();
       throw new Error(error.message);
     }
   } catch (error: any) {
-    yield put(setAddObservationError(error.message || 'An error occurred while adding observation.'));
-    console.error('Error in addNewObservation saga: ', error);
+    yield put(
+      setAddObservationError(
+        error.message || "An error occurred while adding observation."
+      )
+    );
+    console.error("Error in addNewObservation saga: ", error);
   }
 }
 
 export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
-  yield takeLatest(loadTargets.type, function*() {
-    yield fetchAuthToken();
+  yield takeLatest(loadTargets.type, function* () {
     yield fetchTargetsForBoard();
   });
-  yield takeLatest(loadTargetsWithoutLoading.type, function*() {
-    yield fetchAuthToken();
-    yield delay(3000);
-    yield fetchTargetsForBoard();
+  yield takeLatest(loadTarget.type, function* (action: PayloadAction<string>) {
+    yield fetchTargetDetails(action.payload, true);
   });
-  yield takeLatest(createTarget.type, function* (action: PayloadAction<CreateTargetPayload>) {
-    yield fetchAuthToken();
-    yield createNewTarget(action);
-  });
-  yield takeLatest(addObservation.type, function* (action: PayloadAction<AddObservationPayload>) {
-    yield fetchAuthToken();
-    yield addNewObservation(action);
-  });
+  yield takeLatest(
+    createTarget.type,
+    function* (action: PayloadAction<CreateTargetPayload>) {
+      yield createNewTarget(action);
+    }
+  );
+  yield takeLatest(
+    addObservation.type,
+    function* (action: PayloadAction<AddObservationPayload>) {
+      yield addNewObservation(action);
+    }
+  );
 }

@@ -13,18 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import L from 'leaflet';
-import 'leaflet-contextmenu';
-import 'leaflet/dist/leaflet.css';
-import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectLoadedTargetBoard, selectTargetBoardTargets } from '../features/targetApiGateway/targetApiGateway.selectors';
-import { loadTargets, setSelectedTargetBoard, setTargets } from '../features/targetApiGateway/targetApiGateway.slice';
-import AddObservation from './modals/AddObservation';
-import CreateTarget from './modals/CreateTarget';
+import L from "leaflet";
+import "leaflet-contextmenu";
+import "leaflet/dist/leaflet.css";
+import React, { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  selectLoadedTargetBoard,
+  selectTargetBoardTargets,
+} from "../features/targetApiGateway/targetApiGateway.selectors";
+import {
+  loadTargets,
+  setSelectedTargetBoard,
+  setTargets,
+} from "../features/targetApiGateway/targetApiGateway.slice";
+import AddObservation from "./modals/AddObservation";
+import CreateTarget from "./modals/CreateTarget";
+
+// Extend the Leaflet Map type to include contextmenu properties
+declare module "leaflet" {
+  interface Map {
+    contextmenu: {
+      removeAllItems: () => void;
+      addItem: (item: any) => void;
+    };
+  }
+}
 
 const redDiamondIcon = new L.Icon({
-  iconUrl: '/symbol-diamond.svg',
+  iconUrl: "/symbol-diamond.svg",
   iconSize: [25, 25],
   iconAnchor: [12.5, 12.5],
 });
@@ -35,56 +52,74 @@ interface TargetMapProps {
   modalContent: string | null;
   selectedTarget: any;
   setTargetsWithoutLocation: (targets: any[]) => void;
-  setContextMenuLocation: (location: { lat: number; lon: number } | null) => void;
+  setContextMenuLocation: (
+    location: { lat: number; lon: number } | null
+  ) => void;
 }
 
-const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalContent, modalContent, selectedTarget, setTargetsWithoutLocation }) => {
+const TargetMap: React.FC<TargetMapProps> = ({
+  setSelectedTarget,
+  setModalContent,
+  modalContent,
+  selectedTarget,
+  setTargetsWithoutLocation,
+}) => {
   const dispatch = useDispatch();
   const selectedBoard = useSelector(selectLoadedTargetBoard);
   const targets = useSelector(selectTargetBoardTargets);
 
   const [map, setMap] = useState<L.Map | null>(null);
   const [markers, setMarkers] = useState<L.Marker[]>([]);
-  const [cursorLocation, setCursorLocation] = useState<{ lat: number; lon: number }>({ lat: 37.9474, lon: -122.4540 });
+  const [cursorLocation, setCursorLocation] = useState<{
+    lat: number;
+    lon: number;
+  }>({ lat: 37.9474, lon: -122.454 });
   const [zoomLevel, setZoomLevel] = useState<number>(9);
-  const [contextMenuLocation, setContextMenuLocationState] = useState<{ lat: number; lon: number } | null>(null);
-  const [inputValue, setInputValue] = useState<string>(selectedBoard || '');
+  const [contextMenuLocation, setContextMenuLocationState] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
+  const [inputValue, setInputValue] = useState<string>(selectedBoard || "");
 
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (mapRef.current && !map) {
+      // Define context menu items
+      const contextmenuItems = [
+        {
+          text: "Create Target",
+          callback: (e: L.ContextMenuItemClickEvent) => {
+            setContextMenuLocationState({
+              lat: e.latlng.lat,
+              lon: e.latlng.lng,
+            });
+            setModalContent("createTarget");
+          },
+        },
+      ];
+
+      // Initialize map with context menu
       const initializedMap = L.map(mapRef.current, {
         center: [cursorLocation.lat, cursorLocation.lon],
         zoom: zoomLevel,
         contextmenu: true,
-        contextmenuItems: [
-          {
-            text: 'Create Target',
-            callback: (e: L.ContextMenuItemClickEvent) => {
-              setContextMenuLocationState({ lat: e.latlng.lat, lon: e.latlng.lng });
-              setModalContent('createTarget');
-            },
-          },
-          {
-            text: 'Add Observation',
-            callback: (e: L.ContextMenuItemClickEvent) => {
-              setContextMenuLocationState({ lat: e.latlng.lat, lon: e.latlng.lng });
-              setModalContent('addObservation');
-            },
-          },
-        ],
+        contextmenuItems: contextmenuItems,
       }).setView([cursorLocation.lat, cursorLocation.lon], zoomLevel);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-      }).addTo(initializedMap);
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        {
+          attribution:
+            '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }
+      ).addTo(initializedMap);
 
-      initializedMap.on('mousemove', (e: L.LeafletMouseEvent) => {
+      initializedMap.on("mousemove", (e: L.LeafletMouseEvent) => {
         setCursorLocation({ lat: e.latlng.lat, lon: e.latlng.lng });
       });
 
-      initializedMap.on('zoomend', () => {
+      initializedMap.on("zoomend", () => {
         setZoomLevel(initializedMap.getZoom());
       });
 
@@ -97,7 +132,7 @@ const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalConten
   };
 
   const handleBoardKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       setSelectedTarget(null);
       dispatch(setTargets([]));
       dispatch(setSelectedTargetBoard(inputValue));
@@ -109,25 +144,62 @@ const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalConten
     setSelectedTarget(target);
   };
 
+  // Update context menu when selected target changes
+  useEffect(() => {
+    if (map) {
+      // Clear all existing context menu items
+      map.contextmenu.removeAllItems();
+
+      // Add Create Target option (always available)
+      map.contextmenu.addItem({
+        text: "Create Target",
+        callback: (e: L.ContextMenuItemClickEvent) => {
+          setContextMenuLocationState({ lat: e.latlng.lat, lon: e.latlng.lng });
+          setModalContent("createTarget");
+        },
+      });
+
+      // Only add the Add Observation option if a target is selected
+      if (selectedTarget) {
+        map.contextmenu.addItem({
+          text: "Add Observation",
+          callback: (e: L.ContextMenuItemClickEvent) => {
+            setContextMenuLocationState({
+              lat: e.latlng.lat,
+              lon: e.latlng.lng,
+            });
+            setModalContent("addObservation");
+          },
+        });
+      }
+    }
+  }, [map, selectedTarget, setModalContent]);
+
   useEffect(() => {
     if (map && selectedBoard) {
-      markers.forEach(marker => map.removeLayer(marker));
+      markers.forEach((marker) => map.removeLayer(marker));
       setMarkers([]);
 
       const newMarkers: L.Marker[] = [];
       const targetsWithoutValidLocation: any[] = [];
 
-      targets.forEach(target => {
-        if (target.location && target.location.latitude && target.location.longitude) {
+      targets.forEach((target) => {
+        if (
+          target.location &&
+          target.location.latitude &&
+          target.location.longitude
+        ) {
           const marker = L.marker(
             [target.location.latitude, target.location.longitude],
             { icon: redDiamondIcon } as L.MarkerOptions
           );
-          marker.on('click', () => handleMarkerClick(target));
-          marker.on('mouseover', () => marker.openPopup());
-          marker.on('mouseout', () => marker.closePopup());
+          marker.on("click", () => handleMarkerClick(target));
+          marker.on("mouseover", () => marker.openPopup());
+          marker.on("mouseout", () => marker.closePopup());
 
-          marker.bindPopup(`<div><strong>${target.name}</strong><p>${target.column}</p></div>`);
+          marker.bindPopup(
+            `<div><strong>${target.name}</strong><p>${target.column}</p></div>`
+          );
           marker.addTo(map);
 
           newMarkers.push(marker);
@@ -142,7 +214,7 @@ const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalConten
   }, [map, selectedBoard, targets]);
 
   return (
-    <div className="map-container" style={{ marginTop: '20px' }}>
+    <div className="map-container" style={{ marginTop: "20px" }}>
       <div className="target-board-selector-container">
         <div className="target-board-selector">
           <label htmlFor="target-board">Target Board RID:</label>
@@ -156,26 +228,37 @@ const TargetMap: React.FC<TargetMapProps> = ({ setSelectedTarget, setModalConten
           />
         </div>
       </div>
+      {selectedBoard && (
+        <div className="map-instructions">
+          <br></br>
+          Right click on the map to create a new target for the loaded target board.
+          <br></br>
+          Select a target to view details and right click on the map to add a new observation for a selected target. 
+        </div>
+      )}
       <div ref={mapRef} className="leaflet-map"></div>
       <div className="map-info">
-        [{cursorLocation.lat.toFixed(4)}, {cursorLocation.lon.toFixed(4)}], zoom: {zoomLevel}
+        [{cursorLocation.lat.toFixed(4)}, {cursorLocation.lon.toFixed(4)}],
+        zoom: {zoomLevel}
       </div>
-      {modalContent === 'createTarget' && contextMenuLocation && (
+      {modalContent === "createTarget" && (
         <CreateTarget
           selectedBoard={selectedBoard}
           onClose={() => setModalContent(null)}
-          initialLat={contextMenuLocation.lat}
-          initialLon={contextMenuLocation.lon}
+          initialLat={contextMenuLocation?.lat}
+          initialLon={contextMenuLocation?.lon}
         />
       )}
-      {modalContent === 'addObservation' && selectedTarget && contextMenuLocation && (
-        <AddObservation
-          selectedTarget={selectedTarget}
-          onClose={() => setModalContent(null)}
-          initialLat={contextMenuLocation.lat}
-          initialLon={contextMenuLocation.lon}
-        />
-      )}
+      {modalContent === "addObservation" &&
+        selectedTarget &&
+        contextMenuLocation && (
+          <AddObservation
+            selectedTarget={selectedTarget}
+            onClose={() => setModalContent(null)}
+            initialLat={contextMenuLocation.lat}
+            initialLon={contextMenuLocation.lon}
+          />
+        )}
     </div>
   );
 };
