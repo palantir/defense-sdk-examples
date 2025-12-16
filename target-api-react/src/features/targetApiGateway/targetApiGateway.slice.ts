@@ -61,6 +61,7 @@ interface TargetApiGatewayState {
   createTargetError: string | null;
   addObservationError: string | null;
   loading: boolean;
+  loadingSingleTarget: boolean;
 }
 
 const initialState: TargetApiGatewayState = {
@@ -74,6 +75,7 @@ const initialState: TargetApiGatewayState = {
   createTargetError: null,
   addObservationError: null,
   loading: false,
+  loadingSingleTarget: false,
 };
 
 const targetApiGatewaySlice = createSlice({
@@ -86,7 +88,9 @@ const targetApiGatewaySlice = createSlice({
     loadTargetsWithoutLoading: (state) => {
       state.loading = true;
     },
-    loadTarget: (_state) => {},
+    loadTarget: (state, action: PayloadAction<string>) => {
+      state.loadingSingleTarget = true;
+    },
     createTarget: (state, _action: PayloadAction<CreateTargetPayload>) => {
       state.loading = true;
     },
@@ -99,6 +103,20 @@ const targetApiGatewaySlice = createSlice({
     setTargets: (state, action: PayloadAction<Target[]>) => {
       state.targetBoardTargets = action.payload;
       state.loading = false;
+    },
+    updateSingleTarget: (state, action: PayloadAction<Target>) => {
+      const targetIndex = state.targetBoardTargets.findIndex(
+        (target) => target.rid === action.payload.rid
+      );
+
+      if (targetIndex >= 0) {
+        // Update existing target
+        state.targetBoardTargets[targetIndex] = action.payload;
+      } else {
+        // Add new target if it doesn't exist
+        state.targetBoardTargets.push(action.payload);
+      }
+      state.loadingSingleTarget = false;
     },
     setTargetBoardColumns: (state, action: PayloadAction<string[]>) => {
       state.targetBoardColumns = action.payload;
@@ -139,6 +157,7 @@ export const {
   addObservation,
   setSelectedTargetBoard,
   setTargets,
+  updateSingleTarget,
   setSelectedTarget,
   setCreateTargetResponse,
   setAddObservationResponse,

@@ -72,7 +72,7 @@ const AddObservation: React.FC<AddObservationProps> = ({
 
   useEffect(() => {
     if (addObservationResponse && !hasDispatchedLoadTargets) {
-      dispatch(loadTargetsWithoutLoading());
+      // No need to reload all targets anymore - the saga will reload just the updated target
       setHasDispatchedLoadTargets(true);
       onClose(); // Close modal immediately
     }

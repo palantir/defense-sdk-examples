@@ -83,7 +83,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
 
   useEffect(() => {
     if (createTargetResponse && !hasDispatchedLoadTargets) {
-      dispatch(loadTargetsWithoutLoading());
+      // No need to reload all targets anymore - the saga will reload just the new target
       setHasDispatchedLoadTargets(true);
       onClose(); // Close modal immediately
     }

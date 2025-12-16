@@ -22,6 +22,7 @@ import {
   AddObservationPayload,
   createTarget,
   CreateTargetPayload,
+  loadTarget,
   loadTargets,
   loadTargetsWithoutLoading,
   setAddObservationError,
@@ -31,10 +32,11 @@ import {
   setTargetBoardColumns,
   setTargets,
   Target,
+  updateSingleTarget,
 } from "./targetApiGateway.slice";
 import auth from "../../client/auth";
 
-function* fetchTargetDetails(targetRid: string): any {
+function* fetchTargetDetails(targetRid: string, updateState = false): any {
   try {
     let token = yield call(auth.getToken);
     if (!token) {
@@ -55,6 +57,87 @@ function* fetchTargetDetails(targetRid: string): any {
 
     if (response.ok) {
       const target = yield response.json();
+
+      if (updateState && target && target.target) {
+        // Normalize location for state update
+        let location: Target["location"] | undefined = undefined;
+        const loc = target.target.location;
+        if (loc) {
+          if (
+            typeof loc.latitude === "number" &&
+            typeof loc.longitude === "number"
+          ) {
+            location = {
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              radius: loc.radius ?? 100,
+              elevation: loc.elevation ?? 0,
+            };
+          } else if (
+            loc.manualLocation &&
+            typeof loc.manualLocation.lat === "number" &&
+            typeof loc.manualLocation.lng === "number"
+          ) {
+            location = {
+              latitude: loc.manualLocation.lat,
+              longitude: loc.manualLocation.lng,
+              radius: loc.radius ?? 100,
+              elevation: loc.manualLocation.elevation ?? 0,
+            };
+          } else if (
+            loc.center &&
+            typeof loc.center.latitude === "number" &&
+            typeof loc.center.longitude === "number"
+          ) {
+            location = {
+              latitude: loc.center.latitude,
+              longitude: loc.center.longitude,
+              radius: loc.radius ?? 100,
+              elevation: loc.center.elevation ?? 0,
+            };
+          }
+        }
+
+        const boardRid = yield select(selectLoadedTargetBoard);
+        // Get column information for this target
+        let tokenForBoard = yield call(auth.getToken);
+        const boardResponse = yield call(() =>
+          fetch(
+            `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${tokenForBoard}`,
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+
+        if (boardResponse.ok) {
+          const boardData: any = yield boardResponse.json();
+          const targetColumnIds = boardData.targetBoard.targetColumnIds || {};
+          const columns = boardData.targetBoard.configuration?.columns || [];
+
+          // Find the column for this target
+          const targetColumnMapping = targetColumnIds[targetRid];
+          const columnId = targetColumnMapping?.columnId;
+          const column = columns.find((c: any) => c.id === columnId);
+          const columnName = column?.name || columnId || "Unknown";
+
+          // Create target object for state update
+          const targetObj: Target = {
+            rid: target.target.rid,
+            name: target.target.name,
+            column: columnName,
+            location,
+            baseRevisionId: target.baseRevisionId,
+          };
+
+          yield put(updateSingleTarget(targetObj));
+        }
+      }
+
       return target;
     } else {
       const error = yield response.json();
@@ -109,7 +192,11 @@ function* fetchTargetsForBoard(): any {
           const column = columns.find((c: any) => c.id === columnId);
           const columnName = column?.name || columnId || "Unknown";
 
-          const targetDetails = yield call(fetchTargetDetails, targetRid);
+          const targetDetails = yield call(
+            fetchTargetDetails,
+            targetRid,
+            false
+          );
           if (targetDetails && targetDetails.target) {
             // Normalize location
             let location: Target["location"] | undefined = undefined;
@@ -213,8 +300,32 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
 
     if (response.ok) {
       const data = yield response.json();
+      const targetRid = data.target?.rid;
       yield put(setCreateTargetResponse(data));
       yield put(setCreateTargetError(null));
+
+      // If we have a target ID, create a target object directly
+      if (targetRid && data.target) {
+        // Create location object from the payload data since it's already in the right format
+        const location: Target["location"] = {
+          latitude: action.payload.latitude,
+          longitude: action.payload.longitude,
+          radius: action.payload.radius || 100,
+          elevation: 0,
+        };
+
+        // Create target object
+        const targetObj: Target = {
+          rid: targetRid,
+          name: data.target.name || action.payload.name,
+          column: action.payload.column,
+          location,
+          baseRevisionId: data.baseRevisionId || 0,
+        };
+
+        // Update state with the new target
+        yield put(updateSingleTarget(targetObj));
+      }
     } else {
       const error = yield response.json();
       throw new Error(error.message);
@@ -244,7 +355,7 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
           lat: action.payload.latitude,
           lng: action.payload.longitude,
           circularErrorInMeters: action.payload.radius ?? 0,
-        }
+        },
       },
     };
 
@@ -266,6 +377,9 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       const data = yield response.json();
       yield put(setAddObservationResponse(data));
       yield put(setAddObservationError(null));
+
+      // Reload just the updated target
+      yield call(fetchTargetDetails, action.payload.targetId, true);
     } else {
       const error = yield response.json();
       throw new Error(error.message);
@@ -287,6 +401,9 @@ export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
   yield takeLatest(loadTargetsWithoutLoading.type, function* () {
     yield delay(3000);
     yield fetchTargetsForBoard();
+  });
+  yield takeLatest(loadTarget.type, function* (action: PayloadAction<string>) {
+    yield fetchTargetDetails(action.payload, true);
   });
   yield takeLatest(
     createTarget.type,
