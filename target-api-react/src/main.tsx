@@ -16,7 +16,7 @@
 import { Spinner } from "@blueprintjs/core";
 import { SpinnerSize } from "@blueprintjs/core/lib/esm/components/spinner/spinner";
 import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client"; // <-- updated for React 18+
+import ReactDOM from "react-dom/client";
 import { Provider, useSelector } from "react-redux";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import store from "./app/store";
@@ -25,7 +25,7 @@ import TargetMap from "./components/TargetMap";
 import TargetView from "./components/TargetView";
 import { selectLoading } from "./features/targetApiGateway/targetApiGateway.selectors";
 import AuthCallback from "./AuthCallback";
-import auth from "./client/auth"; // <-- import your auth client
+import auth from "./auth"; 
 import "./index.scss";
 
 // Simple AppAuthGate component
@@ -166,7 +166,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-// Render with RouterProvider and Provider
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
     <RouterProvider router={router} />

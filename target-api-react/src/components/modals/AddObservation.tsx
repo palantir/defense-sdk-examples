@@ -24,7 +24,6 @@ import {
   addObservation,
   AddObservationPayload,
   clearAddObservationResponse,
-  loadTargetsWithoutLoading,
   Target,
 } from "../../features/targetApiGateway/targetApiGateway.slice";
 
@@ -72,9 +71,8 @@ const AddObservation: React.FC<AddObservationProps> = ({
 
   useEffect(() => {
     if (addObservationResponse && !hasDispatchedLoadTargets) {
-      // No need to reload all targets anymore - the saga will reload just the updated target
       setHasDispatchedLoadTargets(true);
-      onClose(); // Close modal immediately
+      onClose();
     }
   }, [addObservationResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 

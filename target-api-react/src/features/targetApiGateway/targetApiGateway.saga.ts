@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { PayloadAction } from "@reduxjs/toolkit";
-import { call, delay, put, select, takeLatest } from "redux-saga/effects";
+import { call, put, select, takeLatest } from "redux-saga/effects";
 import { THIRD_PARTY_APP } from "../../config";
 import { selectLoadedTargetBoard } from "./targetApiGateway.selectors";
 import {
@@ -24,7 +24,6 @@ import {
   CreateTargetPayload,
   loadTarget,
   loadTargets,
-  loadTargetsWithoutLoading,
   setAddObservationError,
   setAddObservationResponse,
   setCreateTargetError,
@@ -34,7 +33,7 @@ import {
   Target,
   updateSingleTarget,
 } from "./targetApiGateway.slice";
-import auth from "../../client/auth";
+import auth from "../../auth";
 
 function* fetchTargetDetails(targetRid: string, updateState = false): any {
   try {
@@ -376,10 +375,6 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
 
 export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
   yield takeLatest(loadTargets.type, function* () {
-    yield fetchTargetsForBoard();
-  });
-  yield takeLatest(loadTargetsWithoutLoading.type, function* () {
-    yield delay(3000);
     yield fetchTargetsForBoard();
   });
   yield takeLatest(loadTarget.type, function* (action: PayloadAction<string>) {

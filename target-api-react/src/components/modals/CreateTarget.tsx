@@ -25,7 +25,6 @@ import {
   clearCreateTargetResponse,
   createTarget,
   CreateTargetPayload,
-  loadTargetsWithoutLoading,
 } from "../../features/targetApiGateway/targetApiGateway.slice";
 
 interface CreateTargetProps {
@@ -83,9 +82,8 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
 
   useEffect(() => {
     if (createTargetResponse && !hasDispatchedLoadTargets) {
-      // No need to reload all targets anymore - the saga will reload just the new target
       setHasDispatchedLoadTargets(true);
-      onClose(); // Close modal immediately
+      onClose(); 
     }
   }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 

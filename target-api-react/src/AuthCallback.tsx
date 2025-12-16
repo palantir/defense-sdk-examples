@@ -17,7 +17,7 @@
 import React, { useEffect, useState } from "react";
 import { Spinner } from "@blueprintjs/core";
 import { useNavigate } from "react-router-dom";
-import auth from "./client/auth";
+import auth from "./auth";
 
 const AuthCallback: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
