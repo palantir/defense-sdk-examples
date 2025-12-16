@@ -3,7 +3,13 @@
 ### Try It Out!
 This application demonstrates how to use Palantir's Target API Gateway in React (Typescript).  
 
-To try this yourself, navigate to the **Developer Console** application in your Foundry enrollment.  You will need to make an **unscoped public OAuth client**.  To do this, select "No, I will not use an Ontology SDK" and a "Client-facing application" for the application type.  Be sure to set autofill the redirect URL with http://localhost:8080/auth/callback.  Once you create the client, you will need to copy the client ID from the "OAuth & permissions" tab and use in the next step.
+To try this yourself, navigate to the **Developer Console** application in your Foundry enrollment.  You will need to make an **unscoped public OAuth client**.  To do this: 
+* Select "New Application" in the top-right
+* On the "Resources" screen, select "No, I will not use an Ontology SDK"
+* On the "Application type" screen, select "Client-facing application" 
+* On the "Permissions" screen, be sure to select the "Autofill for me" box at the bottom of the page to autofill the redirect URL with http://localhost:8080/auth/callback.  
+
+Once you create the client, you will need to copy the client ID from the "OAuth & permissions" tab and use in the next step.
 
 <br>
 
