@@ -227,21 +227,13 @@ const TargetMap: React.FC<TargetMapProps> = ({
             placeholder="Enter Target Board ID"
           />
         </div>
-        {/* {selectedBoard && (
-          <button
-            className="create-target-btn"
-            onClick={() => {
-              setContextMenuLocationState(null);
-              setModalContent("createTarget");
-            }}
-          >
-            Create Target
-          </button> */}
-        {/* )} */}
       </div>
       {selectedBoard && (
         <div className="map-instructions">
-          Right click on the map to create a new target.
+          <br></br>
+          Right click on the map to create a new target for the loaded target board.
+          <br></br>
+          Select a target to view details and right click on the map to add a new observation for a selected target. 
         </div>
       )}
       <div ref={mapRef} className="leaflet-map"></div>
