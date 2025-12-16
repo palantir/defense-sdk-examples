@@ -83,13 +83,16 @@ const targetApiGatewaySlice = createSlice({
     loadTargets: (state) => {
       state.loading = true;
     },
-    loadTargetsWithoutLoading: (_state) => {},
+    loadTargetsWithoutLoading: (state) => {
+      state.loading = true;
+    },
     loadTarget: (_state) => {},
-    createTarget: (_state, _action: PayloadAction<CreateTargetPayload>) => {},
-    addObservation: (
-      _state,
-      _action: PayloadAction<AddObservationPayload>
-    ) => {},
+    createTarget: (state, _action: PayloadAction<CreateTargetPayload>) => {
+      state.loading = true;
+    },
+    addObservation: (state, _action: PayloadAction<AddObservationPayload>) => {
+      state.loading = true;
+    },
     setSelectedTargetBoard: (state, action: PayloadAction<string>) => {
       state.loadedTargetBoardArtifactId = action.payload;
     },
@@ -105,9 +108,11 @@ const targetApiGatewaySlice = createSlice({
     },
     setCreateTargetResponse: (state, action: PayloadAction<any>) => {
       state.createTargetResponse = action.payload;
+      state.loading = false;
     },
     setAddObservationResponse: (state, action: PayloadAction<any>) => {
       state.addObservationResponse = action.payload;
+      state.loading = false;
     },
     setCreateTargetError: (state, action: PayloadAction<string | null>) => {
       state.createTargetError = action.payload;

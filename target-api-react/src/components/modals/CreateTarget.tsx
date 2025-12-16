@@ -83,13 +83,9 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
 
   useEffect(() => {
     if (createTargetResponse && !hasDispatchedLoadTargets) {
-      const timer = setTimeout(() => {
-        dispatch(loadTargetsWithoutLoading());
-        setHasDispatchedLoadTargets(true);
-        onClose();
-      }, 1500);
-
-      return () => clearTimeout(timer);
+      dispatch(loadTargetsWithoutLoading());
+      setHasDispatchedLoadTargets(true);
+      onClose(); // Close modal immediately
     }
   }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
