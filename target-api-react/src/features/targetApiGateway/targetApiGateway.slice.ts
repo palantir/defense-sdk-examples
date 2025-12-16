@@ -85,7 +85,7 @@ const targetApiGatewaySlice = createSlice({
     loadTargets: (state) => {
       state.loading = true;
     },
-    loadTarget: (state, action: PayloadAction<string>) => {
+    loadTarget: (state, _action: PayloadAction<string>) => {
       state.loadingSingleTarget = true;
     },
     createTarget: (state, _action: PayloadAction<CreateTargetPayload>) => {

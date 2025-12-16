@@ -24,17 +24,54 @@ const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Process the callback
+    // Extract code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+
+    if (!code) {
+      setError("No authorization code received");
+      setTimeout(() => navigate("/"), 3000);
+      return;
+    }
+
+    // Process the callback directly
+    const codeVerifier = sessionStorage.getItem("code_verifier");
+    if (!codeVerifier) {
+      console.error("No code verifier found in session storage");
+      setError("Authentication failed: No code verifier found");
+      setTimeout(() => navigate("/"), 3000);
+      return;
+    }
+
+    // Exchange code for token
+    console.log("AuthCallback: Processing OAuth code");
     auth
-      .signIn()
+      .exchangeCodeForToken(code, codeVerifier)
       .then(() => {
+        console.log("Authentication successful, redirecting to home");
+        // Send message to opener if this is in a popup
+        if (window.opener && window.opener !== window) {
+          window.opener.postMessage(
+            { type: "OAUTH_SUCCESS", code },
+            window.location.origin
+          );
+        }
         // Redirect to home page after successful authentication
         navigate("/", { replace: true });
       })
-      .catch((e) => {
+      .catch((e: unknown) => {
+        console.error("AuthCallback error:", e);
         const errorMessage =
           e instanceof Error ? e.message : "Authentication failed";
         setError(errorMessage);
+
+        // Notify opener of error if this is a popup
+        if (window.opener && window.opener !== window) {
+          window.opener.postMessage(
+            { type: "OAUTH_ERROR", error: errorMessage },
+            window.location.origin
+          );
+        }
 
         // Redirect after a delay
         setTimeout(() => navigate("/"), 3000);
