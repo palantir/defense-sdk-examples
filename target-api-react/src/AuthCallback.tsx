@@ -27,9 +27,35 @@ const AuthCallback: React.FC = () => {
     // Extract code from URL
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
+    const state = urlParams.get("state");
 
     if (!code) {
       setError("No authorization code received");
+      setTimeout(() => navigate("/"), 3000);
+      return;
+    }
+
+    // Verify the state parameter to prevent CSRF attacks
+    const savedState = sessionStorage.getItem("oauth_state");
+    if (state && savedState && state !== savedState) {
+      console.error("OAuth state mismatch - possible CSRF attack");
+      setError("Authentication failed: Invalid state parameter");
+      setTimeout(() => navigate("/"), 3000);
+      return;
+    }
+
+    // Check if this code has already been processed
+    const processedCode = sessionStorage.getItem("processed_auth_code");
+    if (processedCode === code) {
+      console.log(
+        "This authorization code has already been used, requesting new one"
+      );
+      setError(
+        "This authorization code has already been used. Redirecting to login again..."
+      );
+      // Clear the processed code and verifier so we get a fresh start
+      sessionStorage.removeItem("processed_auth_code");
+      sessionStorage.removeItem("code_verifier");
       setTimeout(() => navigate("/"), 3000);
       return;
     }
@@ -43,12 +69,26 @@ const AuthCallback: React.FC = () => {
       return;
     }
 
+    // Mark this code as being processed to prevent double processing
+    console.log("Marking authorization code as processed");
+    sessionStorage.setItem("processed_auth_code", code);
+
     // Exchange code for token
-    console.log("AuthCallback: Processing OAuth code");
+    console.log("AuthCallback: Processing OAuth code", {
+      codeLength: code.length,
+      hasVerifier: !!codeVerifier,
+      verifierLength: codeVerifier.length,
+    });
+
     auth
       .exchangeCodeForToken(code, codeVerifier)
       .then(() => {
         console.log("Authentication successful, redirecting to home");
+
+        // Set a flag in sessionStorage to indicate successful authentication
+        // This will be checked by the main application to trigger a state update
+        sessionStorage.setItem("auth_completed", "true");
+
         // Send message to opener if this is in a popup
         if (window.opener && window.opener !== window) {
           window.opener.postMessage(
@@ -64,6 +104,16 @@ const AuthCallback: React.FC = () => {
         const errorMessage =
           e instanceof Error ? e.message : "Authentication failed";
         setError(errorMessage);
+
+        // If we got an invalid_grant error, clear all OAuth session storage
+        if (errorMessage.includes("invalid_grant")) {
+          console.log(
+            "Clearing OAuth session storage due to invalid_grant error"
+          );
+          sessionStorage.removeItem("processed_auth_code");
+          sessionStorage.removeItem("code_verifier");
+          sessionStorage.removeItem("oauth_state");
+        }
 
         // Notify opener of error if this is a popup
         if (window.opener && window.opener !== window) {

@@ -18,8 +18,7 @@ const REDIRECT_URI = import.meta.env.VITE_FOUNDRY_REDIRECT_URL;
 const API_URL = import.meta.env.VITE_FOUNDRY_API_URL;
 const AUTH_URL = `${API_URL}/multipass/api/oauth2/authorize`;
 const TOKEN_URL = `${API_URL}/multipass/api/oauth2/token`;
-const TARGET_SCOPES =
-  "api:target-read api:target-write";
+const TARGET_SCOPES = "api:target-read api:target-write";
 
 function getAuthUrl(codeChallenge: string, state: string) {
   const params = new URLSearchParams({
@@ -46,18 +45,39 @@ export async function signIn(): Promise<string> {
   // If we have a code in the URL, we're in the callback page
   if (code) {
     console.log("Processing OAuth callback with authorization code");
-    const codeVerifier = sessionStorage.getItem("code_verifier");
 
+    // Check if this code has been processed before
+    const processedCode = sessionStorage.getItem("processed_auth_code");
+    if (processedCode === code) {
+      console.error("Authorization code has already been used once");
+      throw new Error("Authentication failed: Authorization code already used");
+    }
+
+    const codeVerifier = sessionStorage.getItem("code_verifier");
     if (!codeVerifier) {
       console.error("No code verifier found in session storage");
       throw new Error("Authentication failed: No code verifier found");
     }
 
-    return exchangeCodeForToken(code, codeVerifier);
+    // Mark this code as being processed before we attempt the exchange
+    sessionStorage.setItem("processed_auth_code", code);
+
+    try {
+      return await exchangeCodeForToken(code, codeVerifier);
+    } catch (error) {
+      // If exchange fails, remove the processed code marker to allow retries with a new code
+      console.error("Token exchange failed:", error);
+      sessionStorage.removeItem("processed_auth_code");
+      throw error;
+    }
   }
 
   // 3. Start new PKCE/OAuth2 popup flow
   console.log("Starting new OAuth flow");
+
+  // Clear any previously processed code markers
+  sessionStorage.removeItem("processed_auth_code");
+
   const codeVerifier = generateCodeVerifier();
   // Store the code verifier in session storage
   sessionStorage.setItem("code_verifier", codeVerifier);
@@ -70,44 +90,75 @@ export async function signIn(): Promise<string> {
   const authUrl = getAuthUrl(codeChallenge, state);
   const authCode = await openBrowserAndGetAuthCode(authUrl, REDIRECT_URI);
 
-  // 5. Exchange code for token
-  return exchangeCodeForToken(authCode, codeVerifier);
+  // 5. Exchange code for token - mark code as processed before exchange
+  sessionStorage.setItem("processed_auth_code", authCode);
+
+  try {
+    return await exchangeCodeForToken(authCode, codeVerifier);
+  } catch (error) {
+    // If exchange fails, remove the processed code marker
+    sessionStorage.removeItem("processed_auth_code");
+    throw error;
+  }
 }
 
 export async function exchangeCodeForToken(
   code: string,
   codeVerifier: string
 ): Promise<string> {
-  console.log("Exchanging code for token");
+  console.log("Exchanging code for token", { codeLength: code.length });
 
-  const response = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: REDIRECT_URI,
-      client_id: CLIENT_ID,
-      code_verifier: codeVerifier,
-      scope: "",
-    }),
-  });
+  try {
+    const response = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: REDIRECT_URI,
+        client_id: CLIENT_ID,
+        code_verifier: codeVerifier,
+        scope: "",
+      }),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Token exchange failed:", errorText);
-    throw new Error(`Failed to fetch token: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Token exchange failed:", errorText);
+
+      // If we get an invalid_grant error, mark this in sessionStorage
+      if (errorText.includes("invalid_grant")) {
+        sessionStorage.setItem("invalid_grant_received", "true");
+      }
+
+      throw new Error(`Failed to fetch token: ${errorText}`);
+    }
+
+    const data = await response.json();
+    if (!data.access_token || !data.expires_in) {
+      console.error("Invalid token response:", data);
+      throw new Error("Invalid token response");
+    }
+
+    console.log("Token received successfully");
+    saveToken(data.access_token, data.expires_in);
+
+    // Clear the processed code marker after successful exchange
+    sessionStorage.removeItem("processed_auth_code");
+
+    // Set the auth_completed flag to trigger state update in AppAuthGate
+    // Since storage events only fire for other tabs, we also dispatch a custom event
+    // for the current tab to detect
+    sessionStorage.setItem("auth_completed", "true");
+
+    // Dispatch a custom event to notify listeners in the same tab
+    window.dispatchEvent(new Event("auth_completed"));
+
+    return data.access_token;
+  } catch (error) {
+    // Let the error propagate up
+    throw error;
   }
-
-  const data = await response.json();
-  if (!data.access_token || !data.expires_in) {
-    console.error("Invalid token response:", data);
-    throw new Error("Invalid token response");
-  }
-
-  console.log("Token received successfully");
-  saveToken(data.access_token, data.expires_in);
-  return data.access_token;
 }
 
 export function generateCodeVerifier(): string {
@@ -196,11 +247,20 @@ export function openBrowserAndGetAuthCode(
           clearInterval(pollTimer);
           clearInterval(checkClosed);
           window.removeEventListener("message", messageListener);
+
+          // Close the popup after we've extracted what we need
           popup.close();
 
           if (error) {
             reject(new Error(`OAuth error: ${error}`));
           } else if (code) {
+            // We've successfully gotten the code from the popup
+            // We'll log this but NOT set auth_completed yet - that should only happen
+            // after we successfully exchange the code for a token
+            console.log(
+              "Auth code received from popup, proceeding to token exchange"
+            );
+
             resolve(code);
           } else {
             reject(new Error("No authorization code received"));
@@ -210,7 +270,7 @@ export function openBrowserAndGetAuthCode(
         // Cross-origin error is expected while the popup is on the auth domain
         // Continue polling until it redirects back to our domain
       }
-    }, 1000);
+    }, 500); // Reduced polling interval for faster response
 
     // Set a timeout for the authentication process
     setTimeout(() => {

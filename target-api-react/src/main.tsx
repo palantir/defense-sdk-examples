@@ -25,7 +25,7 @@ import TargetMap from "./components/TargetMap";
 import TargetView from "./components/TargetView";
 import { selectLoading } from "./features/targetApiGateway/targetApiGateway.selectors";
 import AuthCallback from "./AuthCallback";
-import auth from "./auth"; 
+import auth from "./auth";
 import "./index.scss";
 
 // Simple AppAuthGate component
@@ -34,6 +34,56 @@ const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     "loading" | "authenticated" | "unauthenticated"
   >("loading");
 
+  // This effect runs when auth_completed is set by auth.ts
+  // It's specifically to handle the scenario when authentication completes
+  useEffect(() => {
+    const handleAuthComplete = () => {
+      console.log("Auth completion handler triggered");
+      const authCompleted = sessionStorage.getItem("auth_completed");
+
+      if (authCompleted === "true") {
+        console.log("Auth completed flag detected, updating state");
+        // Clear the flag so we don't process it again
+        sessionStorage.removeItem("auth_completed");
+
+        // Force a small delay to ensure token is saved
+        setTimeout(() => {
+          // Check if we have a valid token now
+          if (auth.getToken() !== null) {
+            console.log(
+              "Valid token confirmed after authentication, proceeding as authenticated"
+            );
+            setAuthState("authenticated");
+          } else {
+            console.warn(
+              "No valid token found after authentication completion"
+            );
+          }
+        }, 100);
+      }
+    };
+
+    // Set up listener for storage events (for cross-tab communication)
+    window.addEventListener("storage", handleAuthComplete);
+
+    // Listen for the custom event we dispatch in auth.ts (for same-tab communication)
+    window.addEventListener("auth_completed", handleAuthComplete);
+
+    // Also check immediately in case we already returned from callback
+    handleAuthComplete();
+
+    return () => {
+      window.removeEventListener("storage", handleAuthComplete);
+      window.removeEventListener("auth_completed", handleAuthComplete);
+    };
+  }, []);
+
+  // Debug console log when authState changes
+  useEffect(() => {
+    console.log("Authentication state changed to:", authState);
+  }, [authState]);
+
+  // Main authentication effect
   useEffect(() => {
     // Skip auth check on callback page
     if (window.location.pathname === "/auth/callback") {
@@ -41,16 +91,59 @@ const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
 
     // Check for token
-    const hasToken = auth.getToken() !== undefined;
+    const hasToken = auth.getToken() !== null;
 
     if (hasToken) {
+      console.log("Valid token found in storage, proceeding as authenticated");
       setAuthState("authenticated");
     } else {
+      console.log("No valid token found, starting authentication flow");
+      // Clear any stale OAuth state data
+      sessionStorage.removeItem("processed_auth_code");
+      sessionStorage.removeItem("invalid_grant_received");
+
       // Try to sign in
       auth
         .signIn()
-        .then(() => setAuthState("authenticated"))
-        .catch(() => setAuthState("unauthenticated"));
+        .then(() => {
+          console.log("Sign in successful");
+          setAuthState("authenticated");
+        })
+        .catch((error) => {
+          console.error("Authentication error:", error);
+
+          // Show detailed error to help with debugging
+          const errorMsg = error.message || "Unknown error";
+          console.log(`Authentication failed with error: ${errorMsg}`);
+
+          // When an error occurs, ensure we set the state to unauthenticated
+          // so the user sees the sign in button again
+          setAuthState("unauthenticated");
+
+          // Clear all storage on any authentication error to ensure a clean slate
+          console.log(
+            "Clearing all OAuth storage due to authentication failure"
+          );
+          sessionStorage.removeItem("processed_auth_code");
+          sessionStorage.removeItem("code_verifier");
+          sessionStorage.removeItem("oauth_state");
+          sessionStorage.removeItem("auth_completed");
+          sessionStorage.removeItem("invalid_grant_received");
+
+          // Only clear token storage on invalid_grant to avoid losing valid tokens on
+          // network errors or other transient issues
+          if (error.message && error.message.includes("invalid_grant")) {
+            console.log("Invalid grant detected, also clearing token storage");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("auth_token_expiry");
+          }
+
+          // After a short delay, show the sign in button to allow retrying
+          setTimeout(() => {
+            console.log("Authentication ready for retry");
+            setAuthState("unauthenticated");
+          }, 1000);
+        });
     }
   }, []);
 
