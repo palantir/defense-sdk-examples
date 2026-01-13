@@ -35,15 +35,86 @@ import {
 } from "./targetApiGateway.slice";
 import auth from "../../auth";
 
-function* fetchTargetDetails(targetRid: string, updateState = false): any {
+/**
+ * Helper function to extract location data from various location formats
+ */
+function extractLocationFromTargetData(
+  targetData: any
+): Target["location"] | undefined {
+  if (!targetData) return undefined;
+
+  // Try to extract location from lastObservationLocation field (might be JSON string)
+  let lastObsLocation = targetData.lastobservationlocation;
+  if (lastObsLocation && typeof lastObsLocation === "string") {
+    try {
+      lastObsLocation = JSON.parse(lastObsLocation);
+    } catch (e) {
+      console.warn("Failed to parse lastObservationLocation JSON", e);
+      lastObsLocation = null;
+    }
+  }
+
+  if (lastObsLocation) {
+    // Handle GeoJSON format (type: "Point", coordinates: [lon, lat])
+    if (
+      lastObsLocation.type === "Point" &&
+      Array.isArray(lastObsLocation.coordinates)
+    ) {
+      // GeoJSON Point format has coordinates as [longitude, latitude]
+      const [longitude, latitude] = lastObsLocation.coordinates;
+      if (typeof longitude === "number" && typeof latitude === "number") {
+        console.log(
+          `Extracted GeoJSON location: lat ${latitude}, lon ${longitude}`
+        );
+        return {
+          latitude: latitude,
+          longitude: longitude,
+          radius: 100, // Default radius
+          elevation: 0, // Default elevation
+        };
+      }
+    }
+    // Handle standard format with latitude/longitude properties
+    else if (
+      typeof lastObsLocation.latitude === "number" &&
+      typeof lastObsLocation.longitude === "number"
+    ) {
+      return {
+        latitude: lastObsLocation.latitude,
+        longitude: lastObsLocation.longitude,
+        radius: lastObsLocation.radius ?? 100,
+        elevation: lastObsLocation.elevation ?? 0,
+      };
+    }
+    // Handle format with lat/lng properties
+    else if (lastObsLocation.lat && lastObsLocation.lng) {
+      return {
+        latitude: lastObsLocation.lat,
+        longitude: lastObsLocation.lng,
+        radius: lastObsLocation.radius ?? 100,
+        elevation: lastObsLocation.elevation ?? 0,
+      };
+    }
+  }
+
+  console.log("Could not extract location from target data:", targetData);
+  return undefined;
+}
+
+/**
+ * Fetch a single target by its ID using the ontology endpoints
+ * This is used for loading individual targets, e.g. when adding observations
+ */
+function* fetchSingleTarget(targetId: string): any {
   try {
     let token = yield call(auth.getToken);
     if (!token) {
       token = yield call(auth.signIn);
     }
+
     const response: Response = yield call(() =>
       fetch(
-        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${targetRid}?preview=true`,
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/v2/ontologies/${THIRD_PARTY_APP.ONTOLOGY}/objects/targetOntologyTarget/${targetId}`,
         {
           method: "GET",
           headers: {
@@ -55,111 +126,57 @@ function* fetchTargetDetails(targetRid: string, updateState = false): any {
     );
 
     if (response.ok) {
-      const target = yield response.json();
+      const targetData = yield response.json();
 
-      if (updateState && target && target.target) {
-        // Normalize location for state update
-        let location: Target["location"] | undefined = undefined;
-        const loc = target.target.location;
-        if (loc) {
-          if (
-            typeof loc.latitude === "number" &&
-            typeof loc.longitude === "number"
-          ) {
-            location = {
-              latitude: loc.latitude,
-              longitude: loc.longitude,
-              radius: loc.radius ?? 100,
-              elevation: loc.elevation ?? 0,
-            };
-          } else if (
-            loc.manualLocation &&
-            typeof loc.manualLocation.lat === "number" &&
-            typeof loc.manualLocation.lng === "number"
-          ) {
-            location = {
-              latitude: loc.manualLocation.lat,
-              longitude: loc.manualLocation.lng,
-              radius: loc.radius ?? 100,
-              elevation: loc.manualLocation.elevation ?? 0,
-            };
-          } else if (
-            loc.center &&
-            typeof loc.center.latitude === "number" &&
-            typeof loc.center.longitude === "number"
-          ) {
-            location = {
-              latitude: loc.center.latitude,
-              longitude: loc.center.longitude,
-              radius: loc.radius ?? 100,
-              elevation: loc.center.elevation ?? 0,
-            };
-          }
-        }
+      if (targetData) {
+        // Extract location data
+        const location = extractLocationFromTargetData(targetData);
 
-        const boardRid = yield select(selectLoadedTargetBoard);
-        // Get column information for this target
-        let tokenForBoard = yield call(auth.getToken);
-        const boardResponse = yield call(() =>
-          fetch(
-            `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${tokenForBoard}`,
-                "Content-Type": "application/json",
-              },
-            }
-          )
-        );
+        // Create target object
+        const targetObj: Target = {
+          rid: targetData.__rid,
+          name: targetData.name || "Unnamed Target",
+          column: "Unknown", // We don't have column info when fetching a single target directly
+          location,
+          baseRevisionId: 0, // This may need to be handled differently
+        };
 
-        if (boardResponse.ok) {
-          const boardData: any = yield boardResponse.json();
-          const targetColumnIds = boardData.targetBoard.targetColumnIds || {};
-          const columns = boardData.targetBoard.configuration?.columns || [];
-
-          // Find the column for this target
-          const targetColumnMapping = targetColumnIds[targetRid];
-          const columnId = targetColumnMapping?.columnId;
-          const column = columns.find((c: any) => c.id === columnId);
-          const columnName = column?.name || columnId || "Unknown";
-
-          // Create target object for state update
-          const targetObj: Target = {
-            rid: target.target.rid,
-            name: target.target.name,
-            column: columnName,
-            location,
-            baseRevisionId: target.baseRevisionId,
-          };
-
-          yield put(updateSingleTarget(targetObj));
-        }
+        yield put(updateSingleTarget(targetObj));
+        return targetObj;
       }
-
-      return target;
     } else {
-      const error = yield response.json();
-      console.error("Error fetching target details:", error);
+      console.error("Error fetching target details:", yield response.text());
       return null;
     }
   } catch (error) {
-    console.error("Error in fetchTargetDetails saga:", error);
+    console.error("Error in fetchSingleTarget saga:", error);
     return null;
   }
 }
 
+/**
+ * Fetches all targets for a board using the ontology endpoints with the traversal pattern:
+ * board --> columns --> pucks --> targets
+ */
 function* fetchTargetsForBoard(): any {
   try {
     let token = yield call(auth.getToken);
     if (!token) {
       token = yield call(auth.signIn);
     }
-    const boardRid = yield select(selectLoadedTargetBoard);
 
-    const response = yield call(() =>
+    const boardRid = yield select(selectLoadedTargetBoard);
+    const ontologyId = THIRD_PARTY_APP.ONTOLOGY;
+
+    console.log(
+      `Fetching targets for board ${boardRid} using ontology ${ontologyId}`
+    );
+
+    // Step 1: Get columns for the board
+    console.log(`Fetching columns for board ${boardRid}`);
+    const columnsResponse = yield call(() =>
       fetch(
-        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/targetBoard/${boardRid}?preview=true`,
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/v2/ontologies/${ontologyId}/objects/targetOntologyTargetBoard/${boardRid}/links/columns?pageSize=100`,
         {
           method: "GET",
           headers: {
@@ -170,87 +187,134 @@ function* fetchTargetsForBoard(): any {
       )
     );
 
-    if (response.ok) {
-      const data: any = yield response.json();
-      if (data.targetBoard && data.targetBoard.targets) {
-        const targets: Target[] = [];
-        const targetRids = data.targetBoard.targets;
-        const targetColumnIds = data.targetBoard.targetColumnIds || {};
-        const columns = data.targetBoard.configuration?.columns || [];
-
-        if (columns && columns.length > 0) {
-          const columnIds = columns.map((column: any) => column.id);
-          yield put(setTargetBoardColumns(columnIds));
-        }
-
-        for (const targetRid of targetRids) {
-          const targetColumnMapping = targetColumnIds[targetRid];
-          const columnId = targetColumnMapping?.columnId;
-          const column = columns.find((c: any) => c.id === columnId);
-          const columnName = column?.name || columnId || "Unknown";
-
-          const targetDetails = yield call(
-            fetchTargetDetails,
-            targetRid,
-            false
-          );
-          if (targetDetails && targetDetails.target) {
-            // Normalize location
-            let location: Target["location"] | undefined = undefined;
-            const loc = targetDetails.target.location;
-            if (loc) {
-              if (
-                typeof loc.latitude === "number" &&
-                typeof loc.longitude === "number"
-              ) {
-                location = {
-                  latitude: loc.latitude,
-                  longitude: loc.longitude,
-                  radius: loc.radius ?? 100,
-                  elevation: loc.elevation ?? 0,
-                };
-              } else if (
-                loc.manualLocation &&
-                typeof loc.manualLocation.lat === "number" &&
-                typeof loc.manualLocation.lng === "number"
-              ) {
-                location = {
-                  latitude: loc.manualLocation.lat,
-                  longitude: loc.manualLocation.lng,
-                  radius: loc.radius ?? 100,
-                  elevation: loc.manualLocation.elevation ?? 0,
-                };
-              } else if (
-                loc.center &&
-                typeof loc.center.latitude === "number" &&
-                typeof loc.center.longitude === "number"
-              ) {
-                location = {
-                  latitude: loc.center.latitude,
-                  longitude: loc.center.longitude,
-                  radius: loc.radius ?? 100,
-                  elevation: loc.center.elevation ?? 0,
-                };
-              }
-            }
-            const targetObj: Target = {
-              rid: targetDetails.target.rid,
-              name: targetDetails.target.name,
-              column: columnName,
-              location,
-              baseRevisionId: targetDetails.baseRevisionId,
-            };
-            targets.push(targetObj);
-          }
-        }
-        yield put(setTargets(targets));
-      }
-    } else {
-      const error = yield response.json();
-      console.error("Error fetching targets for board:", error);
+    if (!columnsResponse.ok) {
+      const error = yield columnsResponse.text();
+      console.error("Error fetching columns:", error);
+      return;
     }
+
+    const columnsData = yield columnsResponse.json();
+    const columns = columnsData.data || [];
+    console.log(`Found ${columns.length} columns`);
+
+    // Store column IDs and names for later use
+    const columnMap = new Map();
+    const columnIds: string[] = [];
+
+    for (const column of columns) {
+      columnIds.push(column.targetboardcolumnid);
+      columnMap.set(column.targetboardcolumnid, {
+        id: column.targetboardcolumnid,
+        name: column.name || "Unknown Column",
+      });
+    }
+
+    // Update column IDs in state
+    if (columnIds.length > 0) {
+      yield put(setTargetBoardColumns(columnIds));
+    }
+
+    // Step 2: Collect all puck IDs across all columns in a single request per column
+    const allPucks = [];
+    const puckToColumnMap = new Map(); // Map puck ID to column name for later use
+
+    for (const column of columns) {
+      const columnId = column.targetboardcolumnid;
+      const columnName = column.name || "Unknown Column";
+
+      console.log(`Fetching pucks for column ${columnName} (${columnId})`);
+      const pucksResponse = yield call(() =>
+        fetch(
+          `${THIRD_PARTY_APP.CLIENT_URL}/api/v2/ontologies/${ontologyId}/objects/targetOntologyColumn/${columnId}/links/pucks?pageSize=100`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
+      );
+
+      if (!pucksResponse.ok) {
+        console.error(
+          `Error fetching pucks for column ${columnId}:`,
+          yield pucksResponse.text()
+        );
+        continue;
+      }
+
+      const pucksData = yield pucksResponse.json();
+      const pucks = pucksData.data || [];
+      console.log(`Found ${pucks.length} pucks in column ${columnName}`);
+
+      // Store pucks and their column association
+      for (const puck of pucks) {
+        allPucks.push(puck);
+        puckToColumnMap.set(puck.targetpuckid, columnName);
+      }
+    }
+
+    console.log(`Processing ${allPucks.length} total pucks across all columns`);
+
+    // Step 3: Get targets for all pucks - one request per puck
+    const allTargets: Target[] = [];
+
+    for (const puck of allPucks) {
+      const puckId = puck.targetpuckid;
+      const columnName = puckToColumnMap.get(puckId) || "Unknown Column";
+
+      // Get target for this puck
+      console.log(`Fetching target for puck ${puckId}`);
+      const targetResponse = yield call(() =>
+        fetch(
+          `${THIRD_PARTY_APP.CLIENT_URL}/api/v2/ontologies/${ontologyId}/objects/targetOntologyPuck/${puckId}/links/target`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
+      );
+
+      if (!targetResponse.ok) {
+        console.error(
+          `Error fetching target for puck ${puckId}:`,
+          yield targetResponse.text()
+        );
+        continue;
+      }
+
+      const targetData = yield targetResponse.json();
+      const targets = targetData.data || [];
+      console.log(`Found ${targets.length} targets for puck ${puckId}`);
+
+      // Process each target and add to our list
+      for (const target of targets) {
+        // Extract location data
+        const location = extractLocationFromTargetData(target);
+
+        // Create target object for state update
+        const targetObj: Target = {
+          rid: target.__rid || target.targetid,
+          name: target.name || "Unnamed Target",
+          column: columnName,
+          location,
+          baseRevisionId: target.baseRevisionId || 0,
+        };
+
+        allTargets.push(targetObj);
+      }
+    }
+
+    console.log(
+      `Loaded ${allTargets.length} targets across ${columns.length} columns`
+    );
+    yield put(setTargets(allTargets));
   } catch (error) {
-    console.error("Error in fetchTargetsForBoard saga: ", error);
+    console.error("Error in fetchTargetsForBoard saga:", error);
   }
 }
 
@@ -304,7 +368,7 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
       yield put(setCreateTargetError(null));
 
       if (targetRid) {
-        yield call(fetchTargetDetails, targetRid, true);
+        yield call(fetchSingleTarget, targetRid);
       }
     } else {
       const error = yield response.json();
@@ -358,7 +422,7 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       yield put(setAddObservationResponse(data));
       yield put(setAddObservationError(null));
 
-      yield call(fetchTargetDetails, action.payload.targetId, true);
+      yield call(fetchSingleTarget, action.payload.targetId);
     } else {
       const error = yield response.json();
       throw new Error(error.message);
@@ -378,7 +442,7 @@ export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
     yield fetchTargetsForBoard();
   });
   yield takeLatest(loadTarget.type, function* (action: PayloadAction<string>) {
-    yield fetchTargetDetails(action.payload, true);
+    yield fetchSingleTarget(action.payload);
   });
   yield takeLatest(
     createTarget.type,

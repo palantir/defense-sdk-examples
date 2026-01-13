@@ -18,7 +18,7 @@ const REDIRECT_URI = import.meta.env.VITE_FOUNDRY_REDIRECT_URL;
 const API_URL = import.meta.env.VITE_FOUNDRY_API_URL;
 const AUTH_URL = `${API_URL}/multipass/api/oauth2/authorize`;
 const TOKEN_URL = `${API_URL}/multipass/api/oauth2/token`;
-const TARGET_SCOPES = "api:target-read api:target-write";
+const SCOPES = "api:target-read api:target-write api:ontologies-read api:ontologies-write";
 
 function getAuthUrl(codeChallenge: string, state: string) {
   const params = new URLSearchParams({
@@ -28,7 +28,7 @@ function getAuthUrl(codeChallenge: string, state: string) {
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
-    scope: TARGET_SCOPES,
+    scope: SCOPES,
   });
   return `${AUTH_URL}?${params.toString()}`;
 }
@@ -75,8 +75,8 @@ export async function signIn(): Promise<string> {
   // 3. Start new PKCE/OAuth2 popup flow
   console.log("Starting new OAuth flow");
 
-  // Clear any previously processed code markers
-  sessionStorage.removeItem("processed_auth_code");
+  // Clear all OAuth related session storage to ensure a fresh start
+  clearOAuthSessionStorage();
 
   const codeVerifier = generateCodeVerifier();
   // Store the code verifier in session storage
@@ -95,9 +95,23 @@ export async function signIn(): Promise<string> {
 
   try {
     return await exchangeCodeForToken(authCode, codeVerifier);
-  } catch (error) {
+  } catch (error: any) {
     // If exchange fails, remove the processed code marker
     sessionStorage.removeItem("processed_auth_code");
+
+    // If we encounter an invalid_grant error, clear all OAuth state and retry
+    if (error.message && error.message.includes("invalid_grant")) {
+      console.log(
+        "Invalid grant error detected, clearing OAuth state and retrying"
+      );
+      clearOAuthSessionStorage();
+      // We don't auto-retry here to avoid potential infinite loops
+      // Instead throw a more descriptive error
+      throw new Error(
+        "Authentication failed: Invalid grant. Please try again."
+      );
+    }
+
     throw error;
   }
 }
@@ -107,6 +121,10 @@ export async function exchangeCodeForToken(
   codeVerifier: string
 ): Promise<string> {
   console.log("Exchanging code for token", { codeLength: code.length });
+
+  // Add timestamp to code tracking to handle expiration
+  const codeTimestamp = Date.now();
+  sessionStorage.setItem("auth_code_timestamp", codeTimestamp.toString());
 
   try {
     const response = await fetch(TOKEN_URL, {
@@ -126,9 +144,24 @@ export async function exchangeCodeForToken(
       const errorText = await response.text();
       console.error("Token exchange failed:", errorText);
 
-      // If we get an invalid_grant error, mark this in sessionStorage
+      // If we get an invalid_grant error, mark this in sessionStorage and clear code verifier
       if (errorText.includes("invalid_grant")) {
         sessionStorage.setItem("invalid_grant_received", "true");
+        sessionStorage.removeItem("code_verifier"); // Ensure code_verifier is cleared to prevent reuse
+
+        // Check if this is a repeated invalid_grant error
+        const invalidGrantCount = parseInt(
+          sessionStorage.getItem("invalid_grant_count") || "0"
+        );
+        sessionStorage.setItem(
+          "invalid_grant_count",
+          (invalidGrantCount + 1).toString()
+        );
+
+        if (invalidGrantCount >= 2) {
+          // After multiple failures, perform a complete reset
+          resetOAuthCompletely();
+        }
       }
 
       throw new Error(`Failed to fetch token: ${errorText}`);
@@ -304,4 +337,39 @@ export function getToken(): string | null {
   return token;
 }
 
-export default { signIn, getToken, exchangeCodeForToken };
+/**
+ * Clears all OAuth-related session storage to ensure a fresh auth flow
+ * This helps prevent issues with stale or inconsistent OAuth state
+ */
+export function clearOAuthSessionStorage() {
+  console.log("Clearing all OAuth session storage");
+  // Clear session storage items
+  sessionStorage.removeItem("processed_auth_code");
+  sessionStorage.removeItem("code_verifier");
+  sessionStorage.removeItem("oauth_state");
+  sessionStorage.removeItem("auth_completed");
+  sessionStorage.removeItem("invalid_grant_received");
+}
+
+/**
+ * Performs a complete OAuth reset, clearing both session and local storage
+ * Use this when encountering persistent authentication issues
+ */
+export function resetOAuthCompletely() {
+  // Clear session storage
+  clearOAuthSessionStorage();
+
+  // Clear local storage items
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("auth_token_expiry");
+
+  console.log("Complete OAuth reset performed");
+}
+
+export default {
+  signIn,
+  getToken,
+  exchangeCodeForToken,
+  clearOAuthSessionStorage,
+  resetOAuthCompletely,
+};

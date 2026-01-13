@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Spinner } from "@blueprintjs/core";
+import { Button, Intent, Spinner } from "@blueprintjs/core";
 import { useNavigate } from "react-router-dom";
 import auth from "./auth";
 
@@ -53,11 +53,30 @@ const AuthCallback: React.FC = () => {
       setError(
         "This authorization code has already been used. Redirecting to login again..."
       );
-      // Clear the processed code and verifier so we get a fresh start
-      sessionStorage.removeItem("processed_auth_code");
-      sessionStorage.removeItem("code_verifier");
+      // Clear all OAuth state to ensure a fresh start
+      auth.clearOAuthSessionStorage();
       setTimeout(() => navigate("/"), 3000);
       return;
+    }
+
+    // Check for code timestamp - codes typically expire after 5 minutes
+    const codeTimestamp = sessionStorage.getItem("auth_code_timestamp");
+    if (codeTimestamp) {
+      const timestamp = parseInt(codeTimestamp, 10);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      if (now - timestamp > fiveMinutes) {
+        console.log(
+          "Authorization code may have expired (older than 5 minutes)"
+        );
+        setError(
+          "Authorization code may have expired. Starting a new login flow."
+        );
+        auth.clearOAuthSessionStorage();
+        setTimeout(() => navigate("/"), 3000);
+        return;
+      }
     }
 
     // Process the callback directly
@@ -105,14 +124,12 @@ const AuthCallback: React.FC = () => {
           e instanceof Error ? e.message : "Authentication failed";
         setError(errorMessage);
 
-        // If we got an invalid_grant error, clear all OAuth session storage
+        // If we got an invalid_grant error, perform a complete OAuth reset
         if (errorMessage.includes("invalid_grant")) {
           console.log(
-            "Clearing OAuth session storage due to invalid_grant error"
+            "Performing complete OAuth reset due to invalid_grant error"
           );
-          sessionStorage.removeItem("processed_auth_code");
-          sessionStorage.removeItem("code_verifier");
-          sessionStorage.removeItem("oauth_state");
+          auth.resetOAuthCompletely();
         }
 
         // Notify opener of error if this is a popup
@@ -134,6 +151,16 @@ const AuthCallback: React.FC = () => {
         <h2>Authentication Error</h2>
         <p>{error}</p>
         <p>Redirecting to home page...</p>
+        <Button
+          intent={Intent.PRIMARY}
+          onClick={() => {
+            auth.resetOAuthCompletely();
+            navigate("/");
+          }}
+          style={{ marginTop: "10px" }}
+        >
+          Try Again Now
+        </Button>
       </div>
     );
   }
