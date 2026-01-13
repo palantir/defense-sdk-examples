@@ -53,7 +53,8 @@ export interface AddObservationPayload {
 }
 
 export interface ColumnInfo {
-  id: string; // Column ID (primary key)
+  id: string; // Column ID (full primary key)
+  shortId: string; // Short column ID used in API payloads (e.g. "DRAFT", "CLOSED")
   name: string; // Column name ($title)
 }
 

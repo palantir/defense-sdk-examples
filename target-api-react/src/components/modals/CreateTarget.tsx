@@ -220,7 +220,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
                     <option value="">Select a column</option>
                     {input.name === "column" &&
                       targetBoardColumns.map((column) => (
-                        <option key={column.id} value={column.id}>
+                        <option key={column.id} value={column.shortId}>
                           {column.name}
                         </option>
                       ))}

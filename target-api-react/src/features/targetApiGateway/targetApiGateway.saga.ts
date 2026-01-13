@@ -197,12 +197,19 @@ function* fetchTargetsForBoard(): any {
     const columns = columnsData.data || [];
     console.log(`Found ${columns.length} columns`);
 
-    // Store column information (ID and name)
-    const columnInfos: { id: string; name: string }[] = [];
+    // Store column information (ID, short ID, and name)
+    const columnInfos: { id: string; shortId: string; name: string }[] = [];
 
     for (const column of columns) {
+      // Extract the short column ID (everything after the last ".")
+      const fullId = column.targetboardcolumnid;
+      const shortId = fullId.includes(".")
+        ? fullId.substring(fullId.lastIndexOf(".") + 1)
+        : fullId;
+
       columnInfos.push({
-        id: column.targetboardcolumnid,
+        id: fullId,
+        shortId: shortId,
         name: column.name || "Unknown Column",
       });
     }
