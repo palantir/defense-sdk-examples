@@ -83,7 +83,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   useEffect(() => {
     if (createTargetResponse && !hasDispatchedLoadTargets) {
       setHasDispatchedLoadTargets(true);
-      onClose(); 
+      onClose();
     }
   }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
@@ -220,8 +220,8 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
                     <option value="">Select a column</option>
                     {input.name === "column" &&
                       targetBoardColumns.map((column) => (
-                        <option key={column} value={column}>
-                          {column}
+                        <option key={column.id} value={column.id}>
+                          {column.name}
                         </option>
                       ))}
                   </select>

@@ -39,6 +39,7 @@ export interface CreateTargetPayload {
   latitude: number;
   radius: number;
   column: string;
+  entityId?: string; // Optional ID for the target entity, will be auto-generated if not provided
 }
 
 export interface AddObservationPayload {
@@ -51,10 +52,15 @@ export interface AddObservationPayload {
   baseRevisionId: number;
 }
 
+export interface ColumnInfo {
+  id: string; // Column ID (primary key)
+  name: string; // Column name ($title)
+}
+
 interface TargetApiGatewayState {
   loadedTargetBoardArtifactId: string | null;
   targetBoardTargets: Target[];
-  targetBoardColumns: string[];
+  targetBoardColumns: ColumnInfo[]; // Changed from string[] to ColumnInfo[]
   loadedTargetRid: string;
   createTargetResponse: any | null;
   addObservationResponse: any | null;
@@ -67,7 +73,7 @@ interface TargetApiGatewayState {
 const initialState: TargetApiGatewayState = {
   loadedTargetBoardArtifactId: null,
   targetBoardTargets: [],
-  targetBoardColumns: [],
+  targetBoardColumns: [], // This will now contain objects with id and name properties
   loadedTargetRid:
     "ri.gotham-artifact.3736180562172569377-2123486733096639170.cosmos-situation.E1EMjnkk73B6GkYsAr",
   createTargetResponse: null,
@@ -115,7 +121,7 @@ const targetApiGatewaySlice = createSlice({
       }
       state.loadingSingleTarget = false;
     },
-    setTargetBoardColumns: (state, action: PayloadAction<string[]>) => {
+    setTargetBoardColumns: (state, action: PayloadAction<ColumnInfo[]>) => {
       state.targetBoardColumns = action.payload;
     },
     setSelectedTarget: (state, action: PayloadAction<string>) => {

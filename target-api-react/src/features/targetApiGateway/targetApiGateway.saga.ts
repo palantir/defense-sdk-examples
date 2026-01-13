@@ -197,21 +197,25 @@ function* fetchTargetsForBoard(): any {
     const columns = columnsData.data || [];
     console.log(`Found ${columns.length} columns`);
 
-    // Store column IDs and names for later use
-    const columnMap = new Map();
-    const columnIds: string[] = [];
+    // Store column information (ID and name)
+    const columnInfos: { id: string; name: string }[] = [];
 
     for (const column of columns) {
-      columnIds.push(column.targetboardcolumnid);
-      columnMap.set(column.targetboardcolumnid, {
+      columnInfos.push({
         id: column.targetboardcolumnid,
         name: column.name || "Unknown Column",
       });
     }
 
-    // Update column IDs in state
-    if (columnIds.length > 0) {
-      yield put(setTargetBoardColumns(columnIds));
+    // Create a map for quick lookups
+    const columnMap = new Map();
+    columnInfos.forEach((col) => {
+      columnMap.set(col.id, col);
+    });
+
+    // Update columns in state
+    if (columnInfos.length > 0) {
+      yield put(setTargetBoardColumns(columnInfos));
     }
 
     // Step 2: Collect all puck IDs across all columns in a single request per column
@@ -318,6 +322,11 @@ function* fetchTargetsForBoard(): any {
   }
 }
 
+/**
+ * Legacy implementation of createNewTarget using the TWB API
+ * Kept for reference
+ */
+/*
 function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   try {
     let token = yield call(auth.getToken);
@@ -383,6 +392,86 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
     console.error("Error in createNewTarget saga: ", error);
   }
 }
+*/
+
+/**
+ * Create a new target using the ontology action API
+ */
+function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
+  try {
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
+
+    // Prepare the ontology action payload
+    const ontologyPayload = {
+      parameters: {
+        targetBoardId: action.payload.targetBoardId,
+        columnId: action.payload.column,
+        classificationMarkings: action.payload.classificationMarkings || ["U"],
+        name: action.payload.name,
+        description: action.payload.description || "",
+        targetType: action.payload.targetType || "Unknown",
+        observationTimestamp: formatTimestamp(
+          action.payload.observationTimestamp
+        ),
+        latitude: action.payload.latitude,
+        longitude: action.payload.longitude,
+        // entityId: // use the phonograph object RID if nominating an existing entity
+      },
+      options: {
+        returnEdits: "ALL",
+      },
+    };
+
+    console.log("Creating new target with ontology action:", ontologyPayload);
+    const ontologyId = THIRD_PARTY_APP.ONTOLOGY;
+
+    const response: Response = yield call(() =>
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/v2/ontologies/${ontologyId}/actions/twb-writeback-target-ontology-create-target/apply`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(ontologyPayload),
+        }
+      )
+    );
+
+    if (response.ok) {
+      const data = yield response.json();
+      console.log("Target created successfully:", data);
+      yield put(setCreateTargetResponse(data));
+      yield put(setCreateTargetError(null));
+
+      // Refresh the targets list to include the new target
+      yield call(fetchTargetsForBoard);
+    } else {
+      const errorText = yield response.text();
+      console.error("Error response from create target:", errorText);
+
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
+
+      throw new Error(errorData.message || "Failed to create target");
+    }
+  } catch (error: any) {
+    yield put(
+      setCreateTargetError(
+        error.message || "An error occurred while creating target."
+      )
+    );
+    console.error("Error in createNewTarget saga:", error);
+  }
+}
 
 function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
   try {
@@ -434,6 +523,43 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       )
     );
     console.error("Error in addNewObservation saga: ", error);
+  }
+}
+
+/**
+ * Helper function to ensure timestamps are in ISO format
+ */
+function formatTimestamp(
+  timestamp: string | number | Date | undefined
+): string {
+  if (!timestamp) {
+    return new Date().toISOString();
+  }
+
+  // If it's already an ISO string that matches the format YYYY-MM-DDTHH:MM:SS.sssZ
+  if (
+    typeof timestamp === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(timestamp)
+  ) {
+    return timestamp;
+  }
+
+  // If it's a date object, convert to ISO string
+  if (timestamp instanceof Date) {
+    return timestamp.toISOString();
+  }
+
+  // If it's a number (unix timestamp in milliseconds), convert to ISO string
+  if (typeof timestamp === "number") {
+    return new Date(timestamp).toISOString();
+  }
+
+  // For any other string format, try to parse it as a date
+  try {
+    return new Date(timestamp).toISOString();
+  } catch (e) {
+    console.warn("Invalid timestamp format, using current time", timestamp);
+    return new Date().toISOString();
   }
 }
 
