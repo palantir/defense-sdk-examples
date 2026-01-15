@@ -69,6 +69,7 @@ interface TargetApiGatewayState {
   addObservationError: string | null;
   loading: boolean;
   loadingSingleTarget: boolean;
+  loadingObservation: boolean;
 }
 
 const initialState: TargetApiGatewayState = {
@@ -83,6 +84,7 @@ const initialState: TargetApiGatewayState = {
   addObservationError: null,
   loading: false,
   loadingSingleTarget: false,
+  loadingObservation: false,
 };
 
 const targetApiGatewaySlice = createSlice({
@@ -100,6 +102,7 @@ const targetApiGatewaySlice = createSlice({
     },
     addObservation: (state, _action: PayloadAction<AddObservationPayload>) => {
       state.loading = true;
+      state.loadingObservation = true;
     },
     setSelectedTargetBoard: (state, action: PayloadAction<string>) => {
       state.loadedTargetBoardArtifactId = action.payload;
@@ -121,6 +124,8 @@ const targetApiGatewaySlice = createSlice({
         state.targetBoardTargets.push(action.payload);
       }
       state.loadingSingleTarget = false;
+      state.loadingObservation = false;
+      state.loading = false; // Reset loading state after target is updated
     },
     setTargetBoardColumns: (state, action: PayloadAction<ColumnInfo[]>) => {
       state.targetBoardColumns = action.payload;
@@ -134,7 +139,7 @@ const targetApiGatewaySlice = createSlice({
     },
     setAddObservationResponse: (state, action: PayloadAction<any>) => {
       state.addObservationResponse = action.payload;
-      state.loading = false;
+      // Keep loading true - we'll reset it after the delay and reload
     },
     setCreateTargetError: (state, action: PayloadAction<string | null>) => {
       state.createTargetError = action.payload;
@@ -143,6 +148,7 @@ const targetApiGatewaySlice = createSlice({
     setAddObservationError: (state, action: PayloadAction<string | null>) => {
       state.addObservationError = action.payload;
       state.loading = false;
+      state.loadingObservation = false;
     },
     clearCreateTargetResponse: (state) => {
       state.createTargetResponse = null;

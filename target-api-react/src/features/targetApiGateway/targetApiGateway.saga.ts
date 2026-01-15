@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { PayloadAction } from "@reduxjs/toolkit";
-import { call, put, select, takeLatest } from "redux-saga/effects";
+import { call, delay, put, select, takeLatest } from "redux-saga/effects";
 import { THIRD_PARTY_APP } from "../../config";
 import { selectLoadedTargetBoard } from "./targetApiGateway.selectors";
 import {
@@ -190,6 +190,8 @@ function* fetchTargetsForBoard(): any {
     if (!columnsResponse.ok) {
       const error = yield columnsResponse.text();
       console.error("Error fetching columns:", error);
+      // Ensure loading state is reset even when there's an error
+      yield put(setTargets([]));
       return;
     }
 
@@ -309,7 +311,7 @@ function* fetchTargetsForBoard(): any {
 
         // Create target object for state update
         const targetObj: Target = {
-          rid: target.__rid || target.targetid,
+          rid: target.artifactid || target.targetid,
           name: target.name || "Unnamed Target",
           column: columnName,
           location,
@@ -326,80 +328,10 @@ function* fetchTargetsForBoard(): any {
     yield put(setTargets(allTargets));
   } catch (error) {
     console.error("Error in fetchTargetsForBoard saga:", error);
+    // Ensure loading state is reset even when there's an error
+    yield put(setTargets([]));
   }
 }
-
-/**
- * Legacy implementation of createNewTarget using the TWB API
- * Kept for reference
- */
-/*
-function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
-  try {
-    let token = yield call(auth.getToken);
-    if (!token) {
-      token = yield call(auth.signIn);
-    }
-    const payload = {
-      name: action.payload.name,
-      targetBoard: action.payload.targetBoardId,
-      column: action.payload.column,
-      location: {
-        manualLocation: {
-          lat: action.payload.latitude,
-          lng: action.payload.longitude,
-          circularErrorInMeters: action.payload.radius || 100.0,
-          hae: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
-          msl: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
-          agl: { elevationInMeters: 0.0, linearErrorInMeters: 0.0 },
-        },
-      },
-      security: {
-        portionMarkings: action.payload.classificationMarkings || [],
-      },
-      targetType: action.payload.targetType || "Unknown",
-      description: action.payload.description || "",
-    };
-
-    console.log("Creating new target with payload:", payload);
-    const response: Response = yield call(() =>
-      fetch(
-        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target?preview=true`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      )
-    );
-
-    if (response.ok) {
-      const data = yield response.json();
-      const targetRid = data.targetRid;
-      console.log("Target created successfully. Target RID:", targetRid);
-      yield put(setCreateTargetResponse(data));
-      yield put(setCreateTargetError(null));
-
-      if (targetRid) {
-        yield call(fetchSingleTarget, targetRid);
-      }
-    } else {
-      const error = yield response.json();
-      throw new Error(error.message);
-    }
-  } catch (error: any) {
-    yield put(
-      setCreateTargetError(
-        error.message || "An error occurred while creating target."
-      )
-    );
-    console.error("Error in createNewTarget saga: ", error);
-  }
-}
-*/
 
 /**
  * Create a new target using the ontology action API
@@ -455,8 +387,12 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
       yield put(setCreateTargetResponse(data));
       yield put(setCreateTargetError(null));
 
-      // Refresh the targets list to include the new target
-      yield call(fetchTargetsForBoard);
+      // Add a 2-second delay to give the backend time to sync
+      console.log("Waiting 2 seconds for backend to sync...");
+      yield delay(2000);
+
+      // Set loading state to true and refresh the targets list
+      yield put(loadTargets());
     } else {
       const errorText = yield response.text();
       console.error("Error response from create target:", errorText);
@@ -480,6 +416,11 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
   }
 }
 
+/**
+ * Legacy implementation of addNewObservation using the TWB API
+ * Kept for reference
+ */
+/*
 function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
   try {
     let token = yield call(auth.getToken);
@@ -518,10 +459,91 @@ function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
       yield put(setAddObservationResponse(data));
       yield put(setAddObservationError(null));
 
-      yield call(fetchSingleTarget, action.payload.targetId);
+      // Add a 2-second delay to give the backend time to sync
+      console.log("Waiting 2 seconds for backend to sync...");
+      yield delay(2000);
+
+      // Reload the target with updated data
+      yield put(loadTarget(action.payload.targetId));
     } else {
       const error = yield response.json();
       throw new Error(error.message);
+    }
+  } catch (error: any) {
+    yield put(
+      setAddObservationError(
+        error.message || "An error occurred while adding observation."
+      )
+    );
+    console.error("Error in addNewObservation saga: ", error);
+  }
+}
+*/
+
+/**
+ * Add a new observation to a target using the ontology action API
+ */
+function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
+  try {
+    let token = yield call(auth.getToken);
+    if (!token) {
+      token = yield call(auth.signIn);
+    }
+
+    // Prepare the ontology action payload
+    const ontologyPayload = {
+      parameters: {
+        targetId: action.payload.targetId,
+        observationTimestamp: formatTimestamp(new Date()),
+        latitude: action.payload.latitude,
+        longitude: action.payload.longitude,
+      },
+      options: {
+        returnEdits: "ALL",
+      },
+    };
+
+    console.log("Adding observation with ontology action:", ontologyPayload);
+    const ontologyId = THIRD_PARTY_APP.ONTOLOGY;
+
+    const response: Response = yield call(() =>
+      fetch(
+        `${THIRD_PARTY_APP.CLIENT_URL}/api/v2/ontologies/${ontologyId}/actions/twb-writeback-target-ontology-add-target-observation/apply`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(ontologyPayload),
+        }
+      )
+    );
+
+    if (response.ok) {
+      const data = yield response.json();
+      console.log("Observation added successfully:", data);
+      yield put(setAddObservationResponse(data));
+      yield put(setAddObservationError(null));
+
+      // Add a 2-second delay to give the backend time to sync
+      console.log("Waiting 2 seconds for backend to sync...");
+      yield delay(2000);
+
+      // Reload the target with updated data
+      yield put(loadTarget(action.payload.targetId));
+    } else {
+      const errorText = yield response.text();
+      console.error("Error response from add observation:", errorText);
+
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
+
+      throw new Error(errorData.message || "Failed to add observation");
     }
   } catch (error: any) {
     yield put(
