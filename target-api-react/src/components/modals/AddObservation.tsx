@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Icon, IconSize } from "@blueprintjs/core";
+import { Icon, IconSize, Spinner, SpinnerSize } from "@blueprintjs/core";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectAddObservationError,
   selectAddObservationResponse,
+  selectLoading,
 } from "../../features/targetApiGateway/targetApiGateway.selectors";
 import {
   addObservation,
@@ -45,6 +46,7 @@ const AddObservation: React.FC<AddObservationProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const addObservationError = useSelector(selectAddObservationError);
   const addObservationResponse = useSelector(selectAddObservationResponse);
+  const loading = useSelector(selectLoading);
   const [hasDispatchedLoadTargets, setHasDispatchedLoadTargets] =
     useState(false);
 
@@ -151,6 +153,11 @@ const AddObservation: React.FC<AddObservationProps> = ({
         </span>
         <h2 className="modal-title">Add Observation</h2>
         <div className="form-container">
+          {loading && (
+            <div className="spinner-overlay">
+              <Spinner intent="primary" size={SpinnerSize.LARGE} />
+            </div>
+          )}
           <form className="modal-form" onSubmit={handleSubmit}>
             {[
               {

@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
+import React from "react";
 
 interface NoLocationTableProps {
   targetsWithoutLocation: any[];
   setSelectedTarget: (target: any) => void;
 }
 
-const NoLocationTable: React.FC<NoLocationTableProps> = ({ targetsWithoutLocation, setSelectedTarget }) => {
+const NoLocationTable: React.FC<NoLocationTableProps> = ({
+  targetsWithoutLocation,
+  setSelectedTarget,
+}) => {
   return (
     <div className="target-table-container">
       <h3>Targets without observed location</h3>
@@ -29,15 +32,22 @@ const NoLocationTable: React.FC<NoLocationTableProps> = ({ targetsWithoutLocatio
           <tr>
             <th></th>
             <th>Name</th>
-            <th>Target RID</th>
+            <th>Column</th>
           </tr>
         </thead>
         <tbody>
-          {targetsWithoutLocation.map(target => (
+          {targetsWithoutLocation.map((target) => (
             <tr key={target.targetid} onClick={() => setSelectedTarget(target)}>
-              <td><img src="/symbol-diamond.svg" alt="diamond icon" width="25" height="25" /></td>
+              <td>
+                <img
+                  src="/symbol-diamond.svg"
+                  alt="diamond icon"
+                  width="25"
+                  height="25"
+                />
+              </td>
               <td>{target.name}</td>
-              <td>{target.targetid}</td>
+              <td>{target.column || "Unknown"}</td>
             </tr>
           ))}
         </tbody>

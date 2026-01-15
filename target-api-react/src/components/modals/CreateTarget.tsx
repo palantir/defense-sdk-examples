@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Icon, IconSize } from "@blueprintjs/core";
+import { Icon, IconSize, Spinner, SpinnerSize } from "@blueprintjs/core";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectCreateTargetError,
   selectCreateTargetResponse,
+  selectLoading,
   selectTargetBoardColumns,
 } from "../../features/targetApiGateway/targetApiGateway.selectors";
 import {
@@ -44,6 +45,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   const createTargetResponse = useSelector(selectCreateTargetResponse);
   const createTargetError = useSelector(selectCreateTargetError);
   const targetBoardColumns = useSelector(selectTargetBoardColumns);
+  const loading = useSelector(selectLoading);
 
   const getCurrentUTCTimestamp = (): string => {
     return Date.now().toLocaleString();
@@ -83,7 +85,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   useEffect(() => {
     if (createTargetResponse && !hasDispatchedLoadTargets) {
       setHasDispatchedLoadTargets(true);
-      onClose(); 
+      onClose();
     }
   }, [createTargetResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
@@ -161,6 +163,11 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
         </span>
         <h2 className="modal-title">Create Target</h2>
         <div className="form-container">
+          {loading && (
+            <div className="spinner-overlay">
+              <Spinner intent="primary" size={SpinnerSize.LARGE} />
+            </div>
+          )}
           <form className="modal-form" onSubmit={handleSubmit}>
             {[
               {
@@ -220,8 +227,8 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
                     <option value="">Select a column</option>
                     {input.name === "column" &&
                       targetBoardColumns.map((column) => (
-                        <option key={column} value={column}>
-                          {column}
+                        <option key={column.id} value={column.shortId}>
+                          {column.name}
                         </option>
                       ))}
                   </select>

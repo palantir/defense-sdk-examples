@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Spinner } from "@blueprintjs/core";
+import { Button, Intent, Spinner } from "@blueprintjs/core";
 import { useNavigate } from "react-router-dom";
 import auth from "./auth";
 
@@ -27,11 +27,56 @@ const AuthCallback: React.FC = () => {
     // Extract code from URL
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
+    const state = urlParams.get("state");
 
     if (!code) {
       setError("No authorization code received");
       setTimeout(() => navigate("/"), 3000);
       return;
+    }
+
+    // Verify the state parameter to prevent CSRF attacks
+    const savedState = sessionStorage.getItem("oauth_state");
+    if (state && savedState && state !== savedState) {
+      console.error("OAuth state mismatch - possible CSRF attack");
+      setError("Authentication failed: Invalid state parameter");
+      setTimeout(() => navigate("/"), 3000);
+      return;
+    }
+
+    // Check if this code has already been processed
+    const processedCode = sessionStorage.getItem("processed_auth_code");
+    if (processedCode === code) {
+      console.log(
+        "This authorization code has already been used, requesting new one"
+      );
+      setError(
+        "This authorization code has already been used. Redirecting to login again..."
+      );
+      // Clear all OAuth state to ensure a fresh start
+      auth.clearOAuthSessionStorage();
+      setTimeout(() => navigate("/"), 3000);
+      return;
+    }
+
+    // Check for code timestamp - codes typically expire after 5 minutes
+    const codeTimestamp = sessionStorage.getItem("auth_code_timestamp");
+    if (codeTimestamp) {
+      const timestamp = parseInt(codeTimestamp, 10);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      if (now - timestamp > fiveMinutes) {
+        console.log(
+          "Authorization code may have expired (older than 5 minutes)"
+        );
+        setError(
+          "Authorization code may have expired. Starting a new login flow."
+        );
+        auth.clearOAuthSessionStorage();
+        setTimeout(() => navigate("/"), 3000);
+        return;
+      }
     }
 
     // Process the callback directly
@@ -43,12 +88,26 @@ const AuthCallback: React.FC = () => {
       return;
     }
 
+    // Mark this code as being processed to prevent double processing
+    console.log("Marking authorization code as processed");
+    sessionStorage.setItem("processed_auth_code", code);
+
     // Exchange code for token
-    console.log("AuthCallback: Processing OAuth code");
+    console.log("AuthCallback: Processing OAuth code", {
+      codeLength: code.length,
+      hasVerifier: !!codeVerifier,
+      verifierLength: codeVerifier.length,
+    });
+
     auth
       .exchangeCodeForToken(code, codeVerifier)
       .then(() => {
         console.log("Authentication successful, redirecting to home");
+
+        // Set a flag in sessionStorage to indicate successful authentication
+        // This will be checked by the main application to trigger a state update
+        sessionStorage.setItem("auth_completed", "true");
+
         // Send message to opener if this is in a popup
         if (window.opener && window.opener !== window) {
           window.opener.postMessage(
@@ -64,6 +123,14 @@ const AuthCallback: React.FC = () => {
         const errorMessage =
           e instanceof Error ? e.message : "Authentication failed";
         setError(errorMessage);
+
+        // If we got an invalid_grant error, perform a complete OAuth reset
+        if (errorMessage.includes("invalid_grant")) {
+          console.log(
+            "Performing complete OAuth reset due to invalid_grant error"
+          );
+          auth.resetOAuthCompletely();
+        }
 
         // Notify opener of error if this is a popup
         if (window.opener && window.opener !== window) {
@@ -84,6 +151,16 @@ const AuthCallback: React.FC = () => {
         <h2>Authentication Error</h2>
         <p>{error}</p>
         <p>Redirecting to home page...</p>
+        <Button
+          intent={Intent.PRIMARY}
+          onClick={() => {
+            auth.resetOAuthCompletely();
+            navigate("/");
+          }}
+          style={{ marginTop: "10px" }}
+        >
+          Try Again Now
+        </Button>
       </div>
     );
   }

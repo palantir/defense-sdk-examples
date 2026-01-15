@@ -39,6 +39,7 @@ export interface CreateTargetPayload {
   latitude: number;
   radius: number;
   column: string;
+  entityId?: string; // Optional ID for the target entity, will be auto-generated if not provided
 }
 
 export interface AddObservationPayload {
@@ -51,10 +52,16 @@ export interface AddObservationPayload {
   baseRevisionId: number;
 }
 
+export interface ColumnInfo {
+  id: string; // Column ID (full primary key)
+  shortId: string; // Short column ID used in API payloads (e.g. "DRAFT", "CLOSED")
+  name: string; // Column name ($title)
+}
+
 interface TargetApiGatewayState {
   loadedTargetBoardArtifactId: string | null;
   targetBoardTargets: Target[];
-  targetBoardColumns: string[];
+  targetBoardColumns: ColumnInfo[]; // Changed from string[] to ColumnInfo[]
   loadedTargetRid: string;
   createTargetResponse: any | null;
   addObservationResponse: any | null;
@@ -62,12 +69,13 @@ interface TargetApiGatewayState {
   addObservationError: string | null;
   loading: boolean;
   loadingSingleTarget: boolean;
+  loadingObservation: boolean;
 }
 
 const initialState: TargetApiGatewayState = {
   loadedTargetBoardArtifactId: null,
   targetBoardTargets: [],
-  targetBoardColumns: [],
+  targetBoardColumns: [], // This will now contain objects with id and name properties
   loadedTargetRid:
     "ri.gotham-artifact.3736180562172569377-2123486733096639170.cosmos-situation.E1EMjnkk73B6GkYsAr",
   createTargetResponse: null,
@@ -76,6 +84,7 @@ const initialState: TargetApiGatewayState = {
   addObservationError: null,
   loading: false,
   loadingSingleTarget: false,
+  loadingObservation: false,
 };
 
 const targetApiGatewaySlice = createSlice({
@@ -93,6 +102,7 @@ const targetApiGatewaySlice = createSlice({
     },
     addObservation: (state, _action: PayloadAction<AddObservationPayload>) => {
       state.loading = true;
+      state.loadingObservation = true;
     },
     setSelectedTargetBoard: (state, action: PayloadAction<string>) => {
       state.loadedTargetBoardArtifactId = action.payload;
@@ -114,8 +124,10 @@ const targetApiGatewaySlice = createSlice({
         state.targetBoardTargets.push(action.payload);
       }
       state.loadingSingleTarget = false;
+      state.loadingObservation = false;
+      state.loading = false; // Reset loading state after target is updated
     },
-    setTargetBoardColumns: (state, action: PayloadAction<string[]>) => {
+    setTargetBoardColumns: (state, action: PayloadAction<ColumnInfo[]>) => {
       state.targetBoardColumns = action.payload;
     },
     setSelectedTarget: (state, action: PayloadAction<string>) => {
@@ -127,7 +139,7 @@ const targetApiGatewaySlice = createSlice({
     },
     setAddObservationResponse: (state, action: PayloadAction<any>) => {
       state.addObservationResponse = action.payload;
-      state.loading = false;
+      // Keep loading true - we'll reset it after the delay and reload
     },
     setCreateTargetError: (state, action: PayloadAction<string | null>) => {
       state.createTargetError = action.payload;
@@ -136,6 +148,7 @@ const targetApiGatewaySlice = createSlice({
     setAddObservationError: (state, action: PayloadAction<string | null>) => {
       state.addObservationError = action.payload;
       state.loading = false;
+      state.loadingObservation = false;
     },
     clearCreateTargetResponse: (state) => {
       state.createTargetResponse = null;
