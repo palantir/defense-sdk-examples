@@ -43,11 +43,38 @@ declare module "leaflet" {
   }
 }
 
-const redDiamondIcon = new L.Icon({
-  iconUrl: "/symbol-diamond.svg",
-  iconSize: [25, 25],
-  iconAnchor: [12.5, 12.5],
-});
+// Create a function to get a dynamic marker icon with the current theme color
+const createDiamondIcon = (): L.DivIcon => {
+  // Get the marker color from CSS variables
+  const markerColor = getComputedStyle(document.documentElement)
+    .getPropertyValue("--marker-color")
+    .trim();
+
+  // Create a div icon with inline SVG using the current theme color
+  return L.divIcon({
+    html: `
+      <svg 
+        width="25" 
+        height="25" 
+        viewBox="0 0 16 16" 
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path 
+          fill="${markerColor}" 
+          fill-rule="evenodd" 
+          clip-rule="evenodd" 
+          d="M12,8.01c0-0.19-0.07-0.36-0.16-0.51l0.01-0.01l-3-5L8.84,2.5C8.67,2.21,8.36,2.01,8,2.01
+          S7.33,2.21,7.16,2.5L7.14,2.49l-3,5L4.16,7.5C4.07,7.65,4,7.82,4,8.01s0.07,0.36,0.16,0.51L4.14,8.52l3,5
+          l0.01-0.01C7.33,13.8,7.64,14.01,8,14.01s0.67-0.2,0.84-0.49l0.01,0.01l3-5l-0.01-0.01
+          C11.93,8.36,12,8.2,12,8.01z"
+        />
+      </svg>
+    `,
+    className: "diamond-marker",
+    iconSize: [25, 25],
+    iconAnchor: [12.5, 12.5],
+  });
+};
 
 interface TargetMapProps {
   setSelectedTarget: (target: any) => void;
@@ -94,6 +121,42 @@ const TargetMap: React.FC<TargetMapProps> = ({
       .replace(/['"]+/g, ""); // Remove any quotes
     return tileUrl;
   };
+
+  // Function to get a diamond marker that updates with the theme
+  const getDiamondIcon = () => {
+    return createDiamondIcon();
+  };
+
+  // Create a state to store the current icon
+  const [diamondIcon, setDiamondIcon] = useState(getDiamondIcon());
+
+  // Update the icon when theme changes
+  useEffect(() => {
+    const updateDiamondIcon = () => {
+      setDiamondIcon(getDiamondIcon());
+    };
+
+    // Create a MutationObserver to watch for theme changes
+    const observer = new MutationObserver(updateDiamondIcon);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+
+    // Watch for media query changes too
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      // Use setTimeout to ensure CSS variables are updated first
+      setTimeout(updateDiamondIcon, 100);
+    };
+    mediaQuery.addEventListener("change", handleChange);
+
+    // Clean up
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, []);
 
   // Listen for changes to the color scheme preference
   useEffect(() => {
@@ -246,8 +309,10 @@ const TargetMap: React.FC<TargetMapProps> = ({
     }
   }, [map, selectedTarget, setModalContent]);
 
+  // Update markers when theme changes
   useEffect(() => {
-    if (map && selectedBoard) {
+    if (map && selectedBoard && targets.length > 0) {
+      // Recreate markers with the new icon style
       markers.forEach((marker) => map.removeLayer(marker));
       setMarkers([]);
 
@@ -262,7 +327,7 @@ const TargetMap: React.FC<TargetMapProps> = ({
         ) {
           const marker = L.marker(
             [target.location.latitude, target.location.longitude],
-            { icon: redDiamondIcon } as L.MarkerOptions,
+            { icon: diamondIcon } as L.MarkerOptions,
           );
           marker.on("click", () => handleMarkerClick(target));
           marker.on("mouseover", () => marker.openPopup());
@@ -282,7 +347,7 @@ const TargetMap: React.FC<TargetMapProps> = ({
       setMarkers(newMarkers);
       setTargetsWithoutLocation(targetsWithoutValidLocation);
     }
-  }, [map, selectedBoard, targets]);
+  }, [map, selectedBoard, targets, diamondIcon]);
 
   return (
     <div className="map-container" style={{ marginTop: "20px" }}>

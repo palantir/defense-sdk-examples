@@ -18,7 +18,7 @@
 /* Define CSS variables for both light and dark mode */
 :root {
   /* Light mode theme (default) */
-  --accent-color: #{bp.$vermilion4};
+  --accent-color: #{bp.$rose1};
   --primary-color: #{bp.$dark-gray5};
   --text-color: #{bp.$dark-gray1};
   --secondary-text-color: #{bp.$gray1};
@@ -27,13 +27,14 @@
   --panel-background-color: #{bp.$white};
   --container-background-color: #{bp.$light-gray5};
   --hover-background-color: #{bp.$cerulean4};
-  --button-color: #{bp.$vermilion4};
+  --button-color: #{bp.$rose1};
   --button-text-color: #{bp.$white};
   --border-color: #{bp.$light-gray1};
   --modal-background-color: #{bp.$white};
   --modal-overlay-color: rgba(0, 0, 0, 0.5);
   --error-color: #{bp.$red3};
   --success-color: #{bp.$green3};
+  --marker-color: #{bp.$rose1};
 
   /* Map tile URL for light mode */
   --map-tile-url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
@@ -42,7 +43,7 @@
 /* Dark mode theme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent-color: #{bp.$vermilion4};
+    --accent-color: #{bp.$rose5};
     --primary-color: #{bp.$light-gray5};
     --text-color: #{bp.$white};
     --secondary-text-color: #{bp.$gray5};
@@ -51,13 +52,14 @@
     --panel-background-color: #{bp.$dark-gray2};
     --container-background-color: #{bp.$dark-gray3};
     --hover-background-color: #{bp.$cerulean4};
-    --button-color: #{bp.$vermilion4};
+    --button-color: #{bp.$rose5};
     --button-text-color: #{bp.$dark-gray1};
     --border-color: #{bp.$dark-gray1};
     --modal-background-color: #{bp.$dark-gray1};
     --modal-overlay-color: rgba(0, 0, 0, 0.7);
     --error-color: #{bp.$red4};
     --success-color: #{bp.$green4};
+    --marker-color: #{bp.$rose5};
 
     /* Map tile URL for dark mode */
     --map-tile-url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
@@ -82,3 +84,4 @@ $modalOverlayColor: var(--modal-overlay-color);
 $errorColor: var(--error-color);
 $successColor: var(--success-color);
 $mapTileUrl: var(--map-tile-url);
+$markerColor: var(--marker-color);
