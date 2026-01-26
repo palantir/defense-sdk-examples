@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2018 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2024 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@import "../node_modules/@blueprintjs/core/lib/scss/variables";
+@use "./_variables.scss" as vars;
 @import "@blueprintjs/core/lib/css/blueprint.css";
 
 body {
-  background-color: $dark-gray1;
-  color: white;
+  background-color: vars.$backgroundColor;
+  color: vars.$textColor;
   font-family: "Inconsolata", sans-serif;
   font-size: 16px;
   overflow-y: auto;
 }
 
 h1 {
-  color: $vermilion4;
+  color: vars.$accentColor;
   font-family: "Helvetica", sans-serif;
   font-size: 32px;
   margin-left: 20px;
@@ -36,6 +36,7 @@ h1 {
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
+  background-color: vars.$backgroundColor;
 }
 
 .content-container {
@@ -72,9 +73,21 @@ h1 {
   overflow: hidden;
 }
 
+/* Override Leaflet controls for light/dark mode */
+.leaflet-control-layers,
+.leaflet-control-zoom {
+  background-color: vars.$panelBackgroundColor !important;
+  color: vars.$textColor !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  color: vars.$primaryColor !important;
+}
+
 .target-view {
   margin: 20px;
-  color: white;
+  color: vars.$textColor;
   position: relative;
 }
 
@@ -86,11 +99,11 @@ h1 {
   text-align: center;
   margin-top: 20px;
   font-size: 18px;
-  color: $gray4;
+  color: vars.$disabledTextColor;
 }
 
 .target-name {
-  color: $vermilion4;
+  color: vars.$accentColor;
   font-weight: bold;
   margin-bottom: 10px;
 }
@@ -111,19 +124,19 @@ h1 {
     font-family: "Inconsolata", sans-serif;
     font-size: 16px;
     padding: 8px;
-    background-color: $dark-gray2;
-    color: white;
-    border: 1px solid $dark-gray1;
+    background-color: vars.$panelBackgroundColor;
+    color: vars.$textColor;
+    border: 1px solid vars.$borderColor;
     border-radius: 4px;
     width: 400px;
   }
 }
 
 .create-target-btn {
-  background-color: $vermilion4;
-  color: $dark-gray1;
+  background-color: vars.$buttonColor;
+  color: vars.$buttonTextColor;
   font-weight: bold;
-  border: 1px solid $dark-gray1;
+  border: 1px solid vars.$borderColor;
   padding: 10px 20px;
   cursor: pointer;
   border-radius: 5px;
@@ -131,7 +144,7 @@ h1 {
 }
 
 .map-instructions {
-  color: white;
+  color: vars.$textColor;
   text-align: left;
   padding: 8px;
   margin-bottom: 10px;
@@ -156,18 +169,18 @@ h1 {
 
 .target-table th,
 .target-table td {
-  border: 1px solid $dark-gray1;
+  border: 1px solid vars.$borderColor;
   padding: 8px;
   text-align: left;
 }
 
 .target-table th {
-  background-color: $dark-gray2;
-  color: white;
+  background-color: vars.$panelBackgroundColor;
+  color: vars.$textColor;
 }
 
 .target-table tbody tr:hover {
-  background-color: $cerulean4;
+  background-color: vars.$hoverBackgroundColor;
   cursor: pointer;
 }
 
@@ -186,17 +199,17 @@ h1 {
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-  background: $dark-gray1;
+  background: vars.$panelBackgroundColor;
 }
 
 .leaflet-popup-content {
   font-family: "Inconsolata", sans-serif;
   font-size: 16px;
-  color: white;
+  color: vars.$textColor;
 }
 
 .leaflet-popup-content strong {
-  color: $vermilion4;
+  color: vars.$accentColor;
 }
 
 .leaflet-popup-content p {
@@ -204,14 +217,14 @@ h1 {
 }
 
 .leaflet-contextmenu {
-  background-color: $dark-gray1 !important;
-  border: 2px solid darkslategray;
+  background-color: vars.$panelBackgroundColor !important;
+  border: 2px solid vars.$borderColor;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
 
 .leaflet-contextmenu-item {
-  color: white !important;
+  color: vars.$textColor !important;
   font-family: "Inconsolata", sans-serif !important;
   font-size: 14px !important;
   padding: 8px 12px !important;
@@ -230,7 +243,7 @@ h1 {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: $cerulean4 !important;
+  background-color: vars.$hoverBackgroundColor !important;
   border-radius: 2px;
   padding: 12px 16px;
   z-index: -1;
@@ -241,10 +254,10 @@ h1 {
 }
 
 .add-observation-button {
-  background-color: $vermilion4;
-  color: $dark-gray1;
+  background-color: vars.$buttonColor;
+  color: vars.$buttonTextColor;
   font-weight: bold;
-  border: 1px solid $dark-gray1;
+  border: 1px solid vars.$borderColor;
   padding: 10px;
   cursor: pointer;
   border-radius: 5px;
@@ -258,7 +271,7 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: vars.$modalOverlayColor;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -266,7 +279,7 @@ h1 {
 }
 
 .modal-popout {
-  background: $dark-gray1;
+  background: vars.$modalBackgroundColor;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -325,6 +338,10 @@ h1 {
     flex: 1;
     padding: 8px;
     box-sizing: border-box;
+    background-color: vars.$panelBackgroundColor;
+    color: vars.$textColor;
+    border: 1px solid vars.$borderColor;
+    border-radius: 4px;
   }
 }
 
@@ -336,8 +353,8 @@ h1 {
 .submit-button {
   display: block;
   margin: 20px auto;
-  background-color: $vermilion4;
-  color: black;
+  background-color: vars.$buttonColor;
+  color: vars.$buttonTextColor;
   font-weight: bold;
   padding: 10px 20px;
   border: none;
@@ -356,10 +373,10 @@ h1 {
 .button-container button {
   width: 150px;
   margin-right: 10px;
-  background-color: $vermilion4;
-  color: $dark-gray1;
+  background-color: vars.$buttonColor;
+  color: vars.$buttonTextColor;
   font-weight: bold;
-  border: 1px solid $dark-gray1;
+  border: 1px solid vars.$borderColor;
   padding: 10px;
   cursor: pointer;
   border-radius: 5px;
@@ -373,22 +390,22 @@ h1 {
   text-overflow: ellipsis;
   padding: 5px;
   box-sizing: border-box;
-  color: white;
+  color: vars.$textColor;
 }
 
 .error {
-  border: 2px solid $vermilion4;
+  border: 2px solid vars.$errorColor;
 }
 
 .error-message {
-  color: $vermilion4;
+  color: vars.$errorColor;
 }
 
 .add-observation-button {
-  background-color: $vermilion4;
-  color: $dark-gray1;
+  background-color: vars.$buttonColor;
+  color: vars.$buttonTextColor;
   font-weight: bold;
-  border: 1px solid $dark-gray1;
+  border: 1px solid vars.$borderColor;
   padding: 10px;
   cursor: pointer;
   border-radius: 5px;
@@ -406,7 +423,7 @@ h1 {
 }
 
 .response-message {
-  color: green;
+  color: vars.$successColor;
   white-space: pre-wrap;
 }
 

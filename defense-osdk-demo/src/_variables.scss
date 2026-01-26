@@ -1,0 +1,84 @@
+/*
+ * (c) Copyright 2024 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@use "node_modules/@blueprintjs/core/lib/scss/variables" as bp;
+
+/* Define CSS variables for both light and dark mode */
+:root {
+  /* Light mode theme (default) */
+  --accent-color: #{bp.$vermilion4};
+  --primary-color: #{bp.$dark-gray5};
+  --text-color: #{bp.$dark-gray1};
+  --secondary-text-color: #{bp.$gray1};
+  --disabled-text-color: #{bp.$gray4};
+  --background-color: #{bp.$light-gray4};
+  --panel-background-color: #{bp.$white};
+  --container-background-color: #{bp.$light-gray5};
+  --hover-background-color: #{bp.$cerulean4};
+  --button-color: #{bp.$vermilion4};
+  --button-text-color: #{bp.$white};
+  --border-color: #{bp.$light-gray1};
+  --modal-background-color: #{bp.$white};
+  --modal-overlay-color: rgba(0, 0, 0, 0.5);
+  --error-color: #{bp.$red3};
+  --success-color: #{bp.$green3};
+
+  /* Map tile URL for light mode */
+  --map-tile-url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+}
+
+/* Dark mode theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-color: #{bp.$vermilion4};
+    --primary-color: #{bp.$light-gray5};
+    --text-color: #{bp.$white};
+    --secondary-text-color: #{bp.$gray5};
+    --disabled-text-color: #{bp.$gray4};
+    --background-color: #{bp.$dark-gray1};
+    --panel-background-color: #{bp.$dark-gray2};
+    --container-background-color: #{bp.$dark-gray3};
+    --hover-background-color: #{bp.$cerulean4};
+    --button-color: #{bp.$vermilion4};
+    --button-text-color: #{bp.$dark-gray1};
+    --border-color: #{bp.$dark-gray1};
+    --modal-background-color: #{bp.$dark-gray1};
+    --modal-overlay-color: rgba(0, 0, 0, 0.7);
+    --error-color: #{bp.$red4};
+    --success-color: #{bp.$green4};
+
+    /* Map tile URL for dark mode */
+    --map-tile-url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  }
+}
+
+/* SCSS variables that reference the CSS variables */
+$accentColor: var(--accent-color);
+$primaryColor: var(--primary-color);
+$textColor: var(--text-color);
+$secondaryTextColor: var(--secondary-text-color);
+$disabledTextColor: var(--disabled-text-color);
+$backgroundColor: var(--background-color);
+$panelBackgroundColor: var(--panel-background-color);
+$containerBackgroundColor: var(--container-background-color);
+$hoverBackgroundColor: var(--hover-background-color);
+$buttonColor: var(--button-color);
+$buttonTextColor: var(--button-text-color);
+$borderColor: var(--border-color);
+$modalBackgroundColor: var(--modal-background-color);
+$modalOverlayColor: var(--modal-overlay-color);
+$errorColor: var(--error-color);
+$successColor: var(--success-color);
+$mapTileUrl: var(--map-tile-url);

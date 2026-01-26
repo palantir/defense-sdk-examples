@@ -30,6 +30,9 @@ import {
 import AddObservation from "./modals/AddObservation";
 import CreateTarget from "./modals/CreateTarget";
 
+// Import CSS variables for map tiles
+import "../_variables.scss";
+
 // Extend the Leaflet Map type to include contextmenu properties
 declare module "leaflet" {
   interface Map {
@@ -53,7 +56,7 @@ interface TargetMapProps {
   selectedTarget: any;
   setTargetsWithoutLocation: (targets: any[]) => void;
   setContextMenuLocation: (
-    location: { lat: number; lon: number } | null
+    location: { lat: number; lon: number } | null,
   ) => void;
 }
 
@@ -83,6 +86,74 @@ const TargetMap: React.FC<TargetMapProps> = ({
 
   const mapRef = useRef<HTMLDivElement>(null);
 
+  // Function to get the current tile URL from CSS variables
+  const getMapTileUrl = (): string => {
+    const tileUrl = getComputedStyle(document.documentElement)
+      .getPropertyValue("--map-tile-url")
+      .trim()
+      .replace(/['"]+/g, ""); // Remove any quotes
+    return tileUrl;
+  };
+
+  // Listen for changes to the color scheme preference
+  useEffect(() => {
+    if (!map) return;
+
+    // Get the CSS variables observer to detect theme changes
+    const observer = new MutationObserver(() => {
+      // Update map tiles when CSS variables change
+      map.eachLayer((layer) => {
+        if ((layer as L.TileLayer).options.attribution?.includes("CARTO")) {
+          map.removeLayer(layer);
+        }
+      });
+
+      // Get the current tile URL from CSS variables
+      const tileUrl = getMapTileUrl();
+
+      L.tileLayer(tileUrl, {
+        attribution:
+          '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }).addTo(map);
+    });
+
+    // Observe for changes to document's style attribute (dark/light mode changes)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+
+    // Add listener for media query changes too
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      // This will force a refresh of the map tiles based on the new theme
+      // We're using setTimeout to ensure CSS variables are updated first
+      setTimeout(() => {
+        map.eachLayer((layer) => {
+          if ((layer as L.TileLayer).options.attribution?.includes("CARTO")) {
+            map.removeLayer(layer);
+          }
+        });
+
+        const tileUrl = getMapTileUrl();
+
+        L.tileLayer(tileUrl, {
+          attribution:
+            '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }).addTo(map);
+      }, 100);
+    };
+
+    // Add the listener
+    mediaQuery.addEventListener("change", handleChange);
+
+    // Clean up
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, [map]);
+
   useEffect(() => {
     if (mapRef.current && !map) {
       // Define context menu items
@@ -107,13 +178,13 @@ const TargetMap: React.FC<TargetMapProps> = ({
         contextmenuItems: contextmenuItems,
       }).setView([cursorLocation.lat, cursorLocation.lon], zoomLevel);
 
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution:
-            '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-        }
-      ).addTo(initializedMap);
+      // Get the current tile URL from CSS variables
+      const tileUrl = getMapTileUrl();
+
+      L.tileLayer(tileUrl, {
+        attribution:
+          '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }).addTo(initializedMap);
 
       initializedMap.on("mousemove", (e: L.LeafletMouseEvent) => {
         setCursorLocation({ lat: e.latlng.lat, lon: e.latlng.lng });
@@ -191,14 +262,14 @@ const TargetMap: React.FC<TargetMapProps> = ({
         ) {
           const marker = L.marker(
             [target.location.latitude, target.location.longitude],
-            { icon: redDiamondIcon } as L.MarkerOptions
+            { icon: redDiamondIcon } as L.MarkerOptions,
           );
           marker.on("click", () => handleMarkerClick(target));
           marker.on("mouseover", () => marker.openPopup());
           marker.on("mouseout", () => marker.closePopup());
 
           marker.bindPopup(
-            `<div><strong>${target.name}</strong><p>${target.column}</p></div>`
+            `<div><strong>${target.name}</strong><p>${target.column}</p></div>`,
           );
           marker.addTo(map);
 
@@ -231,9 +302,11 @@ const TargetMap: React.FC<TargetMapProps> = ({
       {selectedBoard && (
         <div className="map-instructions">
           <br></br>
-          Right click on the map to create a new target for the loaded target board.
+          Right click on the map to create a new target for the loaded target
+          board.
           <br></br>
-          Select a target to view details and right click on the map to add a new observation for a selected target. 
+          Select a target to view details and right click on the map to add a
+          new observation for a selected target.
         </div>
       )}
       <div ref={mapRef} className="leaflet-map"></div>
