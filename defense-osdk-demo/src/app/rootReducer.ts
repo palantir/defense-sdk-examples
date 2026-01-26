@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { combineReducers } from '@reduxjs/toolkit';
-import targetApiGatewayReducer from '../features/osdk/osdk.slice';
+import { combineReducers } from "@reduxjs/toolkit";
+import targetApiGatewayReducer from "../features/osdk/osdk.slice";
+import targetBoardsReducer from "../features/osdk/targetBoards.slice";
 
 const rootReducer = combineReducers({
   targetApiGateway: targetApiGatewayReducer,
+  targetBoards: targetBoardsReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

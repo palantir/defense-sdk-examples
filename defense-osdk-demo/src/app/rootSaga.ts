@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { all } from 'redux-saga/effects';
-import targetApiGatewaySaga from '../features/osdk/osdk.saga';
+import { all } from "redux-saga/effects";
+import targetApiGatewaySaga from "../features/osdk/osdk.saga";
+import targetBoardsSaga from "../features/osdk/targetBoards.saga";
 
 export default function* rootSaga() {
-    yield all([
-        targetApiGatewaySaga()
-    ]);
+  yield all([targetApiGatewaySaga(), targetBoardsSaga()]);
 }

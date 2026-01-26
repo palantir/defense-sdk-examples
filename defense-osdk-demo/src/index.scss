@@ -120,7 +120,8 @@ h1 {
   align-items: center;
   gap: 10px;
 
-  input {
+  input,
+  select.board-dropdown {
     font-family: "Inconsolata", sans-serif;
     font-size: 16px;
     padding: 8px;
@@ -129,6 +130,15 @@ h1 {
     border: 1px solid vars.$borderColor;
     border-radius: 4px;
     width: 400px;
+  }
+
+  .loading-indicator {
+    color: vars.$secondaryTextColor;
+    font-style: italic;
+  }
+
+  .error-message {
+    color: vars.$errorColor;
   }
 }
 

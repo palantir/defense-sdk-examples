@@ -27,6 +27,12 @@ import {
   setSelectedTargetBoard,
   setTargets,
 } from "../features/osdk/osdk.slice";
+import {
+  loadTargetBoards,
+  selectTargetBoards,
+  selectTargetBoardsLoading,
+  selectTargetBoardsError,
+} from "../features/osdk/targetBoards.slice";
 import AddObservation from "./modals/AddObservation";
 import CreateTarget from "./modals/CreateTarget";
 
@@ -109,7 +115,12 @@ const TargetMap: React.FC<TargetMapProps> = ({
     lat: number;
     lon: number;
   } | null>(null);
-  const [inputValue, setInputValue] = useState<string>(selectedBoard || "");
+  const [selectedBoardId, setSelectedBoardId] = useState<string>(
+    selectedBoard || "",
+  );
+  const targetBoards = useSelector(selectTargetBoards);
+  const loadingBoards = useSelector(selectTargetBoardsLoading);
+  const boardsError = useSelector(selectTargetBoardsError);
 
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -261,15 +272,20 @@ const TargetMap: React.FC<TargetMapProps> = ({
     }
   }, [mapRef, map, cursorLocation.lat, cursorLocation.lon, zoomLevel]);
 
-  const handleBoardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
+  // Load target boards on component mount
+  useEffect(() => {
+    dispatch(loadTargetBoards());
+  }, [dispatch]);
 
-  const handleBoardKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  // Handle board selection change
+  const handleBoardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const boardId = e.target.value;
+    setSelectedBoardId(boardId);
+
+    if (boardId) {
       setSelectedTarget(null);
       dispatch(setTargets([]));
-      dispatch(setSelectedTargetBoard(inputValue));
+      dispatch(setSelectedTargetBoard(boardId));
       dispatch(loadTargets());
     }
   };
@@ -353,15 +369,28 @@ const TargetMap: React.FC<TargetMapProps> = ({
     <div className="map-container" style={{ marginTop: "20px" }}>
       <div className="target-board-selector-container">
         <div className="target-board-selector">
-          <label htmlFor="target-board">Target Board RID:</label>
-          <input
-            type="text"
-            id="target-board"
-            onChange={handleBoardChange}
-            onKeyPress={handleBoardKeyPress}
-            value={inputValue}
-            placeholder="Enter Target Board ID"
-          />
+          <label htmlFor="target-board">Target Board:</label>
+          {loadingBoards ? (
+            <div className="loading-indicator">Loading target boards...</div>
+          ) : boardsError ? (
+            <div className="error-message">
+              Error loading boards: {boardsError}
+            </div>
+          ) : (
+            <select
+              id="target-board"
+              onChange={handleBoardChange}
+              value={selectedBoardId}
+              className="board-dropdown"
+            >
+              <option value="">Select a Target Board</option>
+              {targetBoards.map((board) => (
+                <option key={board.rid} value={board.rid}>
+                  {board.title}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
       {selectedBoard && (

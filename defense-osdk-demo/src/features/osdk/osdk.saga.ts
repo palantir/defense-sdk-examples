@@ -196,7 +196,7 @@ function* fetchTargetsForBoard(): any {
       // Step 2: Get columns for the board using $link (accessing link from board object)
       console.log(`Fetching columns for board ${boardRid}`);
       const columnsResponse = yield call([board.$link.columns, "fetchPage"]);
-      
+
       // Extract the items from the response's data field
       const columns = columnsResponse.data || [];
       console.log(`Found ${columns.length} columns`);
@@ -358,70 +358,6 @@ function* createNewTarget(action: PayloadAction<CreateTargetPayload>): any {
     console.error("Error in createNewTarget saga:", error);
   }
 }
-
-/**
- * Legacy implementation of addNewObservation using the TWB API
- * Kept for reference
- */
-/*
-function* addNewObservation(action: PayloadAction<AddObservationPayload>): any {
-  try {
-    let token = yield call(auth.getToken);
-    if (!token) {
-      token = yield call(auth.signIn);
-    }
-
-    const payload = {
-      name: action.payload.name,
-      baseRevisionId: action.payload.baseRevisionId,
-      location: {
-        manualLocation: {
-          lat: action.payload.latitude,
-          lng: action.payload.longitude,
-          circularErrorInMeters: action.payload.radius ?? 0,
-        },
-      },
-    };
-
-    const response: Response = yield call(() =>
-      fetch(
-        `${THIRD_PARTY_APP.CLIENT_URL}/api/gotham/v1/twb/target/${action.payload.targetId}?preview=true`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      )
-    );
-
-    if (response.ok) {
-      const data = yield response.json();
-      yield put(setAddObservationResponse(data));
-      yield put(setAddObservationError(null));
-
-      // Add a 2-second delay to give the backend time to sync
-      console.log("Waiting 2 seconds for backend to sync...");
-      yield delay(2000);
-
-      // Reload the target with updated data
-      yield put(loadTarget(action.payload.targetId));
-    } else {
-      const error = yield response.json();
-      throw new Error(error.message);
-    }
-  } catch (error: any) {
-    yield put(
-      setAddObservationError(
-        error.message || "An error occurred while adding observation."
-      )
-    );
-    console.error("Error in addNewObservation saga: ", error);
-  }
-}
-*/
 
 /**
  * Add a new observation to a target using the OSDK action API
