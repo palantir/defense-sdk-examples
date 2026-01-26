@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 16 16"
+   enable-background="new 0 0 16 16"
+   xml:space="preserve"
+   sodipodi:docname="symbol-diamond.svg"
+   inkscape:version="1.2.2 (b0a8486, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs10" /><sodipodi:namedview
+   id="namedview8"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="false"
+   inkscape:zoom="14.75"
+   inkscape:cx="-2.779661"
+   inkscape:cy="8"
+   inkscape:window-width="1309"
+   inkscape:window-height="456"
+   inkscape:window-x="0"
+   inkscape:window-y="25"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="Layer_1" />
+<g
+   id="symbol_diamond_6_"
+   style="fill:#d45500">
+	<g
+   id="g4"
+   style="fill:#d45500">
+		<path
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   d="M12,8.01c0-0.19-0.07-0.36-0.16-0.51l0.01-0.01l-3-5L8.84,2.5    C8.67,2.21,8.36,2.01,8,2.01S7.33,2.21,7.16,2.5L7.14,2.49l-3,5L4.16,7.5C4.07,7.65,4,7.82,4,8.01s0.07,0.36,0.16,0.51L4.14,8.52    l3,5l0.01-0.01C7.33,13.8,7.64,14.01,8,14.01s0.67-0.2,0.84-0.49l0.01,0.01l3-5l-0.01-0.01C11.93,8.36,12,8.2,12,8.01z"
+   id="path2"
+   style="fill:#d45500" />
+	</g>
+</g>
+</svg>
