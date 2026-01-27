@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import React from "react";
+import DiamondIcon from "./icons/DiamondIcon";
 
 interface NoLocationTableProps {
   targetsWithoutLocation: any[];
@@ -39,12 +40,7 @@ const NoLocationTable: React.FC<NoLocationTableProps> = ({
           {targetsWithoutLocation.map((target) => (
             <tr key={target.targetid} onClick={() => setSelectedTarget(target)}>
               <td>
-                <img
-                  src="/symbol-diamond.svg"
-                  alt="diamond icon"
-                  width="25"
-                  height="25"
-                />
+                <DiamondIcon width={25} height={25} />
               </td>
               <td>{target.name}</td>
               <td>{target.column || "Unknown"}</td>
