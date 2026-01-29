@@ -10,26 +10,6 @@ jobs:
       - image: circleci/node:14
     steps:
       - checkout
-      - run:
-          name: Install dependencies for map-api-react
-          command: |
-            cd map-api-react
-            npm install
-      - run:
-          name: Build map-api-react
-          command: |
-            cd map-api-react
-            npm run build
-      - run:
-          name: Install dependencies for target-api-react
-          command: |
-            cd target-api-react
-            npm install
-      - run:
-          name: Build target-api-react
-          command: |
-            cd target-api-react
-            npm run build
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
