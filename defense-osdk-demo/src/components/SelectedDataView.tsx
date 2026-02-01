@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
-import { Target } from '../features/osdk/osdk.slice';
-import AddObservation from './modals/AddObservation';
+import React from "react";
+import { Target } from "../store/features/targeting/targetingSlice";
+import AddObservation from "./modals/AddObservation";
 
-interface TargetViewProps {
+interface SelectedDataViewProps {
   selectedTarget: Target;
   setModalContent: (content: string | null) => void;
   modalContent: string | null;
   contextMenuLocation: { lat: number; lon: number } | null;
 }
 
-const TargetView: React.FC<TargetViewProps> = ({ selectedTarget, setModalContent, modalContent, contextMenuLocation }) => {
+const SelectedDataView: React.FC<SelectedDataViewProps> = ({
+  selectedTarget,
+  setModalContent,
+  modalContent,
+  contextMenuLocation,
+}) => {
   const renderModal = () => {
-    if (modalContent === 'addObservation' && contextMenuLocation) {
+    if (modalContent === "addObservation" && contextMenuLocation) {
       return (
         <AddObservation
           selectedTarget={selectedTarget}
@@ -40,28 +45,31 @@ const TargetView: React.FC<TargetViewProps> = ({ selectedTarget, setModalContent
   };
 
   return (
-    <div className="target-view">
+    <div className="selected-data-view">
       {selectedTarget ? (
         <div className="target-details">
           <h3 className="target-name">{selectedTarget.name}</h3>
-          <p><strong>Target RID:</strong> {selectedTarget.rid}</p>
-          <p><strong>Column:</strong> {selectedTarget.column}</p>
-          <p><strong>Last Observed Location:</strong> {
-            selectedTarget.location 
-            && selectedTarget.location.latitude !== undefined 
-            && selectedTarget.location.longitude !== undefined 
-            ? `[${selectedTarget.location.latitude}, ${selectedTarget.location.longitude}]` 
-            : '[]'
-          }</p>
+          <p>
+            <strong>Target RID:</strong> {selectedTarget.rid}
+          </p>
+          <p>
+            <strong>Column:</strong> {selectedTarget.column}
+          </p>
+          <p>
+            <strong>Last Observed Location:</strong>{" "}
+            {selectedTarget.location &&
+            selectedTarget.location.latitude !== undefined &&
+            selectedTarget.location.longitude !== undefined
+              ? `[${selectedTarget.location.latitude}, ${selectedTarget.location.longitude}]`
+              : "[]"}
+          </p>
         </div>
       ) : (
-        <div className="target-placeholder">
-          Select a target
-        </div>
+        <div className="target-placeholder">Select a target</div>
       )}
       {renderModal()}
     </div>
   );
 };
 
-export default TargetView;
+export default SelectedDataView;

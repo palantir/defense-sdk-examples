@@ -34,22 +34,17 @@ function checkEnv(
   }
 }
 
-export const auth = createPublicOauthClient(clientId, url, redirectUrl);
-/**
- * Initialize the client to interact with the Ontology SDK
- *
- * According to the OSDK documentation, the client is used by passing the object/action
- * definition as a parameter to the client function:
- *
- * Example:
- * ```
- * // Fetch an object
- * const target = await client(targetOntologyTarget).fetchOne("targetId");
- *
- * // Call an action
- * const result = await client(twbWritebackTargetOntologyCreateTarget).applyAction({...});
- * ```
- */
+const scopes: string[] = [
+  "api:ontologies-write",
+  "api:ontologies-read",
+  "api:map-read",
+  "api:target-read",
+  "api:target-write",
+  "api:admin-read"
+];
+
+export const auth = createPublicOauthClient(clientId, url, redirectUrl, true, undefined, window.location.toString(), scopes);
+
 export const client = createClient(url, $ontologyRid, auth);
 
 export default client;

@@ -21,12 +21,12 @@ import {
   selectCreateTargetResponse,
   selectLoading,
   selectTargetBoardColumns,
-} from "../../features/osdk/osdk.selectors";
+} from "../../store/features/targeting/targetingSelectors";
 import {
   clearCreateTargetResponse,
   createTarget,
   CreateTargetPayload,
-} from "../../features/osdk/osdk.slice";
+} from "../../store/features/targeting/targetingSlice";
 
 interface CreateTargetProps {
   selectedBoard: string | null;
@@ -92,7 +92,7 @@ const CreateTarget: React.FC<CreateTargetProps> = ({
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({

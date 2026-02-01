@@ -15,6 +15,7 @@
  */
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+// Target related types
 export interface Target {
   rid: string;
   name: string;
@@ -58,10 +59,23 @@ export interface ColumnInfo {
   name: string; // Column name ($title)
 }
 
-interface TargetApiGatewayState {
+// Target Board related types
+export interface TargetBoard {
+  rid: string;
+  title: string;
+}
+
+// Main state interface
+interface TargetingState {
+  // Target board state
+  boards: TargetBoard[];
+  loadingBoards: boolean;
+  boardsError: string | null;
+
+  // Target state
   loadedTargetBoardArtifactId: string | null;
   targetBoardTargets: Target[];
-  targetBoardColumns: ColumnInfo[]; // Changed from string[] to ColumnInfo[]
+  targetBoardColumns: ColumnInfo[];
   loadedTargetRid: string;
   createTargetResponse: any | null;
   addObservationResponse: any | null;
@@ -72,10 +86,16 @@ interface TargetApiGatewayState {
   loadingObservation: boolean;
 }
 
-const initialState: TargetApiGatewayState = {
+const initialState: TargetingState = {
+  // Target board state
+  boards: [],
+  loadingBoards: false,
+  boardsError: null,
+
+  // Target state
   loadedTargetBoardArtifactId: null,
   targetBoardTargets: [],
-  targetBoardColumns: [], // This will now contain objects with id and name properties
+  targetBoardColumns: [],
   loadedTargetRid:
     "ri.gotham-artifact.3736180562172569377-2123486733096639170.cosmos-situation.E1EMjnkk73B6GkYsAr",
   createTargetResponse: null,
@@ -87,10 +107,25 @@ const initialState: TargetApiGatewayState = {
   loadingObservation: false,
 };
 
-const targetApiGatewaySlice = createSlice({
-  name: "targetApiGateway",
+const targetingSlice = createSlice({
+  name: "targeting",
   initialState,
   reducers: {
+    // Target board actions
+    loadTargetBoards: (state) => {
+      state.loadingBoards = true;
+      state.boardsError = null;
+    },
+    setTargetBoards: (state, action: PayloadAction<TargetBoard[]>) => {
+      state.boards = action.payload;
+      state.loadingBoards = false;
+    },
+    setTargetBoardsError: (state, action: PayloadAction<string>) => {
+      state.boardsError = action.payload;
+      state.loadingBoards = false;
+    },
+
+    // Target actions
     loadTargets: (state) => {
       state.loading = true;
     },
@@ -113,7 +148,7 @@ const targetApiGatewaySlice = createSlice({
     },
     updateSingleTarget: (state, action: PayloadAction<Target>) => {
       const targetIndex = state.targetBoardTargets.findIndex(
-        (target) => target.rid === action.payload.rid
+        (target) => target.rid === action.payload.rid,
       );
 
       if (targetIndex >= 0) {
@@ -160,6 +195,12 @@ const targetApiGatewaySlice = createSlice({
 });
 
 export const {
+  // Target board actions
+  loadTargetBoards,
+  setTargetBoards,
+  setTargetBoardsError,
+
+  // Target actions
   loadTargets,
   loadTarget,
   createTarget,
@@ -175,6 +216,6 @@ export const {
   clearCreateTargetResponse,
   clearAddObservationResponse,
   setTargetBoardColumns,
-} = targetApiGatewaySlice.actions;
+} = targetingSlice.actions;
 
-export default targetApiGatewaySlice.reducer;
+export default targetingSlice.reducer;

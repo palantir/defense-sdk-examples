@@ -13,14 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { combineReducers } from "@reduxjs/toolkit";
-import targetApiGatewayReducer from "../features/osdk/osdk.slice";
-import targetBoardsReducer from "../features/osdk/targetBoards.slice";
+import type { RootState } from "../../store";
 
-const rootReducer = combineReducers({
-  targetApiGateway: targetApiGatewayReducer,
-  targetBoards: targetBoardsReducer,
-});
-
-export type RootState = ReturnType<typeof rootReducer>;
-export default rootReducer;
+export const selectCurrentUserId = (state: RootState) =>
+  state.user.currentUserId;
+export const selectUserLoading = (state: RootState) => state.user.loading;
+export const selectUserError = (state: RootState) => state.user.error;

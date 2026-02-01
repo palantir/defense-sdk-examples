@@ -16,9 +16,9 @@
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import store from "./app/store";
+import store from "./store/store";
 import AuthCallback from "./AuthCallback";
-import AppWithErrorBoundary from "./app/AppWithErrorBoundary";
+import AppWithErrorBoundary from "./components/app/AppWithErrorBoundary";
 import "./index.scss";
 
 // Create the router with improved routes

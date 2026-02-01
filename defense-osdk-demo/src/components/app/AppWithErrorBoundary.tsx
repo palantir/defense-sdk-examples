@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { all } from "redux-saga/effects";
-import targetApiGatewaySaga from "../features/osdk/osdk.saga";
-import targetBoardsSaga from "../features/osdk/targetBoards.saga";
+import React from "react";
+import ErrorBoundary from "../../error/ErrorBoundary";
+import App from "./App";
+import { AppAuthGate } from "./App";
 
-export default function* rootSaga() {
-  yield all([targetApiGatewaySaga(), targetBoardsSaga()]);
-}
+const AppWithErrorBoundary: React.FC = () => (
+  <ErrorBoundary>
+    <AppAuthGate>
+      <App />
+    </AppAuthGate>
+  </ErrorBoundary>
+);
+
+export default AppWithErrorBoundary;

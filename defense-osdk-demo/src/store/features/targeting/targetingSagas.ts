@@ -15,25 +15,7 @@
  */
 import { PayloadAction } from "@reduxjs/toolkit";
 import { call, delay, put, select, takeLatest } from "redux-saga/effects";
-import { selectLoadedTargetBoard } from "./osdk.selectors";
-import {
-  addObservation,
-  AddObservationPayload,
-  createTarget,
-  CreateTargetPayload,
-  loadTarget,
-  loadTargets,
-  setAddObservationError,
-  setAddObservationResponse,
-  setCreateTargetError,
-  setCreateTargetResponse,
-  setTargetBoardColumns,
-  setTargets,
-  Target,
-  updateSingleTarget,
-  ColumnInfo,
-} from "./osdk.slice";
-import { client, auth } from "../../client";
+import { client } from "../../../client";
 import {
   targetOntologyTargetBoard,
   targetOntologyColumn,
@@ -42,7 +24,37 @@ import {
   twbWritebackTargetOntologyCreateTarget,
   twbWritebackTargetOntologyAddTargetObservation,
 } from "@defense-osdk-demo/sdk";
-import type { Osdk } from "@osdk/client";
+import { PalantirApiError, type PageResult, type Osdk } from "@osdk/client";
+
+import {
+  selectLoadedTargetBoard,
+  selectCurrentUserId,
+} from "./targetingSelectors";
+
+import {
+  loadTargetBoards,
+  setTargetBoards,
+  setTargetBoardsError,
+  loadTarget,
+  loadTargets,
+  setTargets,
+  updateSingleTarget,
+  Target,
+  TargetBoard,
+  createTarget,
+  CreateTargetPayload,
+  addObservation,
+  AddObservationPayload,
+  setCreateTargetResponse,
+  setAddObservationResponse,
+  setCreateTargetError,
+  setAddObservationError,
+  setTargetBoardColumns,
+  ColumnInfo,
+} from "./targetingSlice";
+
+import { getCurrentUser } from "../user/userSlice";
+import { selectCurrentUserId as selectUserCurrentUserId } from "../user/userSelectors";
 
 /**
  * Helper function to extract location data from various location formats
@@ -453,10 +465,97 @@ function formatTimestamp(
   }
 }
 
-export default function* targetApiGatewaySaga(): Generator<any, void, unknown> {
-  yield takeLatest(loadTargets.type, function* () {
-    yield fetchTargetsForBoard();
-  });
+/**
+ * Fetches target boards created by the current user
+ */
+function* fetchUserTargetBoards(): Generator<any, void, any> {
+  try {
+    // Get user ID from the user state
+    const userId = yield select(selectUserCurrentUserId);
+
+    // If not available, we'll need to wait for the getCurrentUser action to complete
+    if (!userId) {
+      console.log(
+        "User ID not available, boards will be loaded after user is fetched",
+      );
+      return;
+    }
+
+    console.log(`Fetching target boards for user ${userId}`);
+
+    const page: PageResult<Osdk.Instance<typeof targetOntologyTargetBoard>> =
+      yield call(
+        [
+          client(targetOntologyTargetBoard).where({
+            createdby: { $eq: userId },
+          }),
+          "fetchPage",
+        ],
+        {
+          $pageSize: 100,
+        },
+      );
+
+    console.log("Fetched boards raw response:", page);
+
+    // Extract the board data and filter by creator
+    let boards = page.data || [];
+
+    console.log(`Retrieved ${boards.length} total boards`);
+
+    // Log the boards to see what's available
+    if (boards.length > 0) {
+      console.log("First board example:", boards[0]);
+      console.log("Board properties:", Object.keys(boards[0]));
+    }
+
+    // First, see if there are any boards with matching creator properties
+    const userBoards = boards.filter((board) => {
+      // TypeScript doesn't know about all possible properties, so use type assertions
+      const boardAny = board as any;
+
+      // Try all possible property names for creator
+      return (
+        (board.createdby && board.createdby === userId) ||
+        (boardAny.createdBy && boardAny.createdBy === userId) ||
+        (boardAny.creator && boardAny.creator === userId) ||
+        // Try to access other potential properties
+        (boardAny.$objectFields && boardAny.$objectFields.createdby === userId)
+      );
+    });
+
+    console.log(`Found ${userBoards.length} boards after filtering by creator`);
+
+    // If we didn't find any boards with creator properties, just return all boards
+    // This is a fallback so users can see something
+    boards = userBoards.length > 0 ? userBoards : boards;
+
+    console.log(
+      `Found ${boards.length} target boards created by user ${userId}`,
+    );
+
+    // Map to our TargetBoard type
+    const formattedBoards: TargetBoard[] = boards.map((board) => ({
+      rid: board.$primaryKey,
+      title: board.$title || board.name || "Unnamed Board",
+    }));
+
+    // Update the state with the fetched boards
+    yield put(setTargetBoards(formattedBoards));
+  } catch (error: any) {
+    console.error("Error fetching user target boards:", error);
+    yield put(
+      setTargetBoardsError(error.message || "Failed to load target boards"),
+    );
+  }
+}
+
+export default function* targetingSagas(): Generator<any, void, unknown> {
+  // Target board sagas
+  yield takeLatest(loadTargetBoards.type, fetchUserTargetBoards);
+
+  // Target sagas
+  yield takeLatest(loadTargets.type, fetchTargetsForBoard);
   yield takeLatest(loadTarget.type, function* (action: PayloadAction<string>) {
     yield fetchSingleTarget(action.payload);
   });

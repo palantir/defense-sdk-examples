@@ -20,13 +20,13 @@ import {
   selectAddObservationError,
   selectAddObservationResponse,
   selectLoading,
-} from "../../features/osdk/osdk.selectors";
+} from "../../store/features/targeting/targetingSelectors";
 import {
   addObservation,
   AddObservationPayload,
   clearAddObservationResponse,
   Target,
-} from "../../features/osdk/osdk.slice";
+} from "../../store/features/targeting/targetingSlice";
 
 interface AddObservationProps {
   selectedTarget: Target;
@@ -79,7 +79,7 @@ const AddObservation: React.FC<AddObservationProps> = ({
   }, [addObservationResponse, dispatch, hasDispatchedLoadTargets, onClose]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({

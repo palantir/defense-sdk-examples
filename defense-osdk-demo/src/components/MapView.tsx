@@ -17,20 +17,11 @@ import L from "leaflet";
 import "leaflet-contextmenu";
 import "leaflet/dist/leaflet.css";
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   selectLoadedTargetBoard,
   selectTargetBoardTargets,
-  selectTargetBoards,
-  selectTargetBoardsLoading,
-  selectTargetBoardsError,
 } from "../store/features/targeting/targetingSelectors";
-import {
-  loadTargets,
-  setSelectedTargetBoard,
-  setTargets,
-  loadTargetBoards,
-} from "../store/features/targeting/targetingSlice";
 import AddObservation from "./modals/AddObservation";
 import CreateTarget from "./modals/CreateTarget";
 import { createDiamondIcon } from "./icons/DiamondIcon";
@@ -48,7 +39,7 @@ declare module "leaflet" {
   }
 }
 
-interface TargetMapProps {
+interface MapViewProps {
   setSelectedTarget: (target: any) => void;
   setModalContent: (content: string | null) => void;
   modalContent: string | null;
@@ -58,13 +49,12 @@ interface TargetMapProps {
   ) => void;
 }
 
-const TargetMap: React.FC<TargetMapProps> = ({
+const MapView: React.FC<MapViewProps> = ({
   setSelectedTarget,
   setModalContent,
   modalContent,
   selectedTarget,
 }) => {
-  const dispatch = useDispatch();
   const selectedBoard = useSelector(selectLoadedTargetBoard);
   const targets = useSelector(selectTargetBoardTargets);
 
@@ -79,12 +69,6 @@ const TargetMap: React.FC<TargetMapProps> = ({
     lat: number;
     lon: number;
   } | null>(null);
-  const [selectedBoardId, setSelectedBoardId] = useState<string>(
-    selectedBoard || "",
-  );
-  const targetBoards = useSelector(selectTargetBoards);
-  const loadingBoards = useSelector(selectTargetBoardsLoading);
-  const boardsError = useSelector(selectTargetBoardsError);
 
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -200,24 +184,6 @@ const TargetMap: React.FC<TargetMapProps> = ({
     }
   }, [mapRef, map, cursorLocation.lat, cursorLocation.lon, zoomLevel]);
 
-  // Load target boards on component mount
-  useEffect(() => {
-    dispatch(loadTargetBoards());
-  }, [dispatch]);
-
-  // Handle board selection change
-  const handleBoardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const boardId = e.target.value;
-    setSelectedBoardId(boardId);
-
-    if (boardId) {
-      setSelectedTarget(null);
-      dispatch(setTargets([]));
-      dispatch(setSelectedTargetBoard(boardId));
-      dispatch(loadTargets());
-    }
-  };
-
   const handleMarkerClick = (target: any) => {
     setSelectedTarget(target);
   };
@@ -290,39 +256,12 @@ const TargetMap: React.FC<TargetMapProps> = ({
   }, [map, selectedBoard, targets]);
 
   return (
-    <div className="map-container" style={{ marginTop: "20px" }}>
-      <div className="target-board-selector-container">
-        <div className="target-board-selector">
-          <label htmlFor="target-board">Target Board:</label>
-          {loadingBoards ? (
-            <div className="loading-indicator">Loading target boards...</div>
-          ) : boardsError ? (
-            <div className="error-message">
-              Error loading boards: {boardsError}
-            </div>
-          ) : (
-            <select
-              id="target-board"
-              onChange={handleBoardChange}
-              value={selectedBoardId}
-              className="board-dropdown"
-            >
-              <option value="">Select a Target Board</option>
-              {targetBoards.map((board) => (
-                <option key={board.rid} value={board.rid}>
-                  {board.title}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      </div>
+    <div className="map-view-container">
       {selectedBoard && (
         <div className="map-instructions">
-          <br></br>
           Right click on the map to create a new target for the loaded target
           board.
-          <br></br>
+          <br />
           Select a target to view details and right click on the map to add a
           new observation for a selected target.
         </div>
@@ -354,4 +293,4 @@ const TargetMap: React.FC<TargetMapProps> = ({
   );
 };
 
-export default TargetMap;
+export default MapView;
