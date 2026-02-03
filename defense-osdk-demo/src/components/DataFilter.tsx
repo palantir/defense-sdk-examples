@@ -283,21 +283,6 @@ const DataFilter: React.FC<DataFilterProps> = ({
           <p>Error: {searchError}</p>
         </div>
       )}
-
-      {/* Selected Layers Display */}
-      {selectedLayerIds.length > 0 && loadedMapData && (
-        <div className="layer-info-container">
-          <h4>Selected Layers:</h4>
-          <div className="layer-details">
-            <ul>
-              {selectedLayerIds.map((layerId) => {
-                const layerMetadata = loadedMapData.layers?.[layerId];
-                return <li key={layerId}>{layerMetadata?.label || layerId}</li>;
-              })}
-            </ul>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

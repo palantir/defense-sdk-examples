@@ -96,3 +96,64 @@ export const selectLayersDataError = (state: RootState) => {
 export const selectSelectedLayerIds = (state: RootState) => {
   return state.gaia.selectedLayerIds;
 };
+
+// Import for GeoJSON filtering
+import { filterGeoJSONElements } from "../../../types/geojson";
+import type { LayerElement } from "../../../types/geojson";
+
+// Selector to get all valid GeoJSON elements from loaded layers data
+export const selectLoadedLayerGeoJSONElements = (
+  state: RootState,
+): LayerElement[] => {
+  const loadedLayersData = state.gaia.loadedLayersData;
+  if (!loadedLayersData || !loadedLayersData.layers) {
+    return [];
+  }
+
+  const allElements: LayerElement[] = [];
+
+  // Go through all loaded layers and filter their elements
+  Object.values(loadedLayersData.layers).forEach((layer) => {
+    if (layer && layer.elements) {
+      const validElements = filterGeoJSONElements({
+        id: layer.id,
+        elements: layer.elements as LayerElement[],
+      });
+      allElements.push(...validElements);
+    }
+  });
+
+  return allElements;
+};
+
+// Selector to get valid GeoJSON elements only from selected layers
+export const selectSelectedLayerGeoJSONElements = (
+  state: RootState,
+): LayerElement[] => {
+  const loadedLayersData = state.gaia.loadedLayersData;
+  const selectedLayerIds = state.gaia.selectedLayerIds;
+
+  if (
+    !loadedLayersData ||
+    !loadedLayersData.layers ||
+    selectedLayerIds.length === 0
+  ) {
+    return [];
+  }
+
+  const allElements: LayerElement[] = [];
+
+  // Only get elements from selected layers
+  selectedLayerIds.forEach((layerId) => {
+    const layer = loadedLayersData.layers[layerId];
+    if (layer && layer.elements) {
+      const validElements = filterGeoJSONElements({
+        id: layer.id,
+        elements: layer.elements as LayerElement[],
+      });
+      allElements.push(...validElements);
+    }
+  });
+
+  return allElements;
+};
