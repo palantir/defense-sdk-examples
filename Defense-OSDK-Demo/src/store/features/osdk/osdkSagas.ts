@@ -17,7 +17,7 @@
 import { call, put, takeLatest, all } from "redux-saga/effects";
 import { client } from "../../../client";
 import { User, Users } from "@osdk/foundry.admin";
-import { unit, elint, collateralConcernCandidateWithGeometry, trackedEntity, unitHierarchyNodeRelationship, associateIntelligenceToIntelligenceSubject, intelligenceSubject } from "@defense-osdk/sdk";
+import { unit, elint, collateralConcernCandidateWithGeometry, trackedEntity, unitHierarchyNodeRelationship, associateIntelligenceWithIntelligenceSubject, intelligenceSubject } from "@defense-osdk/sdk";
 import { loadUser, loadUnits, setUnits, setUser, loadElints, setElints, loadCollateralConcerns, setCollateralConcerns, loadUnitLocations, setUnitLocations, loadMapData, startLoadingMapData, finishLoadingMapData, loadUnitHierarchy, setUnitHierarchy, setUnitHierarchyError, associateElintWithUnit, setElintAssociationSuccess, setElintAssociationError, loadAssociatedElints, setAssociatedElints, setAssociatedElintsError, loadTrackedEntityObservations, setTrackedEntityObservations, setTrackedEntityObservationsError } from "./osdkSlice";
 
 
@@ -231,7 +231,7 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
 
     // Call the action with ActionParam.InterfaceType structure
     yield call(async () => {
-      await client(associateIntelligenceToIntelligenceSubject).applyAction({
+      await client(associateIntelligenceWithIntelligenceSubject).applyAction({
         "com.palantir.ontology.defense-types.intelligenceSubject": {
           $objectType: unitObjectType,
           $primaryKey: unitPrimaryKey,
