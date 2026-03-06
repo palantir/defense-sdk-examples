@@ -1,0 +1,427 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* ============================================
+   DEVCON THEME - Matrix/Terminal Aesthetic
+   ============================================ */
+
+// Theme Colors
+$matrix-green: #00ff41;
+$matrix-green-dark: #00cc33;
+$matrix-green-darker: #00aa2a;
+$matrix-green-darkest: #00661a;
+$matrix-cyan: #00ffff;
+$bg-black: #000000;
+$bg-dark-green: #001a00;
+$bg-green: #002200;
+$bg-green-light: #001100;
+$white: #ffffff;
+
+// CSS Custom Properties
+:root[data-theme="devcon"] {
+  // Background colors
+  --bg-primary: #{$bg-black};
+  --bg-secondary: #{$bg-dark-green};
+  --bg-tertiary: #{$bg-green};
+  --bg-hover: rgba($matrix-green, 0.1);
+  --bg-active: rgba($matrix-green, 0.2);
+
+  // Text colors
+  --text-primary: #{$matrix-green};
+  --text-secondary: #{$matrix-green-dark};
+  --text-tertiary: #{$matrix-green-darker};
+  --text-white: #{$white};
+
+  // Accent colors
+  --accent-primary: #{$matrix-green};
+  --accent-secondary: #{$matrix-green-dark};
+  --accent-blue: #{$matrix-cyan};
+
+  // Border colors
+  --border-primary: #{$matrix-green};
+  --border-secondary: #{$matrix-green-dark};
+  --border-tertiary: #{$matrix-green-darkest};
+
+  // Component-specific
+  --card-bg: #{$bg-green-light};
+  --card-header-bg: #{$bg-green};
+  --modal-bg: #{$bg-black};
+  --modal-border: #{$matrix-green};
+  --modal-overlay: rgba(0, 20, 0, 0.95);
+  --map-bg: #{$bg-black};
+  --map-tile-url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  --button-color: #{$matrix-green};
+  --button-text-color: #{$bg-black};
+
+  // Effects
+  --glow-primary: 0 0 10px rgba($matrix-green, 0.5);
+  --glow-strong: 0 0 20px rgba($matrix-green, 0.8);
+
+  // Map marker colors - using global constants
+  --elint-color: var(--map-elint-yellow);
+  --elint-primary: var(--map-elint-yellow);
+  --elint-secondary: var(--map-elint-yellow);
+  --collateral-concern-color: var(--map-collateral-concern-orange);
+  --unit-friend-color: var(--map-unit-friend-blue);
+  --unit-hostile-color: var(--map-unit-hostile-red);
+  --unit-other-color: #808080;
+  --unit-selected: #{$matrix-green};
+
+  // Typography
+  --font-primary: "SF Mono", "Consolas", "Monaco", "Courier New", monospace;
+  --font-title: "SF Mono", "Consolas", "Monaco", "Courier New", monospace;
+  --text-transform-title: uppercase;
+  --text-transform-label: uppercase;
+  --text-transform-property-label: uppercase;
+
+  // Spacing
+  --border-radius: 0px;
+}
+
+// Keyframe Animations
+@keyframes terminal-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes terminal-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(0, 255, 65, 0.5),
+      inset 0 0 10px rgba(0, 255, 65, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(0, 255, 65, 0.8),
+      inset 0 0 15px rgba(0, 255, 65, 0.2);
+  }
+}
+
+@keyframes terminal-scan {
+  0%,
+  100% {
+    opacity: 0.6;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(0, 255, 65, 1);
+  }
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #00ff41;
+  }
+}
+
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100px);
+  }
+}
+
+// Global Component Styling
+:root[data-theme="devcon"] {
+  // App Container - CRT scanline effect
+  .appContainer {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 9999;
+      animation: terminal-flicker 0.2s infinite;
+    }
+  }
+
+  // Title Bar - pulsing Matrix-style glow
+  .titleBar {
+    animation: terminal-scan 2s ease-in-out infinite;
+  }
+
+  // Main title bar title - typewriter animation
+  .titleBar .title {
+    overflow: hidden;
+    border-right: 3px solid #00ff41;
+    white-space: nowrap;
+    margin: 0 auto;
+    animation:
+      typing 3.5s steps(40, end),
+      blink-caret 0.75s step-end infinite,
+      terminal-flicker 0.1s infinite;
+  }
+
+  // Workspace - Matrix rain effect
+  .workspace {
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.03) 2px,
+        rgba(0, 255, 65, 0.03) 4px
+      );
+      animation: matrix-rain 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  // Left Map - pulsing border
+  .leftMap {
+    animation: terminal-glow-pulse 2.5s ease-in-out infinite;
+  }
+
+  // Map Loading Overlay - Matrix-style loading
+  .loadingOverlay {
+    animation: terminal-flicker 0.15s infinite;
+
+    &::before {
+      content: "LOADING";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: "SF Mono", "Consolas", "Monaco", monospace;
+      font-size: 24px;
+      color: #00ff41;
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+      letter-spacing: 0.3em;
+      animation: blink-caret 1s step-end infinite;
+    }
+
+    &::after {
+      content: "[████████████████████]";
+      position: absolute;
+      top: calc(50% + 40px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: "SF Mono", "Consolas", "Monaco", monospace;
+      font-size: 16px;
+      color: #00ff41;
+      text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+      animation: terminal-scan 2s ease-in-out infinite;
+    }
+
+    .bp5-spinner {
+      display: none;
+    }
+  }
+
+  // Theme Switcher Button - terminal green with glow
+  .button {
+    color: #00ff41 !important;
+    border: 2px solid #00ff41 !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    box-shadow:
+      0 0 10px rgba(0, 255, 65, 0.5),
+      inset 0 0 5px rgba(0, 255, 65, 0.2);
+    animation: terminal-glow-pulse 3s ease-in-out infinite;
+
+    &:hover {
+      background-color: rgba(0, 255, 65, 0.2) !important;
+      color: #00ff41 !important;
+      box-shadow:
+        0 0 20px rgba(0, 255, 65, 0.8),
+        inset 0 0 10px rgba(0, 255, 65, 0.3);
+      transform: rotate(90deg);
+    }
+  }
+
+  // Cards - pulsing glow animation
+  .hierarchyCard,
+  .unitCard,
+  .elintCard,
+  .historyCard {
+    animation: terminal-glow-pulse 4.5s ease-in-out infinite;
+  }
+
+  // Unit Card - green glow
+  .unitCard {
+    animation: terminal-glow-pulse 3s ease-in-out infinite;
+  }
+
+  // ELINT Card - yellow glow
+  .elintCard {
+    border-color: #ffff00 !important;
+    box-shadow:
+      0 0 15px rgba(255, 255, 0, 0.4),
+      inset 0 0 10px rgba(255, 255, 0, 0.1) !important;
+    animation: terminal-glow-pulse 3.5s ease-in-out infinite;
+  }
+
+  .elintTitle {
+    color: #ffff00 !important;
+    text-shadow: 0 0 8px rgba(255, 255, 0, 0.6) !important;
+  }
+
+  // ELINT Card title - yellow, no italic, no cursor
+  .elintCard .title {
+    color: #ffff00 !important;
+    text-shadow: 0 0 8px rgba(255, 255, 0, 0.6) !important;
+    font-style: normal !important;
+    border-right: none !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    animation: none !important;
+  }
+
+  // History Card - cyan glow
+  .historyCard {
+    border-color: #00ffff !important;
+    box-shadow:
+      0 0 15px rgba(0, 255, 255, 0.4),
+      inset 0 0 10px rgba(0, 255, 255, 0.1) !important;
+    animation: terminal-glow-pulse 4s ease-in-out infinite;
+  }
+
+  .historyTitle {
+    color: #00ffff !important;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.6) !important;
+  }
+
+  // History Card title - cyan, no italic, no cursor
+  .historyCard .title {
+    color: #00ffff !important;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.6) !important;
+    font-style: normal !important;
+    border-right: none !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    animation: none !important;
+  }
+
+  // Hierarchy Card title - green, no italic, no cursor
+  .hierarchyCard .title {
+    color: #00ff41 !important;
+    font-style: normal !important;
+    border-right: none !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    animation: none !important;
+  }
+
+  // Unit Card title - PROMINENT hacker-style with intense glow
+  .unitCard .title {
+    color: #00ff41 !important;
+    font-style: normal !important;
+    font-size: var(--font-size-xl) !important;
+    font-weight: var(--font-weight-bold) !important;
+    letter-spacing: 0.05em !important;
+    border-right: none !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-shadow:
+      0 0 5px rgba(0, 255, 65, 0.8),
+      0 0 10px rgba(0, 255, 65, 0.6),
+      0 0 15px rgba(0, 255, 65, 0.4),
+      0 0 20px rgba(0, 255, 65, 0.2) !important;
+    animation: terminal-glow-pulse 3s ease-in-out infinite !important;
+  }
+
+  // Table row hover effects
+  .tableRow {
+    &:hover {
+      background-color: rgba(0, 255, 65, 0.15) !important;
+      box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.3) !important;
+    }
+  }
+
+  // Unit Hierarchy - active unit styling
+  .nodeContent.currentUnit {
+    background-color: var(--bg-active);
+    box-shadow: var(--glow-primary);
+
+    .nodeName {
+      color: var(--accent-primary);
+      text-shadow: var(--glow-primary);
+    }
+  }
+
+  // Modal Dialog
+  .bp5-dialog.confirmAssociateElintDialog {
+    .bp5-button {
+      border: 2px solid #00ff41 !important;
+      background: rgba(0, 0, 0, 0.8) !important;
+      color: #00ff41 !important;
+      font-family: "SF Mono", "Consolas", monospace !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.1em !important;
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.4) !important;
+
+      &:hover {
+        background: rgba(0, 255, 65, 0.2) !important;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.6) !important;
+      }
+
+      &.bp5-intent-primary {
+        background: rgba(0, 255, 65, 0.3) !important;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.6) !important;
+
+        &:hover {
+          background: rgba(0, 255, 65, 0.4) !important;
+          box-shadow: 0 0 20px rgba(0, 255, 65, 0.8) !important;
+        }
+      }
+    }
+  }
+}

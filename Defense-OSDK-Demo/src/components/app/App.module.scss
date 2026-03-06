@@ -1,0 +1,128 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../_variables.scss" as vars;
+
+/* ============================================
+   APP CONTAINER
+   ============================================ */
+
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: vars.$bgPrimary;
+}
+
+.titleBar {
+  background-color: vars.$bgTertiary;
+  padding: vars.$spaceXl vars.$spaceXxl;
+  border-bottom: var(--border-width-medium) solid vars.$borderSecondary;
+  flex-shrink: 0;
+  box-shadow: vars.$glowPrimary;
+}
+
+.title {
+  margin: 0;
+  color: vars.$accentPrimary;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-bold);
+  font-family: vars.$fontTitle;
+  text-transform: vars.$textTransformTitle;
+  letter-spacing: var(--letter-spacing-wide);
+  text-shadow: vars.$glowPrimary;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: vars.$spaceLg vars.$spaceXxl;
+  background-color: vars.$bgSecondary;
+  border-bottom: var(--border-width-thin) solid vars.$borderSecondary;
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: vars.$spaceSm;
+}
+
+.exploreText {
+  color: vars.$textSecondary;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  font-family: vars.$fontPrimary;
+}
+
+.defenseOsdkLink {
+  color: vars.$accentBlue;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  font-family: vars.$fontPrimary;
+  text-transform: vars.$textTransformLabel;
+  letter-spacing: var(--letter-spacing-wide);
+  transition: all vars.$transitionBase;
+  border-bottom: 1px solid transparent;
+
+  &:hover {
+    color: vars.$textPrimary;
+    text-shadow: vars.$glowPrimary;
+    border-bottom: 1px solid vars.$borderPrimary;
+  }
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: vars.$spaceMd;
+}
+
+.greeting {
+  color: vars.$textPrimary;
+  font-size: var(--font-size-sm);
+  font-family: vars.$fontPrimary;
+  text-transform: vars.$textTransformLabel;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: vars.$spaceLg;
+  gap: vars.$spaceLg;
+  box-sizing: border-box;
+  background-color: vars.$bgPrimary;
+}
+
+.leftMap {
+  width: 65%;
+  height: 100%;
+  flex-shrink: 0;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  overflow: hidden;
+}
+
+.rightContainer {
+  width: 35%;
+  height: 100%;
+  overflow: auto;
+}

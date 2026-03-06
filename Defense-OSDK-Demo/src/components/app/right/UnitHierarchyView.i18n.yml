@@ -1,0 +1,76 @@
+messages:
+  unitHierarchyTitle: Unit Hierarchy
+  children: Children
+  parents: Parents
+  loadingHierarchy: Loading hierarchy...
+  errorFetching: Error loading hierarchy
+  noChildren: No child units found
+  noParents: No parent units found
+  noHierarchyData: No hierarchy data available
+  unknownNode: Unknown unit
+
+de:
+  unitHierarchyTitle: Einheitenhierarchie
+  children: Untergeordnete
+  parents: Übergeordnete
+  loadingHierarchy: Hierarchie wird geladen...
+  errorFetching: Fehler beim Laden der Hierarchie
+  noChildren: Keine untergeordneten Einheiten gefunden
+  noParents: Keine übergeordneten Einheiten gefunden
+  noHierarchyData: Keine Hierarchiedaten verfügbar
+  unknownNode: Unbekannte Einheit
+
+es:
+  unitHierarchyTitle: Jerarquía de unidades
+  children: Hijos
+  parents: Padres
+  loadingHierarchy: Cargando jerarquía...
+  errorFetching: Error al cargar jerarquía
+  noChildren: No se encontraron unidades hijas
+  noParents: No se encontraron unidades padres
+  noHierarchyData: No hay datos de jerarquía disponibles
+  unknownNode: Unidad desconocida
+
+fr:
+  unitHierarchyTitle: Hiérarchie des unités
+  children: Enfants
+  parents: Parents
+  loadingHierarchy: Chargement de la hiérarchie...
+  errorFetching: Erreur lors du chargement de la hiérarchie
+  noChildren: Aucune unité enfant trouvée
+  noParents: Aucune unité parente trouvée
+  noHierarchyData: Aucune donnée de hiérarchie disponible
+  unknownNode: Unité inconnue
+
+ja:
+  unitHierarchyTitle: ユニット階層
+  children: 子
+  parents: 親
+  loadingHierarchy: 階層を読み込んでいます...
+  errorFetching: 階層の読み込みエラー
+  noChildren: 子ユニットが見つかりません
+  noParents: 親ユニットが見つかりません
+  noHierarchyData: 階層データがありません
+  unknownNode: 不明なユニット
+
+ko:
+  unitHierarchyTitle: 부대 계층
+  children: 하위
+  parents: 상위
+  loadingHierarchy: 계층을 로드하는 중...
+  errorFetching: 계층 로드 오류
+  noChildren: 하위 부대를 찾을 수 없음
+  noParents: 상위 부대를 찾을 수 없음
+  noHierarchyData: 계층 데이터를 사용할 수 없음
+  unknownNode: 알 수 없는 부대
+
+zh:
+  unitHierarchyTitle: 单位层次结构
+  children: 子级
+  parents: 父级
+  loadingHierarchy: 正在加载层次结构...
+  errorFetching: 加载层次结构时出错
+  noChildren: 未找到子单位
+  noParents: 未找到父单位
+  noHierarchyData: 没有可用的层次结构数据
+  unknownNode: 未知单位

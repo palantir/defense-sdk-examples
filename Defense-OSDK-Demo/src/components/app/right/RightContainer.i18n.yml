@@ -1,0 +1,27 @@
+messages:
+  selectUnitPrompt: Select a unit on the map
+  closeButton: Close
+
+de:
+  selectUnitPrompt: Wählen Sie eine Einheit auf der Karte aus
+  closeButton: Schließen
+
+es:
+  selectUnitPrompt: Seleccione una unidad en el mapa
+  closeButton: Cerrar
+
+fr:
+  selectUnitPrompt: Sélectionnez une unité sur la carte
+  closeButton: Fermer
+
+ja:
+  selectUnitPrompt: マップ上のユニットを選択してください
+  closeButton: 閉じる
+
+ko:
+  selectUnitPrompt: 지도에서 부대를 선택하세요
+  closeButton: 닫기
+
+zh:
+  selectUnitPrompt: 在地图上选择一个单位
+  closeButton: 关闭

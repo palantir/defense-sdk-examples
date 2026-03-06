@@ -1,0 +1,61 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../variables" as vars;
+
+.button {
+  color: vars.$textPrimary !important;
+  transition: all vars.$transitionBase;
+
+  &:hover {
+    background-color: vars.$bgHover !important;
+    color: vars.$accentPrimary !important;
+    box-shadow: vars.$glowPrimary;
+  }
+
+  svg {
+    color: currentColor !important;
+  }
+}
+
+.menu {
+  background-color: vars.$bgSecondary !important;
+  border: var(--border-width-thin) solid vars.$borderPrimary !important;
+  border-radius: vars.$borderRadius !important;
+  padding: vars.$spaceXs !important;
+  box-shadow: vars.$glowPrimary, 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+
+  :global(.bp5-menu-item) {
+    background-color: transparent !important;
+    color: vars.$textPrimary !important;
+    border-radius: vars.$borderRadius !important;
+    font-family: vars.$fontPrimary !important;
+
+    &:hover {
+      background-color: vars.$bgHover !important;
+      color: vars.$accentPrimary !important;
+    }
+
+    &.active {
+      color: vars.$accentPrimary !important;
+      font-weight: var(--font-weight-bold);
+    }
+
+    :global(.bp5-icon) {
+      color: currentColor !important;
+    }
+  }
+}

@@ -1,0 +1,103 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Spinner } from "@blueprintjs/core";
+import { SpinnerSize } from "@blueprintjs/core/lib/esm/components/spinner/spinner";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
+import { loadUser } from "../../store/features/osdk/osdkSlice";
+import { RootState } from "../../store/store";
+import styles from "./App.module.scss";
+import LeftMapContainer from "./left/LeftMapContainer";
+import RightContainer from "./right/RightContainer";
+import ConfirmAssociateElintModal from "./modals/ConfirmAssociateElintModal";
+import ThemeSwitcher from "./ThemeSwitcher";
+
+export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  return <>{children}</>;
+};
+
+const App: React.FC = () => {
+  const { t } = useTranslation();
+
+  const user = useSelector((state: RootState) => state.osdk.user);
+  const loadingUser = useSelector((state: RootState) => state.osdk.loadingUser);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(loadUser());
+  }, [dispatch]);
+
+  // Set the browser tab title using i18n
+  useEffect(() => {
+    document.title = t("browserTitle");
+  }, [t]);
+
+  return (
+    <div className={styles.appContainer}>
+      {/* Title Bar */}
+      <div className={styles.titleBar}>
+        <h1 className={styles.title}>{t('title')}</h1>
+      </div>
+
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerLeft}>
+          <span className={styles.exploreText}>{t('viewThe')}</span>
+          <a
+            href="https://www.palantir.com/docs/defense-osdk/api"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.defenseOsdkLink}
+          >
+            {t('defenseOsdkDocumentation')}
+          </a>
+        </div>
+        <div className={styles.headerRight}>
+          {loadingUser ? (
+            <Spinner size={SpinnerSize.SMALL} />
+          ) : (
+            <>
+              <span className={styles.greeting}>
+                👋 {t('hello')}, {user?.givenName || t('user')}!
+              </span>
+              <ThemeSwitcher />
+            </>
+          )}
+        </div>
+      </header>
+
+      {/* Workspace */}
+      <div className={styles.workspace}>
+        <div className={styles.leftMap}>
+          <LeftMapContainer />
+        </div>
+        <div className={styles.rightContainer}>
+          <RightContainer />
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmAssociateElintModal />
+    </div>
+  );
+};
+
+export default App;

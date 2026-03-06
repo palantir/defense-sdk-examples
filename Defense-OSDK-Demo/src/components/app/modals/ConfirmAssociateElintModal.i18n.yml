@@ -1,0 +1,167 @@
+messages:
+  confirmAssociateElintTitle: Confirm ELINT Association
+  confirmAssociateElintMessage: Are you sure you want to associate this ELINT with the selected unit?
+  alreadyAssociatedTitle: ELINT Already Associated
+  alreadyAssociatedMessage: "ELINT {{elint}} is already associated with Hostile Unit {{unit}}"
+  checkingAssociation: Checking association...
+  unit: Unit
+  unitId: Unit ID
+  affiliation: Affiliation
+  elint: ELINT
+  elintId: ELINT ID
+  elnot: ELNOT
+  trackQuality: Track Quality
+  timestamp: Timestamp
+  position: Position
+  confirm: Confirm
+  cancel: Cancel
+  ok: OK
+  noPosition: No position
+  notAvailable: N/A
+  unknown: Unknown
+  associationSuccess: ELINT successfully associated with unit
+  associationError: Failed to associate ELINT with unit
+
+de:
+  confirmAssociateElintTitle: ELINT-Zuordnung bestätigen
+  confirmAssociateElintMessage: Sind Sie sicher, dass Sie diese ELINT der ausgewählten Einheit zuordnen möchten?
+  alreadyAssociatedTitle: ELINT bereits zugeordnet
+  alreadyAssociatedMessage: "ELINT {{elint}} ist bereits der feindlichen Einheit {{unit}} zugeordnet"
+  checkingAssociation: Zuordnung wird überprüft...
+  unit: Einheit
+  unitId: Einheiten-ID
+  affiliation: Zugehörigkeit
+  elint: ELINT
+  elintId: ELINT-ID
+  elnot: ELNOT
+  trackQuality: Spurqualität
+  timestamp: Zeitstempel
+  position: Position
+  confirm: Bestätigen
+  cancel: Abbrechen
+  ok: OK
+  noPosition: Keine Position
+  notAvailable: N/V
+  unknown: Unbekannt
+  associationSuccess: ELINT erfolgreich mit Einheit verknüpft
+  associationError: ELINT-Zuordnung zur Einheit fehlgeschlagen
+
+es:
+  confirmAssociateElintTitle: Confirmar asociación ELINT
+  confirmAssociateElintMessage: ¿Está seguro de que desea asociar este ELINT con la unidad seleccionada?
+  alreadyAssociatedTitle: ELINT ya asociado
+  alreadyAssociatedMessage: "ELINT {{elint}} ya está asociado con la unidad hostil {{unit}}"
+  checkingAssociation: Verificando asociación...
+  unit: Unidad
+  unitId: ID de unidad
+  affiliation: Afiliación
+  elint: ELINT
+  elintId: ID de ELINT
+  elnot: ELNOT
+  trackQuality: Calidad de seguimiento
+  timestamp: Marca de tiempo
+  position: Posición
+  confirm: Confirmar
+  cancel: Cancelar
+  ok: OK
+  noPosition: Sin posición
+  notAvailable: N/D
+  unknown: Desconocido
+  associationSuccess: ELINT asociado exitosamente con la unidad
+  associationError: Error al asociar ELINT con la unidad
+
+fr:
+  confirmAssociateElintTitle: Confirmer l'association ELINT
+  confirmAssociateElintMessage: Êtes-vous sûr de vouloir associer ce ELINT à l'unité sélectionnée?
+  alreadyAssociatedTitle: ELINT déjà associé
+  alreadyAssociatedMessage: "ELINT {{elint}} est déjà associé à l'unité hostile {{unit}}"
+  checkingAssociation: Vérification de l'association...
+  unit: Unité
+  unitId: ID d'unité
+  affiliation: Affiliation
+  elint: ELINT
+  elintId: ID ELINT
+  elnot: ELNOT
+  trackQuality: Qualité de suivi
+  timestamp: Horodatage
+  position: Position
+  confirm: Confirmer
+  cancel: Annuler
+  ok: OK
+  noPosition: Pas de position
+  notAvailable: N/D
+  unknown: Inconnu
+  associationSuccess: ELINT associé avec succès à l'unité
+  associationError: Échec de l'association ELINT avec l'unité
+
+ja:
+  confirmAssociateElintTitle: ELINT関連付けの確認
+  confirmAssociateElintMessage: このELINTを選択したユニットに関連付けてもよろしいですか？
+  alreadyAssociatedTitle: ELINTはすでに関連付けられています
+  alreadyAssociatedMessage: "ELINT {{elint}} はすでに敵対ユニット {{unit}} に関連付けられています"
+  checkingAssociation: 関連付けを確認しています...
+  unit: ユニット
+  unitId: ユニットID
+  affiliation: 所属
+  elint: ELINT
+  elintId: ELINT ID
+  elnot: ELNOT
+  trackQuality: トラック品質
+  timestamp: タイムスタンプ
+  position: 位置
+  confirm: 確認
+  cancel: キャンセル
+  ok: OK
+  noPosition: 位置なし
+  notAvailable: N/A
+  unknown: 不明
+  associationSuccess: ELINTがユニットに正常に関連付けられました
+  associationError: ELINTとユニットの関連付けに失敗しました
+
+ko:
+  confirmAssociateElintTitle: ELINT 연관 확인
+  confirmAssociateElintMessage: 이 ELINT를 선택한 부대와 연관시키시겠습니까?
+  alreadyAssociatedTitle: ELINT가 이미 연관되어 있습니다
+  alreadyAssociatedMessage: "ELINT {{elint}}는 이미 적대 부대 {{unit}}와 연관되어 있습니다"
+  checkingAssociation: 연관 확인 중...
+  unit: 부대
+  unitId: 부대 ID
+  affiliation: 소속
+  elint: ELINT
+  elintId: ELINT ID
+  elnot: ELNOT
+  trackQuality: 추적 품질
+  timestamp: 타임스탬프
+  position: 위치
+  confirm: 확인
+  cancel: 취소
+  ok: 확인
+  noPosition: 위치 없음
+  notAvailable: N/A
+  unknown: 알 수 없음
+  associationSuccess: ELINT가 부대와 성공적으로 연관되었습니다
+  associationError: ELINT를 부대와 연관하는 데 실패했습니다
+
+zh:
+  confirmAssociateElintTitle: 确认ELINT关联
+  confirmAssociateElintMessage: 您确定要将此ELINT与所选单位关联吗？
+  alreadyAssociatedTitle: ELINT已关联
+  alreadyAssociatedMessage: "ELINT {{elint}} 已经与敌对单位 {{unit}} 关联"
+  checkingAssociation: 正在检查关联...
+  unit: 单位
+  unitId: 单位ID
+  affiliation: 隶属关系
+  elint: ELINT
+  elintId: ELINT ID
+  elnot: ELNOT
+  trackQuality: 追踪质量
+  timestamp: 时间戳
+  position: 位置
+  confirm: 确认
+  cancel: 取消
+  ok: 确定
+  noPosition: 无位置
+  notAvailable: N/A
+  unknown: 未知
+  associationSuccess: ELINT已成功与单位关联
+  associationError: 无法将ELINT与单位关联

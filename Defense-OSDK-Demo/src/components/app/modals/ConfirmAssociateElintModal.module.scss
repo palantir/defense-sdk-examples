@@ -1,0 +1,142 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../../variables" as vars;
+
+/* ============================================
+   MODAL - CONFIRM ASSOCIATE ELINT
+   ============================================ */
+
+// Global styles for the portal-rendered dialog
+:global {
+  .bp5-dialog.confirmAssociateElintDialog {
+    width: 500px !important;
+    max-width: 90vw !important;
+    margin: 30px auto !important;
+    background-color: vars.$modalBg !important;
+    color: vars.$textPrimary !important;
+    border: var(--border-width-medium) solid vars.$modalBorder !important;
+    border-radius: vars.$borderRadius !important;
+    box-shadow: vars.$glowStrong, 0 10px 50px rgba(0, 0, 0, 0.8) !important;
+
+    .bp5-dialog-header {
+      background-color: vars.$cardHeaderBg !important;
+      color: vars.$textPrimary !important;
+      border-bottom: var(--border-width-thin) solid vars.$borderPrimary;
+      font-family: vars.$fontPrimary !important;
+    }
+
+    .bp5-dialog-body {
+      background-color: vars.$modalBg !important;
+      color: vars.$textPrimary !important;
+      font-family: vars.$fontPrimary !important;
+    }
+
+    .bp5-dialog-footer {
+      background-color: vars.$cardHeaderBg !important;
+      border-top: var(--border-width-thin) solid vars.$borderPrimary;
+    }
+
+    .bp5-heading {
+      color: vars.$textPrimary !important;
+      font-family: vars.$fontPrimary !important;
+      text-transform: vars.$textTransformTitle;
+      letter-spacing: var(--letter-spacing-wide);
+      text-shadow: vars.$glowPrimary;
+    }
+
+    .bp5-overlay-backdrop {
+      background-color: vars.$modalOverlay !important;
+    }
+  }
+}
+
+.content {
+  padding: vars.$spaceXl;
+}
+
+.confirmText {
+  margin-bottom: vars.$spaceXl;
+  font-size: var(--font-size-base);
+  color: vars.$textSecondary;
+  font-family: vars.$fontPrimary;
+}
+
+.detailsSection {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spaceLg;
+  margin-bottom: vars.$spaceXl;
+}
+
+.detailGroup {
+  background-color: vars.$bgTertiary;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  border-radius: vars.$borderRadius;
+  padding: vars.$spaceMd;
+
+  h4 {
+    margin: 0 0 vars.$spaceMd 0;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    text-transform: vars.$textTransformLabel;
+    color: vars.$textPrimary;
+    letter-spacing: var(--letter-spacing-wider);
+    border-bottom: var(--border-width-thin) solid vars.$borderTertiary;
+    padding-bottom: vars.$spaceSm;
+    font-family: vars.$fontPrimary;
+  }
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  padding: vars.$spaceXs 0;
+  font-size: var(--font-size-sm);
+
+  &:not(:last-child) {
+    border-bottom: var(--border-width-thin) solid vars.$borderTertiary;
+    padding-bottom: vars.$spaceSm;
+    margin-bottom: vars.$spaceSm;
+  }
+}
+
+.label {
+  font-weight: var(--font-weight-bold);
+  color: vars.$textTertiary;
+  flex-shrink: 0;
+  margin-right: vars.$spaceMd;
+  font-family: vars.$fontPrimary;
+  text-transform: vars.$textTransformPropertyLabel;
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wider);
+}
+
+.value {
+  color: vars.$textSecondary;
+  text-align: right;
+  font-family: vars.$fontPrimary;
+  word-break: break-all;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: vars.$spaceSm;
+  padding: vars.$spaceMd vars.$spaceXl;
+  border-top: var(--border-width-thin) solid vars.$borderPrimary;
+  background-color: vars.$cardHeaderBg;
+}
