@@ -39,7 +39,7 @@ function* fetchUnits(): any {
   try {
     const result = yield call([client(unit), "fetchPage"]);
     const units: unit.OsdkInstance[] = result.data;
-    yield put(setUnits(units || []));
+    yield put(setUnits(units ?? []));
   } catch (e) {
     console.error("Error fetching units:", e);
     yield put(setUnits([]));
@@ -48,13 +48,12 @@ function* fetchUnits(): any {
 
 function* fetchElints(): any {
   try {
-    const result = yield call(async () => {
-      return await client(elint).fetchPage({
-        $select: ["intelligenceEllipseGeometry", "reportedPosition", "semiMajorAxisMeters", "semiMinorAxisMeters", "axisOrientation", "elnot", "reportedTimestamp"]
-      });
-    });
+    const result = yield call(
+      [client(elint), "fetchPage"],
+      { $select: ["intelligenceEllipseGeometry", "reportedPosition", "semiMajorAxisMeters", "semiMinorAxisMeters", "axisOrientation", "elnot", "reportedTimestamp"] }
+    );
     const elints: elint.OsdkInstance[] = result.data;
-    yield put(setElints(elints || []));
+    yield put(setElints(elints ?? []));
   } catch (e) {
     console.error("Error fetching ELINT:", e);
     yield put(setElints([]));
@@ -67,7 +66,7 @@ function* fetchCollateralConcerns(): any {
       $select: ["geometry"]
     });
     const collateralConcerns: collateralConcernCandidateWithGeometry.OsdkInstance[] = result.data;
-    yield put(setCollateralConcerns(collateralConcerns || []));
+    yield put(setCollateralConcerns(collateralConcerns ?? []));
   } catch (e) {
     console.error("Error fetching collateral concerns:", e);
     yield put(setCollateralConcerns([]));
@@ -140,8 +139,8 @@ function* fetchUnitHierarchy(action: ReturnType<typeof loadUnitHierarchy>): any 
       return;
     }
 
-    const immediateParents = yield call(async () => await getImmediateParentUnits(nodeId));
-    const immediateChildren = yield call(async () => await getImmediateChildUnits(nodeId));
+    const immediateParents = yield call(getImmediateParentUnits, nodeId);
+    const immediateChildren = yield call(getImmediateChildUnits, nodeId);
 
     yield put(setUnitHierarchy({
       parents: immediateParents,
@@ -229,9 +228,9 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
     const unitObjectType = (unitInstance as any).$objectType;
     const elintObjectType = (elintInstance as any).$objectType;
 
-    // Call the action with ActionParam.InterfaceType structure
-    yield call(async () => {
-      await client(associateIntelligenceWithIntelligenceSubject).applyAction({
+    yield call(
+      [client(associateIntelligenceWithIntelligenceSubject), "applyAction"],
+      {
         "com.palantir.ontology.defense-types.intelligenceSubject": {
           $objectType: unitObjectType,
           $primaryKey: unitPrimaryKey,
@@ -240,8 +239,8 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
           $objectType: elintObjectType,
           $primaryKey: elintPrimaryKey,
         },
-      });
-    });
+      }
+    );
 
     yield put(setElintAssociationSuccess());
     yield put(loadAssociatedElints(unitInstance));
@@ -262,14 +261,15 @@ function* fetchAssociatedElints(action: ReturnType<typeof loadAssociatedElints>)
       return;
     }
 
-    const result = yield call(async () => {
-      return await link["com.palantir.ontology.defense-types.linkedIntelligence"].fetchPage({
+    const result = yield call(
+      [link["com.palantir.ontology.defense-types.linkedIntelligence"], "fetchPage"],
+      {
         $select: ['reportedPosition', 'semiMajorAxisMeters', 'semiMinorAxisMeters', 'axisOrientation', 'intelligenceEllipseGeometry', 'elnot', 'reportedTimestamp'],
         $pageSize: 100,
-      });
-    });
+      }
+    );
 
-    const elints: elint.OsdkInstance[] = result.data || [];
+    const elints: elint.OsdkInstance[] = result.data ?? [];
     yield put(setAssociatedElints(elints));
   } catch (err) {
     console.error("Error fetching associated ELINTs:", err);
@@ -288,15 +288,16 @@ function* fetchTrackedEntityObservations(action: ReturnType<typeof loadTrackedEn
       return;
     }
 
-    const result = yield call(async () => {
-      return await link["com.palantir.core.ontology.types.trackedEntity"].fetchPage({
+    const result = yield call(
+      [link["com.palantir.core.ontology.types.trackedEntity"], "fetchPage"],
+      {
         $select: ['geotrackablePosition', 'geotrackableTimestamp'],
         $orderBy: { geotrackableTimestamp: 'desc' },
         $pageSize: 100,
-      });
-    });
+      }
+    );
 
-    const observations: trackedEntity.OsdkInstance[] = result.data || [];
+    const observations: trackedEntity.OsdkInstance[] = result.data ?? [];
     yield put(setTrackedEntityObservations(observations));
   } catch (err) {
     console.error("Error fetching tracked entity observations:", err);

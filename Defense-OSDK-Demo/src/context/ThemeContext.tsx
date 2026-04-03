@@ -16,7 +16,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type ThemeName = 'devcon' | 'katie-classic' | 'retro' | 'synthwave';
+const THEMES = ['devcon', 'katie-classic', 'retro', 'synthwave'] as const;
+type ThemeName = typeof THEMES[number];
+
+const DEFAULT_THEME: ThemeName = 'devcon';
+
+function isValidTheme(value: string | null): value is ThemeName {
+  return value != null && (THEMES as readonly string[]).includes(value);
+}
 
 interface ThemeContextType {
   theme: ThemeName;
@@ -27,9 +34,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeName>(() => {
-    // Load theme from localStorage or default to devcon
-    const savedTheme = localStorage.getItem('app-theme') as ThemeName;
-    const initialTheme = savedTheme || 'devcon';
+    const savedTheme = localStorage.getItem('app-theme');
+    const initialTheme = isValidTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
 
     // Set data-theme attribute immediately to prevent flash of wrong theme
     document.documentElement.setAttribute('data-theme', initialTheme);

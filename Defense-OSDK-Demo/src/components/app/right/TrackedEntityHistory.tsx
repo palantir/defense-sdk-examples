@@ -18,8 +18,8 @@ import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { unit } from "@defense-osdk/sdk";
-import { RootState } from "../../../store/store";
 import { loadTrackedEntityObservations } from "../../../store/features/osdk/osdkSlice";
+import { selectTrackedEntityObservations, selectLoadingTrackedEntityObservations, selectTrackedEntityObservationsError } from "../../../store/features/osdk/osdkSelectors";
 import styles from "./TrackedEntityHistory.module.scss";
 
 interface TrackedEntityHistoryProps {
@@ -30,16 +30,18 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  const observations = useSelector((state: RootState) => state.osdk.trackedEntityObservations);
-  const loading = useSelector((state: RootState) => state.osdk.loadingTrackedEntityObservations);
-  const error = useSelector((state: RootState) => state.osdk.trackedEntityObservationsError);
+  const observations = useSelector(selectTrackedEntityObservations);
+  const loading = useSelector(selectLoadingTrackedEntityObservations);
+  const error = useSelector(selectTrackedEntityObservationsError);
 
   useEffect(() => {
     dispatch(loadTrackedEntityObservations(unitInstance));
   }, [unitInstance, dispatch]);
 
   const formatTimestamp = (timestamp: string | undefined): string => {
-    if (!timestamp) return t("noTimestamp");
+    if (timestamp == null) {
+      return t("noTimestamp");
+    }
     try {
       return new Date(timestamp).toLocaleString();
     } catch {
@@ -48,7 +50,7 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
   };
 
   const formatPosition = (position: any): string => {
-    if (!position || !position.coordinates || position.coordinates.length < 2) {
+    if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;
@@ -99,7 +101,7 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
             </thead>
             <tbody>
               {observations.map((obs, index) => (
-                <tr key={(obs as any).$primaryKey || index}>
+                <tr key={(obs as any).$primaryKey ?? index}>
                   <td>{formatTimestamp(obs.geotrackableTimestamp)}</td>
                   <td>{formatPosition(obs.geotrackablePosition)}</td>
                 </tr>

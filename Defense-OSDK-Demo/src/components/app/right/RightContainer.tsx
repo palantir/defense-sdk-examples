@@ -17,8 +17,8 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { RootState } from "../../../store/store";
 import { clearSelectedUnit, loadUnitHierarchy, clearUnitHierarchy, selectUnit } from "../../../store/features/osdk/osdkSlice";
+import { selectSelectedUnit, selectUnitHierarchy, selectLoadingUnitHierarchy, selectUnitHierarchyError } from "../../../store/features/osdk/osdkSelectors";
 import UnitCard from "./UnitCard";
 import AssociatedELINT from "./AssociatedElint";
 import TrackedEntityHistory from "./TrackedEntityHistory";
@@ -28,10 +28,10 @@ import styles from "./RightContainer.module.scss";
 const RightContainer: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const selectedUnit = useSelector((state: RootState) => state.osdk.selectedUnit);
-  const unitHierarchy = useSelector((state: RootState) => state.osdk.unitHierarchy);
-  const loadingHierarchy = useSelector((state: RootState) => state.osdk.loadingUnitHierarchy);
-  const hierarchyError = useSelector((state: RootState) => state.osdk.unitHierarchyError);
+  const selectedUnit = useSelector(selectSelectedUnit);
+  const unitHierarchy = useSelector(selectUnitHierarchy);
+  const loadingHierarchy = useSelector(selectLoadingUnitHierarchy);
+  const hierarchyError = useSelector(selectUnitHierarchyError);
 
   const handleClearSelection = () => {
     dispatch(clearSelectedUnit());
@@ -71,8 +71,8 @@ const RightContainer: React.FC = () => {
           {isFriendly && (
             <UnitHierarchyView
               unit={selectedUnit}
-              parents={unitHierarchy?.parents || []}
-              children={unitHierarchy?.children || []}
+              parents={unitHierarchy?.parents ?? []}
+              children={unitHierarchy?.children ?? []}
               loading={loadingHierarchy}
               error={hierarchyError}
               onSelectUnit={handleSelectUnit}

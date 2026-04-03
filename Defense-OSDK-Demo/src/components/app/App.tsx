@@ -20,11 +20,11 @@ import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { loadUser } from "../../store/features/osdk/osdkSlice";
-import { RootState } from "../../store/store";
+import { selectUser, selectUserLoading } from "../../store/features/osdk/osdkSelectors";
 import styles from "./App.module.scss";
 import LeftMapContainer from "./left/LeftMapContainer";
 import RightContainer from "./right/RightContainer";
-import ConfirmAssociateElintModal from "./modals/ConfirmAssociateElintModal";
+import ConfirmAssociateElintModal, { AssociationToaster } from "./modals/ConfirmAssociateElintModal";
 import ThemeSwitcher from "./ThemeSwitcher";
 
 export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
@@ -36,8 +36,8 @@ export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
 const App: React.FC = () => {
   const { t } = useTranslation();
 
-  const user = useSelector((state: RootState) => state.osdk.user);
-  const loadingUser = useSelector((state: RootState) => state.osdk.loadingUser);
+  const user = useSelector(selectUser);
+  const loadingUser = useSelector(selectUserLoading);
 
   const dispatch = useDispatch();
 
@@ -76,7 +76,7 @@ const App: React.FC = () => {
           ) : (
             <>
               <span className={styles.greeting}>
-                👋 {t('hello')}, {user?.givenName || t('user')}!
+                👋 {t('hello')}, {user?.givenName ?? t('user')}!
               </span>
               <ThemeSwitcher />
             </>
@@ -94,8 +94,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
       <ConfirmAssociateElintModal />
+      <AssociationToaster />
     </div>
   );
 };

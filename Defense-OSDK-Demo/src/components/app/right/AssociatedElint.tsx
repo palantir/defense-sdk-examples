@@ -18,8 +18,8 @@ import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import { unit } from "@defense-osdk/sdk";
-import { RootState } from "../../../store/store";
 import { loadAssociatedElints } from "../../../store/features/osdk/osdkSlice";
+import { selectAssociatedElints, selectLoadingAssociatedElints, selectAssociatedElintsError, selectAssociatingElint } from "../../../store/features/osdk/osdkSelectors";
 import styles from "./AssociatedElint.module.scss";
 
 interface AssociatedELINTProps {
@@ -30,10 +30,10 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  const elints = useSelector((state: RootState) => state.osdk.associatedElints);
-  const loading = useSelector((state: RootState) => state.osdk.loadingAssociatedElints);
-  const error = useSelector((state: RootState) => state.osdk.associatedElintsError);
-  const associatingElint = useSelector((state: RootState) => state.osdk.associatingElint);
+  const elints = useSelector(selectAssociatedElints);
+  const loading = useSelector(selectLoadingAssociatedElints);
+  const error = useSelector(selectAssociatedElintsError);
+  const associatingElint = useSelector(selectAssociatingElint);
 
   const prevAssociatingRef = React.useRef(associatingElint);
 
@@ -49,7 +49,7 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
   }, [unitInstance, dispatch]);
 
   const formatPosition = (position: any): string => {
-    if (!position || !position.coordinates || position.coordinates.length < 2) {
+    if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;
@@ -113,8 +113,8 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
             </thead>
             <tbody>
               {elints.map((elintReport, index) => (
-                <tr key={(elintReport as any).$primaryKey || index}>
-                  <td>{(elintReport as any).$title || (elintReport as any).$primaryKey || `ELINT-${index + 1}`}</td>
+                <tr key={(elintReport as any).$primaryKey ?? index}>
+                  <td>{(elintReport as any).$title ?? (elintReport as any).$primaryKey ?? `ELINT-${index + 1}`}</td>
                   <td>{formatPosition(elintReport.reportedPosition)}</td>
                   <td>{formatDimensions(elintReport.semiMajorAxisMeters, elintReport.semiMinorAxisMeters)}</td>
                   <td>{elintReport.axisOrientation !== undefined ? `${elintReport.axisOrientation.toFixed(1)}°` : "N/A"}</td>
