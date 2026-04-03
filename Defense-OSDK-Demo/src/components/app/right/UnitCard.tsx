@@ -14,75 +14,57 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { unit } from "@defense-osdk/sdk";
 import styles from "./UnitCard.module.scss";
 
 interface UnitCardProps {
-  unit: unit.OsdkInstance;
   onClose?: () => void;
+  unit: unit.OsdkInstance;
+}
+
+function formatPropertyKey(key: string): string {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
+}
+
+function formatPropertyValue(value: any): string {
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
 }
 
 const UnitCard: React.FC<UnitCardProps> = ({ unit, onClose }) => {
   const { t } = useTranslation();
 
-  // Get all properties from the unit, excluding system properties starting with $
-  const getUnitProperties = () => {
-    const properties: Array<{ key: string; value: any }> = [];
-
-    // Iterate through all keys on the unit object
-    Object.keys(unit).forEach((key) => {
-      // Skip system properties that start with $
-      if (key.startsWith('$')) {
-        return;
-      }
-
-      const value = (unit as any)[key];
-
-      // Skip undefined, null, and empty values
-      if (value === undefined || value === null || value === '') {
-        return;
-      }
-
-      // Skip functions
-      if (typeof value === 'function') {
-        return;
-      }
-
-      properties.push({ key, value });
-    });
-
-    return properties;
-  };
-
-  // Format property key for display (convert camelCase to Title Case)
-  const formatPropertyKey = (key: string): string => {
-    return key
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
-      .trim();
-  };
-
-  // Format property value for display
-  const formatPropertyValue = (value: any): string => {
-    if (typeof value === 'object') {
-      return JSON.stringify(value, null, 2);
-    }
-    return String(value);
-  };
-
-  const properties = getUnitProperties();
+  const properties = useMemo(() =>
+    Object.entries(unit)
+      .filter(([key, value]) =>
+        !key.startsWith('$') &&
+        value != null &&
+        value !== '' &&
+        typeof value !== 'function'
+      ),
+    [unit]
+  );
 
   return (
     <div className={styles.unitCard}>
       <div className={styles.header}>
-        <h2 className={styles.title}>{unit.$title || t("untitledUnit")}</h2>
-        {onClose && (
+        <h2 className={styles.title}>{unit.$title ?? t("untitledUnit")}</h2>
+        {onClose != null && (
           <button
+            aria-label={t("closeButton")}
             className={styles.closeButton}
             onClick={onClose}
-            aria-label={t("closeButton")}
           >
             ✕
           </button>
@@ -90,8 +72,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onClose }) => {
       </div>
 
       <div className={styles.propertiesGrid}>
-        {/* All properties in 2 columns */}
-        {properties.map(({ key, value }) => (
+        {properties.map(([key, value]) => (
           <div key={key} className={styles.property}>
             <span className={styles.label}>{formatPropertyKey(key)}:</span>
             <span className={styles.value}>{formatPropertyValue(value)}</span>

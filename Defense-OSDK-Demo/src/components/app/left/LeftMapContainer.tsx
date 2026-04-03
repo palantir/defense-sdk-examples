@@ -25,6 +25,9 @@ import { intelligenceSubject } from "@defense-osdk/sdk";
 import { useTheme } from "../../../context/ThemeContext";
 import styles from "./LeftMapContainer.module.scss";
 
+const HOSTILE_AFFILIATION = "hostile";
+const LINKED_INTELLIGENCE_ID = "com.palantir.ontology.defense-types.linkedIntelligence";
+
 function getCssVariable(name: string): string {
   return getComputedStyle(document.documentElement)
     .getPropertyValue(name)
@@ -58,7 +61,7 @@ function getUnitColor(affiliation: string | undefined, colors: MapColors): strin
     return colors.unitOtherColor;
   }
   const lowerAffiliation = affiliation.toLowerCase();
-  if (lowerAffiliation === 'hostile') {
+  if (lowerAffiliation === HOSTILE_AFFILIATION) {
     return colors.unitHostileColor;
   }
   if (lowerAffiliation.includes('friend')) {
@@ -68,6 +71,31 @@ function getUnitColor(affiliation: string | undefined, colors: MapColors): strin
 }
 
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+// Fetches primary keys of ELINTs linked to a hostile unit via the intelligence subject interface
+async function getAssociatedElintPrimaryKeys(selectedUnit: any): Promise<Set<string>> {
+  if (selectedUnit == null || selectedUnit.affiliation?.toLowerCase() !== HOSTILE_AFFILIATION) {
+    return new Set();
+  }
+
+  try {
+    // OSDK interface casting requires `as any` since types are resolved at runtime
+    const asIntelligenceSubject = selectedUnit.$as(intelligenceSubject);
+    const link = asIntelligenceSubject.$link;
+
+    if (link?.[LINKED_INTELLIGENCE_ID] == null) {
+      return new Set();
+    }
+
+    const { data } = await link[LINKED_INTELLIGENCE_ID].fetchPage({
+      $pageSize: 1000,
+    });
+
+    return new Set(data.map((elint: any) => elint.$primaryKey));
+  } catch {
+    return new Set();
+  }
+}
 
 const LeftMapContainer: React.FC = () => {
   const { theme } = useTheme();
@@ -183,39 +211,7 @@ const LeftMapContainer: React.FC = () => {
       return;
     }
 
-    const fetchAssociatedElints = async () => {
-      if (selectedUnit == null) {
-        setAssociatedElintPrimaryKeys(new Set());
-        return;
-      }
-
-      const isHostile = selectedUnit.affiliation?.toLowerCase() === 'hostile';
-      if (!isHostile) {
-        setAssociatedElintPrimaryKeys(new Set());
-        return;
-      }
-
-      try {
-        const asIntelligenceSubject = (selectedUnit as any).$as(intelligenceSubject);
-        const link = (asIntelligenceSubject as any).$link;
-
-        if (link == null || link["com.palantir.ontology.defense-types.linkedIntelligence"] == null) {
-          setAssociatedElintPrimaryKeys(new Set());
-          return;
-        }
-
-        const { data } = await link["com.palantir.ontology.defense-types.linkedIntelligence"].fetchPage({
-          $pageSize: 1000,
-        });
-
-        const primaryKeys = new Set(data.map((elint: any) => elint.$primaryKey));
-        setAssociatedElintPrimaryKeys(primaryKeys);
-      } catch {
-        setAssociatedElintPrimaryKeys(new Set());
-      }
-    };
-
-    fetchAssociatedElints();
+    getAssociatedElintPrimaryKeys(selectedUnit).then(setAssociatedElintPrimaryKeys);
   }, [selectedUnit, associatingElint]);
 
   useEffect(() => {
@@ -234,7 +230,7 @@ const LeftMapContainer: React.FC = () => {
 
     elints.forEach((elintData) => {
       try {
-        const isHostileSelected = selectedUnit != null && selectedUnit.affiliation?.toLowerCase() === 'hostile';
+        const isHostileSelected = selectedUnit != null && selectedUnit.affiliation?.toLowerCase() === HOSTILE_AFFILIATION;
 
         if (elintData.reportedPosition != null && elintData.reportedPosition.coordinates != null) {
           const center: [number, number] = [

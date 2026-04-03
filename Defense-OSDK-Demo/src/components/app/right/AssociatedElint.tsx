@@ -38,7 +38,7 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
   const prevAssociatingRef = React.useRef(associatingElint);
 
   useEffect(() => {
-    if (prevAssociatingRef.current === true && associatingElint === false) {
+    if (prevAssociatingRef.current && !associatingElint) {
       dispatch(loadAssociatedElints(unitInstance));
     }
     prevAssociatingRef.current = associatingElint;
@@ -117,7 +117,7 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
                   <td>{(elintReport as any).$title ?? (elintReport as any).$primaryKey ?? `ELINT-${index + 1}`}</td>
                   <td>{formatPosition(elintReport.reportedPosition)}</td>
                   <td>{formatDimensions(elintReport.semiMajorAxisMeters, elintReport.semiMinorAxisMeters)}</td>
-                  <td>{elintReport.axisOrientation !== undefined ? `${elintReport.axisOrientation.toFixed(1)}°` : "N/A"}</td>
+                  <td>{elintReport.axisOrientation != null ? `${elintReport.axisOrientation.toFixed(1)}°` : t("notAvailable")}</td>
                 </tr>
               ))}
             </tbody>

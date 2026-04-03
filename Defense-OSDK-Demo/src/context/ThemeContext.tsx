@@ -16,14 +16,23 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const THEMES = ['devcon', 'katie-classic', 'retro', 'synthwave'] as const;
-type ThemeName = typeof THEMES[number];
+const THEMES = [
+  { id: 'devcon', label: 'DEVCON' },
+  { id: 'katie-classic', label: 'Katie Classic' },
+  { id: 'retro', label: 'Retro' },
+  { id: 'synthwave', label: 'Synthwave' },
+] as const;
+
+type ThemeName = typeof THEMES[number]['id'];
 
 const DEFAULT_THEME: ThemeName = 'devcon';
 
 function isValidTheme(value: string | null): value is ThemeName {
-  return value != null && (THEMES as readonly string[]).includes(value);
+  return value != null && THEMES.some(({ id }) => id === value);
 }
+
+export { THEMES };
+export type { ThemeName };
 
 interface ThemeContextType {
   theme: ThemeName;

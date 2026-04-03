@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { clearSelectedUnit, loadUnitHierarchy, clearUnitHierarchy, selectUnit } from "../../../store/features/osdk/osdkSlice";
@@ -33,13 +33,13 @@ const RightContainer: React.FC = () => {
   const loadingHierarchy = useSelector(selectLoadingUnitHierarchy);
   const hierarchyError = useSelector(selectUnitHierarchyError);
 
-  const handleClearSelection = () => {
+  const handleClearSelection = useCallback(() => {
     dispatch(clearSelectedUnit());
-  };
+  }, [dispatch]);
 
-  const handleSelectUnit = (unit: any) => {
+  const handleSelectUnit = useCallback((unit: any) => {
     dispatch(selectUnit(unit));
-  };
+  }, [dispatch]);
 
   // Check unit affiliation
   const affiliation = selectedUnit?.affiliation?.toLowerCase();
@@ -74,7 +74,7 @@ const RightContainer: React.FC = () => {
               parents={unitHierarchy?.parents ?? []}
               children={unitHierarchy?.children ?? []}
               loading={loadingHierarchy}
-              error={hierarchyError}
+              error={hierarchyError ?? undefined}
               onSelectUnit={handleSelectUnit}
             />
           )}
