@@ -87,10 +87,10 @@ function* fetchUnitLocations(): any {
 
     for (const unitInstance of units) {
       try {
-        const asTrackedEntity = (unitInstance as any).$as(trackedEntity);
-        const link = (asTrackedEntity as any).$link;
+        const asTrackedEntity = unitInstance.$as(trackedEntity);
+        const link = asTrackedEntity.$link;
 
-        if (!link || !link["com.palantir.core.ontology.types.trackedEntity"]) {
+        if (link?.["com.palantir.core.ontology.types.trackedEntity"] == null) {
           continue;
         }
 
@@ -223,10 +223,10 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
   try {
     const { elint: elintInstance, unit: unitInstance } = action.payload;
 
-    const unitPrimaryKey = (unitInstance as any).$primaryKey;
-    const elintPrimaryKey = (elintInstance as any).$primaryKey;
-    const unitObjectType = (unitInstance as any).$objectType;
-    const elintObjectType = (elintInstance as any).$objectType;
+    const unitPrimaryKey = unitInstance.$primaryKey;
+    const elintPrimaryKey = elintInstance.$primaryKey;
+    const unitObjectType = unitInstance.$objectType;
+    const elintObjectType = elintInstance.$objectType;
 
     yield call(
       [client(associateIntelligenceWithIntelligenceSubject), "applyAction"],
@@ -253,10 +253,10 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
 function* fetchAssociatedElints(action: ReturnType<typeof loadAssociatedElints>): any {
   try {
     const unitInstance = action.payload;
-    const asIntelligenceSubject = (unitInstance as any).$as(intelligenceSubject);
-    const link = (asIntelligenceSubject as any).$link;
+    const asIntelligenceSubject = unitInstance.$as(intelligenceSubject);
+    const link = asIntelligenceSubject.$link;
 
-    if (!link || !link["com.palantir.ontology.defense-types.linkedIntelligence"]) {
+    if (link?.["com.palantir.ontology.defense-types.linkedIntelligence"] == null) {
       yield put(setAssociatedElints([]));
       return;
     }
@@ -280,10 +280,10 @@ function* fetchAssociatedElints(action: ReturnType<typeof loadAssociatedElints>)
 function* fetchTrackedEntityObservations(action: ReturnType<typeof loadTrackedEntityObservations>): any {
   try {
     const unitInstance = action.payload;
-    const asTrackedEntity = (unitInstance as any).$as(trackedEntity);
-    const link = (asTrackedEntity as any).$link;
+    const asTrackedEntity = unitInstance.$as(trackedEntity);
+    const link = asTrackedEntity.$link;
 
-    if (!link || !link["com.palantir.core.ontology.types.trackedEntity"]) {
+    if (link?.["com.palantir.core.ontology.types.trackedEntity"] == null) {
       yield put(setTrackedEntityObservations([]));
       return;
     }

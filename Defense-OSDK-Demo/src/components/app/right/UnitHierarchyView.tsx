@@ -38,7 +38,7 @@ interface HierarchyNodeProps {
 
 const HierarchyNode: React.FC<HierarchyNodeProps> = ({ indentLevel, isLast = true, showLines = true, unitInstance, onSelect }) => {
   const { t } = useTranslation();
-  const nodeTitle = (unitInstance as any).$title ?? t("unknownNode");
+  const nodeTitle = unitInstance.$title ?? t("unknownNode");
 
   const handleClick = useCallback(() => {
     onSelect?.(unitInstance);
@@ -46,7 +46,7 @@ const HierarchyNode: React.FC<HierarchyNodeProps> = ({ indentLevel, isLast = tru
 
   return (
     <div
-      key={(unitInstance as any).$primaryKey}
+      key={unitInstance.$primaryKey}
       className={styles.treeRow}
       style={{ paddingLeft: `${indentLevel * 20}px` }}
     >
@@ -118,7 +118,7 @@ const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
           <div className={styles.tree}>
             {parents.map((parentUnit) => (
               <HierarchyNode
-                key={(parentUnit as any).$primaryKey}
+                key={parentUnit.$primaryKey}
                 indentLevel={0}
                 showLines={false}
                 unitInstance={parentUnit}
@@ -140,17 +140,17 @@ const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
               </div>
               <div
                 className={`${styles.nodeContent} ${styles.currentUnit}`}
-                title={(unitInstance as any).$title ?? t("unknownNode")}
+                title={unitInstance.$title ?? t("unknownNode")}
               >
                 <div className={styles.nodeName}>
-                  {(unitInstance as any).$title ?? t("unknownNode")}
+                  {unitInstance.$title ?? t("unknownNode")}
                 </div>
               </div>
             </div>
 
             {children.map((childUnit, index) => (
               <HierarchyNode
-                key={(childUnit as any).$primaryKey}
+                key={childUnit.$primaryKey}
                 indentLevel={childIndentLevel}
                 isLast={index === children.length - 1}
                 unitInstance={childUnit}

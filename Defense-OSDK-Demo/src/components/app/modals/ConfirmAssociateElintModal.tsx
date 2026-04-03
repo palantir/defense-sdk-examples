@@ -42,8 +42,8 @@ const ConfirmAssociateElintModal: React.FC = () => {
     if (selectedElint == null || associatedElints.length === 0) {
       return false;
     }
-    const elintPrimaryKey = (selectedElint as any).$primaryKey;
-    return associatedElints.some((linkedElint: any) => linkedElint.$primaryKey === elintPrimaryKey);
+    const elintPrimaryKey = selectedElint.$primaryKey;
+    return associatedElints.some((linkedElint) => linkedElint.$primaryKey === elintPrimaryKey);
   }, [selectedElint, associatedElints]);
 
   const handleConfirm = () => {
@@ -75,8 +75,8 @@ const ConfirmAssociateElintModal: React.FC = () => {
     }
   };
 
-  const unitTitle = (selectedUnit as any)?.$title ?? (selectedUnit as any)?.$primaryKey ?? t("unknown");
-  const elintTitle = (selectedElint as any)?.$title ?? (selectedElint as any)?.$primaryKey ?? t("unknown");
+  const unitTitle = selectedUnit?.$title ?? selectedUnit?.$primaryKey ?? t("unknown");
+  const elintTitle = selectedElint?.$title ?? selectedElint?.$primaryKey ?? t("unknown");
 
   return (
     <Dialog
@@ -112,7 +112,7 @@ const ConfirmAssociateElintModal: React.FC = () => {
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.label}>{t("affiliationLabel")}</span>
-                  <span className={styles.value}>{(selectedUnit as any)?.affiliation ?? t("notAvailable")}</span>
+                  <span className={styles.value}>{selectedUnit?.affiliation ?? t("notAvailable")}</span>
                 </div>
               </div>
 
@@ -124,15 +124,15 @@ const ConfirmAssociateElintModal: React.FC = () => {
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.label}>{t("elnotLabel")}</span>
-                  <span className={styles.value}>{(selectedElint as any)?.elnot ?? t("notAvailable")}</span>
+                  <span className={styles.value}>{selectedElint?.elnot ?? t("notAvailable")}</span>
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.label}>{t("timestampLabel")}</span>
-                  <span className={styles.value}>{formatTimestamp((selectedElint as any)?.reportedTimestamp)}</span>
+                  <span className={styles.value}>{formatTimestamp(selectedElint?.reportedTimestamp)}</span>
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.label}>{t("positionLabel")}</span>
-                  <span className={styles.value}>{formatPosition((selectedElint as any)?.reportedPosition)}</span>
+                  <span className={styles.value}>{formatPosition(selectedElint?.reportedPosition)}</span>
                 </div>
               </div>
             </div>

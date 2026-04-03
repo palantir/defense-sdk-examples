@@ -113,8 +113,8 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
             </thead>
             <tbody>
               {elints.map((elintReport, index) => (
-                <tr key={(elintReport as any).$primaryKey ?? index}>
-                  <td>{(elintReport as any).$title ?? (elintReport as any).$primaryKey ?? `ELINT-${index + 1}`}</td>
+                <tr key={elintReport.$primaryKey ?? index}>
+                  <td>{elintReport.$title ?? elintReport.$primaryKey ?? `ELINT-${index + 1}`}</td>
                   <td>{formatPosition(elintReport.reportedPosition)}</td>
                   <td>{formatDimensions(elintReport.semiMajorAxisMeters, elintReport.semiMinorAxisMeters)}</td>
                   <td>{elintReport.axisOrientation != null ? `${elintReport.axisOrientation.toFixed(1)}°` : t("notAvailable")}</td>

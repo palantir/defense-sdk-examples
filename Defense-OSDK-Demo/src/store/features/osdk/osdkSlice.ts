@@ -131,6 +131,7 @@ const osdkSlice = createSlice({
       state.unitsError = null;
     },
     setUnits: (state, action: PayloadAction<unit.OsdkInstance[]>) => {
+      // TODO: remove `as any` once OSDK types are compatible with Redux Toolkit state assignment
       state.units = action.payload as any;
       state.loadingUnits = false;
     },

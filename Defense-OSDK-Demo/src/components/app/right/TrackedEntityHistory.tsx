@@ -101,7 +101,7 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
             </thead>
             <tbody>
               {observations.map((obs, index) => (
-                <tr key={(obs as any).$primaryKey ?? index}>
+                <tr key={obs.$primaryKey ?? index}>
                   <td>{formatTimestamp(obs.geotrackableTimestamp)}</td>
                   <td>{formatPosition(obs.geotrackablePosition)}</td>
                 </tr>

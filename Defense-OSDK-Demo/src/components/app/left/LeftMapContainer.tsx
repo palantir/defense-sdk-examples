@@ -79,7 +79,6 @@ async function getAssociatedElintPrimaryKeys(selectedUnit: any): Promise<Set<str
   }
 
   try {
-    // OSDK interface casting requires `as any` since types are resolved at runtime
     const asIntelligenceSubject = selectedUnit.$as(intelligenceSubject);
     const link = asIntelligenceSubject.$link;
 
@@ -238,7 +237,7 @@ const LeftMapContainer: React.FC = () => {
             elintData.reportedPosition.coordinates[0]
           ];
 
-          const elintPrimaryKey = (elintData as any).$primaryKey;
+          const elintPrimaryKey = elintData.$primaryKey;
           const isAssociated = associatedElintPrimaryKeys.has(elintPrimaryKey);
 
           if (isAssociated && isHostileSelected && ellipsesLayerRef.current != null) {
@@ -377,10 +376,13 @@ const LeftMapContainer: React.FC = () => {
   }, [unitLocations, dispatch]);
 
   useEffect(() => {
-    if (mapRef.current == null || ellipsesLayerRef.current == null || collateralConcernsLayerRef.current == null || unitsLayerRef.current == null) {
-      return;
-    }
-    if (elints.length === 0 && collateralConcerns.length === 0 && unitLocations.length === 0) {
+    if (
+      mapRef.current == null ||
+      ellipsesLayerRef.current == null ||
+      collateralConcernsLayerRef.current == null ||
+      unitsLayerRef.current == null ||
+      (elints.length === 0 && collateralConcerns.length === 0 && unitLocations.length === 0)
+    ) {
       return;
     }
 
