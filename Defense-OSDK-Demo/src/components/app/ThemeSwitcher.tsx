@@ -17,7 +17,7 @@
 import React, { useCallback, useState } from 'react';
 import { Button, Menu, MenuItem, Popover, Position } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
-import { useTheme, THEMES, ThemeName } from '../../context/ThemeContext';
+import { useTheme, ThemeValues, ThemeName } from '../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import styles from './ThemeSwitcher.module.scss';
 
@@ -33,7 +33,7 @@ const ThemeSwitcher: React.FC = () => {
 
   const menu = (
     <Menu className={styles.menu}>
-      {THEMES.map(({ id, label }) => (
+      {ThemeValues.map(({ id, label }) => (
         <MenuItem
           key={id}
           className={theme === id ? styles.active : ''}

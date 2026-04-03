@@ -16,23 +16,21 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const THEMES = [
-  { id: 'devcon', label: 'DEVCON' },
-  { id: 'katie-classic', label: 'Katie Classic' },
-  { id: 'retro', label: 'Retro' },
-  { id: 'synthwave', label: 'Synthwave' },
-] as const;
+export const Themes = {
+  DEVCON: { id: 'devcon', label: 'DEVCON' },
+  KATIE_CLASSIC: { id: 'katie-classic', label: 'Katie Classic' },
+  RETRO: { id: 'retro', label: 'Retro' },
+  SYNTHWAVE: { id: 'synthwave', label: 'Synthwave' },
+} as const;
 
-type ThemeName = typeof THEMES[number]['id'];
+export type ThemeName = typeof Themes[keyof typeof Themes]['id'];
 
-const DEFAULT_THEME: ThemeName = 'devcon';
+export const ThemeValues = Object.values(Themes);
+const DEFAULT_THEME: ThemeName = Themes.DEVCON.id;
 
 function isValidTheme(value: string | null): value is ThemeName {
-  return value != null && THEMES.some(({ id }) => id === value);
+  return value != null && ThemeValues.some(({ id }) => id === value);
 }
-
-export { THEMES };
-export type { ThemeName };
 
 interface ThemeContextType {
   theme: ThemeName;
