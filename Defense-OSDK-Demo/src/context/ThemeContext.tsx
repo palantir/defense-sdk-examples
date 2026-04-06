@@ -15,6 +15,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { THEME_STORAGE_KEY, THEME_DATA_ATTRIBUTE } from '../constants';
 
 export const Themes = {
   DEVCON: { id: 'devcon', label: 'DEVCON' },
@@ -41,21 +42,21 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeName>(() => {
-    const savedTheme = localStorage.getItem('app-theme');
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     const initialTheme = isValidTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
 
     // Set data-theme attribute immediately to prevent flash of wrong theme
-    document.documentElement.setAttribute('data-theme', initialTheme);
+    document.documentElement.setAttribute(THEME_DATA_ATTRIBUTE, initialTheme);
 
     return initialTheme;
   });
 
   useEffect(() => {
     // Save theme to localStorage
-    localStorage.setItem('app-theme', theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
 
     // Apply theme to document root
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute(THEME_DATA_ATTRIBUTE, theme);
   }, [theme]);
 
   const setTheme = (newTheme: ThemeName) => {

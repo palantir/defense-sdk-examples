@@ -23,6 +23,7 @@ import UnitCard from "./UnitCard";
 import AssociatedELINT from "./AssociatedElint";
 import TrackedEntityHistory from "./TrackedEntityHistory";
 import UnitHierarchyView from "./UnitHierarchyView";
+import { Affiliations } from "../../../constants";
 import styles from "./RightContainer.module.scss";
 
 const RightContainer: React.FC = () => {
@@ -43,8 +44,8 @@ const RightContainer: React.FC = () => {
 
   // Check unit affiliation
   const affiliation = selectedUnit?.affiliation?.toLowerCase();
-  const isHostile = affiliation === 'hostile';
-  const isFriendly = affiliation?.includes('friend');
+  const isHostile = affiliation === Affiliations.HOSTILE;
+  const isFriendly = affiliation?.includes(Affiliations.FRIEND);
 
   // Load hierarchy for friendly units
   useEffect(() => {

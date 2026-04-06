@@ -23,10 +23,8 @@ import { loadMapData, selectUnit, selectElint } from "../../../store/features/os
 import { selectElints, selectCollateralConcerns, selectUnitLocations, selectLoadingMapData, selectSelectedUnit, selectAssociatingElint } from "../../../store/features/osdk/osdkSelectors";
 import { intelligenceSubject } from "@defense-osdk/sdk";
 import { useTheme } from "../../../context/ThemeContext";
+import { Affiliations, CssVariables, OntologyLinkTypes } from "../../../constants";
 import styles from "./LeftMapContainer.module.scss";
-
-const HOSTILE_AFFILIATION = "hostile";
-const LINKED_INTELLIGENCE_ID = "com.palantir.ontology.defense-types.linkedIntelligence";
 
 function getCssVariable(name: string): string {
   return getComputedStyle(document.documentElement)
@@ -35,7 +33,7 @@ function getCssVariable(name: string): string {
 }
 
 function getMapTileUrl(): string {
-  return getCssVariable('--map-tile-url').replace(/^["']|["']$/g, '');
+  return getCssVariable(CssVariables.MAP_TILE_URL).replace(/^["']|["']$/g, '');
 }
 
 interface MapColors {
@@ -48,11 +46,11 @@ interface MapColors {
 
 function getMapColors(): MapColors {
   return {
-    collateralConcernColor: getCssVariable('--collateral-concern-color'),
-    elintColor: getCssVariable('--elint-color'),
-    unitFriendColor: getCssVariable('--unit-friend-color'),
-    unitHostileColor: getCssVariable('--unit-hostile-color'),
-    unitOtherColor: getCssVariable('--unit-other-color'),
+    collateralConcernColor: getCssVariable(CssVariables.COLLATERAL_CONCERN_COLOR),
+    elintColor: getCssVariable(CssVariables.ELINT_COLOR),
+    unitFriendColor: getCssVariable(CssVariables.UNIT_FRIEND_COLOR),
+    unitHostileColor: getCssVariable(CssVariables.UNIT_HOSTILE_COLOR),
+    unitOtherColor: getCssVariable(CssVariables.UNIT_OTHER_COLOR),
   };
 }
 
@@ -61,10 +59,10 @@ function getUnitColor(affiliation: string | undefined, colors: MapColors): strin
     return colors.unitOtherColor;
   }
   const lowerAffiliation = affiliation.toLowerCase();
-  if (lowerAffiliation === HOSTILE_AFFILIATION) {
+  if (lowerAffiliation === Affiliations.HOSTILE) {
     return colors.unitHostileColor;
   }
-  if (lowerAffiliation.includes('friend')) {
+  if (lowerAffiliation.includes(Affiliations.FRIEND)) {
     return colors.unitFriendColor;
   }
   return colors.unitOtherColor;
@@ -74,7 +72,7 @@ const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyrigh
 
 // Fetches primary keys of ELINTs linked to a hostile unit via the intelligence subject interface
 async function getAssociatedElintPrimaryKeys(selectedUnit: any): Promise<Set<string>> {
-  if (selectedUnit == null || selectedUnit.affiliation?.toLowerCase() !== HOSTILE_AFFILIATION) {
+  if (selectedUnit == null || selectedUnit.affiliation?.toLowerCase() !== Affiliations.HOSTILE) {
     return new Set();
   }
 
@@ -82,11 +80,11 @@ async function getAssociatedElintPrimaryKeys(selectedUnit: any): Promise<Set<str
     const asIntelligenceSubject = selectedUnit.$as(intelligenceSubject);
     const link = asIntelligenceSubject.$link;
 
-    if (link?.[LINKED_INTELLIGENCE_ID] == null) {
+    if (link?.[OntologyLinkTypes.LINKED_INTELLIGENCE] == null) {
       return new Set();
     }
 
-    const { data } = await link[LINKED_INTELLIGENCE_ID].fetchPage({
+    const { data } = await link[OntologyLinkTypes.LINKED_INTELLIGENCE].fetchPage({
       $pageSize: 1000,
     });
 
@@ -229,7 +227,7 @@ const LeftMapContainer: React.FC = () => {
 
     elints.forEach((elintData) => {
       try {
-        const isHostileSelected = selectedUnit != null && selectedUnit.affiliation?.toLowerCase() === HOSTILE_AFFILIATION;
+        const isHostileSelected = selectedUnit != null && selectedUnit.affiliation?.toLowerCase() === Affiliations.HOSTILE;
 
         if (elintData.reportedPosition != null && elintData.reportedPosition.coordinates != null) {
           const center: [number, number] = [

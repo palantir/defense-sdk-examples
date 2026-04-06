@@ -19,6 +19,7 @@ import { client } from "../../../client";
 import { User, Users } from "@osdk/foundry.admin";
 import { unit, elint, collateralConcernCandidateWithGeometry, trackedEntity, unitHierarchyNodeRelationship, associateIntelligenceWithIntelligenceSubject, intelligenceSubject } from "@defense-osdk/sdk";
 import { loadUser, loadUnits, setUnits, setUser, loadElints, setElints, loadCollateralConcerns, setCollateralConcerns, loadUnitLocations, setUnitLocations, loadMapData, startLoadingMapData, finishLoadingMapData, loadUnitHierarchy, setUnitHierarchy, setUnitHierarchyError, associateElintWithUnit, setElintAssociationSuccess, setElintAssociationError, loadAssociatedElints, setAssociatedElints, setAssociatedElintsError, loadTrackedEntityObservations, setTrackedEntityObservations, setTrackedEntityObservationsError } from "./osdkSlice";
+import { OntologyLinkTypes, OntologyActionParams } from "../../../constants";
 
 
 function* fetchUser(): any {
@@ -90,31 +91,29 @@ function* fetchUnitLocations(): any {
         const asTrackedEntity = unitInstance.$as(trackedEntity);
         const link = asTrackedEntity.$link;
 
-        if (link?.["com.palantir.core.ontology.types.trackedEntity"] == null) {
-          continue;
-        }
-
-        const linkedObservations = yield call(async () => {
-          const { data } = await link["com.palantir.core.ontology.types.trackedEntity"].fetchPage({
-            $select: ['geotrackablePosition', 'geotrackableTimestamp'],
-            $orderBy: { geotrackableTimestamp: 'desc' },
-            $pageSize: 1,
-          });
-          return data;
-        });
-
-        if (linkedObservations && linkedObservations.length > 0) {
-          const latestObservation = linkedObservations[0];
-          const position = latestObservation.geotrackablePosition;
-
-          if (position && position.coordinates && position.coordinates.length === 2) {
-            unitLocations.push({
-              unit: unitInstance,
-              location: {
-                lat: position.coordinates[1],
-                lng: position.coordinates[0]
-              }
+        if (link?.[OntologyLinkTypes.TRACKED_ENTITY] != null) {
+          const linkedObservations = yield call(async () => {
+            const { data } = await link[OntologyLinkTypes.TRACKED_ENTITY].fetchPage({
+              $select: ['geotrackablePosition', 'geotrackableTimestamp'],
+              $orderBy: { geotrackableTimestamp: 'desc' },
+              $pageSize: 1,
             });
+            return data;
+          });
+
+          if (linkedObservations && linkedObservations.length > 0) {
+            const latestObservation = linkedObservations[0];
+            const position = latestObservation.geotrackablePosition;
+
+            if (position && position.coordinates && position.coordinates.length === 2) {
+              unitLocations.push({
+                unit: unitInstance,
+                location: {
+                  lat: position.coordinates[1],
+                  lng: position.coordinates[0]
+                }
+              });
+            }
           }
         }
       } catch (err) {
@@ -156,12 +155,12 @@ async function getImmediateChildUnits(nodeId: string | number): Promise<unit.Osd
   try {
     const { data: relationships } = await client(unitHierarchyNodeRelationship)
       .where({
-        "com.palantir.core.ontology.types.hierarchyNodeRelationshipParentId": String(nodeId),
+        OntologyLinkTypes.HIERARCHY_PARENT_ID: String(nodeId),
       })
       .fetchPage({ $pageSize: 1000 });
 
     const childIds = relationships
-      .map((rel: any) => rel["com.palantir.core.ontology.types.hierarchyNodeRelationshipChildId"])
+      .map((rel: any) => rel[OntologyLinkTypes.HIERARCHY_CHILD_ID])
       .filter((id: any) => id);
 
     if (childIds.length === 0) {
@@ -182,12 +181,12 @@ async function getImmediateParentUnits(nodeId: string | number): Promise<unit.Os
   try {
     const { data: relationships } = await client(unitHierarchyNodeRelationship)
       .where({
-        "com.palantir.core.ontology.types.hierarchyNodeRelationshipChildId": String(nodeId),
+        OntologyLinkTypes.HIERARCHY_CHILD_ID: String(nodeId),
       })
       .fetchPage({ $pageSize: 1000 });
 
     const parentIds = relationships
-      .map((rel: any) => rel["com.palantir.core.ontology.types.hierarchyNodeRelationshipParentId"])
+      .map((rel: any) => rel[OntologyLinkTypes.HIERARCHY_PARENT_ID])
       .filter((id: any) => id);
 
     if (parentIds.length === 0) {
@@ -231,11 +230,11 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
     yield call(
       [client(associateIntelligenceWithIntelligenceSubject), "applyAction"],
       {
-        "com.palantir.ontology.defense-types.intelligenceSubject": {
+        [OntologyActionParams.INTELLIGENCE_SUBJECT]: {
           $objectType: unitObjectType,
           $primaryKey: unitPrimaryKey,
         },
-        "com.palantir.ontology.defense-types.intelligence_1": {
+        [OntologyActionParams.INTELLIGENCE]: {
           $objectType: elintObjectType,
           $primaryKey: elintPrimaryKey,
         },
@@ -256,13 +255,13 @@ function* fetchAssociatedElints(action: ReturnType<typeof loadAssociatedElints>)
     const asIntelligenceSubject = unitInstance.$as(intelligenceSubject);
     const link = asIntelligenceSubject.$link;
 
-    if (link?.["com.palantir.ontology.defense-types.linkedIntelligence"] == null) {
+    if (link?.[OntologyLinkTypes.LINKED_INTELLIGENCE] == null) {
       yield put(setAssociatedElints([]));
       return;
     }
 
     const result = yield call(
-      [link["com.palantir.ontology.defense-types.linkedIntelligence"], "fetchPage"],
+      [link[OntologyLinkTypes.LINKED_INTELLIGENCE], "fetchPage"],
       {
         $select: ['reportedPosition', 'semiMajorAxisMeters', 'semiMinorAxisMeters', 'axisOrientation', 'intelligenceEllipseGeometry', 'elnot', 'reportedTimestamp'],
         $pageSize: 100,
@@ -283,13 +282,13 @@ function* fetchTrackedEntityObservations(action: ReturnType<typeof loadTrackedEn
     const asTrackedEntity = unitInstance.$as(trackedEntity);
     const link = asTrackedEntity.$link;
 
-    if (link?.["com.palantir.core.ontology.types.trackedEntity"] == null) {
+    if (link?.[OntologyLinkTypes.TRACKED_ENTITY] == null) {
       yield put(setTrackedEntityObservations([]));
       return;
     }
 
     const result = yield call(
-      [link["com.palantir.core.ontology.types.trackedEntity"], "fetchPage"],
+      [link[OntologyLinkTypes.TRACKED_ENTITY], "fetchPage"],
       {
         $select: ['geotrackablePosition', 'geotrackableTimestamp'],
         $orderBy: { geotrackableTimestamp: 'desc' },
