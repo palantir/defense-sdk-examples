@@ -6,7 +6,7 @@
 This application demonstrates how to use Palantir's Defense OSDK in React (Typescript).
 
 To try this yourself, navigate to the **Developer Console** application in your Foundry enrollment.  You will need to make an **unscoped public OAuth client**.  To do this: 
-* Select "New Application" in the top-right and name the application "OSDK Foo" 
+* Select "New Application" in the top-right and name the application "Defense OSDK" 
   * If you use another name, you will need to update the npm library referenced in `package.json`.
 * On the "Application type" screen, select "Client-facing application" 
 * On the "Permissions" screen, be sure to select the "Autofill for me" box at the bottom of the page to autofill the redirect URL with http://localhost:8080/auth/callback.
