@@ -22,6 +22,7 @@ import { intelligenceSubject } from "@defense-osdk/sdk";
 import { useTheme } from "../../../context/ThemeContext";
 import { useSelection } from "../../../context/SelectionContext";
 import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoaded, isLoading } from "../../../types/AsyncLoaded";
 import { Affiliations, CssVariables, OntologyLinkTypes } from "../../../constants";
 import styles from "./LeftMapContainer.module.scss";
 
@@ -104,7 +105,13 @@ const LeftMapContainer: React.FC = () => {
   const hoverMarkerRef = useRef<L.CircleMarker | null>(null);
 
   const { selectUnit, selectElint, selectedUnit } = useSelection();
-  const { elints, collateralConcerns, unitLocations, loadingMapData, associatingElint } = useOsdkData();
+  const { mapData, elintAssociation } = useOsdkData();
+
+  const elints = isLoaded(mapData) ? mapData.value.elints : [];
+  const collateralConcerns = isLoaded(mapData) ? mapData.value.collateralConcerns : [];
+  const unitLocations = isLoaded(mapData) ? mapData.value.unitLocations : [];
+  const loadingMapData = isLoading(mapData);
+  const associatingElint = isLoading(elintAssociation);
 
   const [associatedElintPrimaryKeys, setAssociatedElintPrimaryKeys] = useState<Set<string>>(new Set());
 

@@ -18,6 +18,7 @@ import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelection } from "../../../context/SelectionContext";
 import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoaded, isLoading, isError } from "../../../types/AsyncLoaded";
 import UnitCard from "./UnitCard";
 import AssociatedELINT from "./AssociatedElint";
 import TrackedEntityHistory from "./TrackedEntityHistory";
@@ -28,7 +29,7 @@ import styles from "./RightContainer.module.scss";
 const RightContainer: React.FC = () => {
   const { t } = useTranslation();
   const { selectedUnit, clearSelectedUnit, selectUnit } = useSelection();
-  const { unitHierarchy, loadingUnitHierarchy, unitHierarchyError } = useOsdkData();
+  const { unitHierarchy: hierarchyState } = useOsdkData();
 
   const handleClearSelection = useCallback(() => {
     clearSelectedUnit();
@@ -57,10 +58,10 @@ const RightContainer: React.FC = () => {
           {isFriendly && (
             <UnitHierarchyView
               unit={selectedUnit}
-              parents={unitHierarchy?.parents ?? []}
-              children={unitHierarchy?.children ?? []}
-              loading={loadingUnitHierarchy}
-              error={unitHierarchyError}
+              parents={isLoaded(hierarchyState) ? hierarchyState.value.parents : []}
+              children={isLoaded(hierarchyState) ? hierarchyState.value.children : []}
+              loading={isLoading(hierarchyState)}
+              error={isError(hierarchyState) ? hierarchyState.error.message : undefined}
               onSelectUnit={handleSelectUnit}
             />
           )}

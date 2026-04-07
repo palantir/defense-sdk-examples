@@ -18,6 +18,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { unit } from "@defense-osdk/sdk";
 import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoading, isIdle, isError } from "../../../types/AsyncLoaded";
 import styles from "./TrackedEntityHistory.module.scss";
 
 interface TrackedEntityHistoryProps {
@@ -26,11 +27,7 @@ interface TrackedEntityHistoryProps {
 
 const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
   const { t } = useTranslation();
-  const {
-    trackedEntityObservations: observations,
-    loadingTrackedEntityObservations: loading,
-    trackedEntityObservationsError: error,
-  } = useOsdkData();
+  const { trackedEntityObservations: observationsState } = useOsdkData();
 
   const formatTimestamp = (timestamp: string | undefined): string => {
     if (timestamp == null) {
@@ -51,7 +48,7 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   };
 
-  if (loading) {
+  if (isLoading(observationsState) || isIdle(observationsState)) {
     return (
       <div className={styles.historyCard}>
         <div className={styles.header}>
@@ -62,16 +59,18 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
     );
   }
 
-  if (error) {
+  if (isError(observationsState)) {
     return (
       <div className={styles.historyCard}>
         <div className={styles.header}>
           <h3 className={styles.title}>{t("locationHistoryTitle")}</h3>
         </div>
-        <div className={styles.error}>{error}</div>
+        <div className={styles.error}>{observationsState.error.message}</div>
       </div>
     );
   }
+
+  const observations = observationsState.status === "loaded" ? observationsState.value : [];
 
   return (
     <div className={styles.historyCard}>

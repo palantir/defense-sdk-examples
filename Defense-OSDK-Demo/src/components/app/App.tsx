@@ -19,6 +19,7 @@ import { SpinnerSize } from "@blueprintjs/core/lib/esm/components/spinner/spinne
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useOsdkData } from "../../context/OsdkDataContext";
+import { isLoading, isLoaded } from "../../types/AsyncLoaded";
 import styles from "./App.module.scss";
 import LeftMapContainer from "./left/LeftMapContainer";
 import RightContainer from "./right/RightContainer";
@@ -34,7 +35,7 @@ export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
 const App: React.FC = () => {
   const { t } = useTranslation();
 
-  const { user, loadingUser } = useOsdkData();
+  const { user: userState } = useOsdkData();
 
   // Set the browser tab title using i18n
   useEffect(() => {
@@ -62,12 +63,12 @@ const App: React.FC = () => {
           </a>
         </div>
         <div className={styles.headerRight}>
-          {loadingUser ? (
+          {isLoading(userState) ? (
             <Spinner size={SpinnerSize.SMALL} />
           ) : (
             <>
               <span className={styles.greeting}>
-                👋 {t('hello')}, {user?.givenName ?? t('user')}!
+                👋 {t('hello')}, {isLoaded(userState) ? userState.value.givenName : t('user')}!
               </span>
               <ThemeSwitcher />
             </>

@@ -29,22 +29,27 @@ import { client } from "../client";
 import { OntologyLinkTypes, OntologyActionParams } from "../constants";
 import { useSelection } from "./SelectionContext";
 import { Affiliations } from "../constants";
+import { type AsyncLoaded, IDLE, LOADING, loaded, failed } from "../types/AsyncLoaded";
 
 export interface UnitHierarchyData {
   parents: unit.OsdkInstance[];
   children: unit.OsdkInstance[];
 }
 
-// --- Fetch functions (extracted from sagas) ---
+export interface MapData {
+  elints: elint.OsdkInstance[];
+  collateralConcerns: collateralConcernCandidateWithGeometry.OsdkInstance[];
+  unitLocations: Array<{ unit: unit.OsdkInstance; location: { lat: number; lng: number } }>;
+}
 
-async function fetchCurrentUser(): Promise<User | undefined> {
-  try {
-    const user = await Users.getCurrent(client);
-    return user ?? undefined;
-  } catch (e) {
-    console.error("Error fetching current user:", e);
-    return undefined;
+// --- Fetch functions ---
+
+async function fetchCurrentUser(): Promise<User> {
+  const user = await Users.getCurrent(client);
+  if (user == null) {
+    throw new Error("No current user found");
   }
+  return user;
 }
 
 async function fetchElints(): Promise<elint.OsdkInstance[]> {
@@ -222,32 +227,30 @@ async function performAssociateElintWithUnit(
   });
 }
 
+// --- Helper to run an async operation and update state ---
+
+async function runAsync<V>(
+  setState: (s: AsyncLoaded<V>) => void,
+  fn: () => Promise<V>,
+): Promise<void> {
+  setState(LOADING);
+  try {
+    setState(loaded(await fn()));
+  } catch (err) {
+    console.error(err);
+    setState(failed(err));
+  }
+}
+
 // --- Context ---
 
 interface OsdkDataContextType {
-  user?: User;
-  loadingUser: boolean;
-
-  elints: elint.OsdkInstance[];
-  collateralConcerns: collateralConcernCandidateWithGeometry.OsdkInstance[];
-  unitLocations: Array<{ unit: unit.OsdkInstance; location: { lat: number; lng: number } }>;
-  loadingMapData: boolean;
-
-  unitHierarchy?: UnitHierarchyData;
-  loadingUnitHierarchy: boolean;
-  unitHierarchyError?: string;
-
-  associatedElints: elint.OsdkInstance[];
-  loadingAssociatedElints: boolean;
-  associatedElintsError?: string;
-
-  trackedEntityObservations: trackedEntity.OsdkInstance[];
-  loadingTrackedEntityObservations: boolean;
-  trackedEntityObservationsError?: string;
-
-  associatingElint: boolean;
-  elintAssociationError?: string;
-
+  user: AsyncLoaded<User>;
+  mapData: AsyncLoaded<MapData>;
+  unitHierarchy: AsyncLoaded<UnitHierarchyData>;
+  associatedElints: AsyncLoaded<elint.OsdkInstance[]>;
+  trackedEntityObservations: AsyncLoaded<trackedEntity.OsdkInstance[]>;
+  elintAssociation: AsyncLoaded<void>;
   associateElintWithUnit: (elintInstance: elint.OsdkInstance, unitInstance: unit.OsdkInstance) => Promise<void>;
   refreshAssociatedElints: (unitInstance: unit.OsdkInstance) => Promise<void>;
 }
@@ -257,71 +260,36 @@ const OsdkDataContext = createContext<OsdkDataContextType | undefined>(undefined
 export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { selectedUnit } = useSelection();
 
-  // User
-  const [user, setUser] = useState<User>();
-  const [loadingUser, setLoadingUser] = useState(true);
-
-  // Map data
-  const [elints, setElints] = useState<elint.OsdkInstance[]>([]);
-  const [collateralConcerns, setCollateralConcerns] = useState<collateralConcernCandidateWithGeometry.OsdkInstance[]>([]);
-  const [unitLocations, setUnitLocations] = useState<Array<{ unit: unit.OsdkInstance; location: { lat: number; lng: number } }>>([]);
-  const [loadingMapData, setLoadingMapData] = useState(true);
-
-  // Unit hierarchy
-  const [unitHierarchy, setUnitHierarchy] = useState<UnitHierarchyData>();
-  const [loadingUnitHierarchy, setLoadingUnitHierarchy] = useState(false);
-  const [unitHierarchyError, setUnitHierarchyError] = useState<string>();
-
-  // Associated ELINTs
-  const [associatedElints, setAssociatedElints] = useState<elint.OsdkInstance[]>([]);
-  const [loadingAssociatedElints, setLoadingAssociatedElints] = useState(false);
-  const [associatedElintsError, setAssociatedElintsError] = useState<string>();
-
-  // Tracked entity observations
-  const [trackedEntityObservations, setTrackedEntityObservations] = useState<trackedEntity.OsdkInstance[]>([]);
-  const [loadingTrackedEntityObservations, setLoadingTrackedEntityObservations] = useState(false);
-  const [trackedEntityObservationsError, setTrackedEntityObservationsError] = useState<string>();
-
-  // Association mutation
-  const [associatingElint, setAssociatingElint] = useState(false);
-  const [elintAssociationError, setElintAssociationError] = useState<string>();
+  const [user, setUser] = useState<AsyncLoaded<User>>(LOADING);
+  const [mapData, setMapData] = useState<AsyncLoaded<MapData>>(LOADING);
+  const [unitHierarchy, setUnitHierarchy] = useState<AsyncLoaded<UnitHierarchyData>>(IDLE);
+  const [associatedElints, setAssociatedElints] = useState<AsyncLoaded<elint.OsdkInstance[]>>(IDLE);
+  const [trackedEntityObservations, setTrackedEntityObservations] = useState<AsyncLoaded<trackedEntity.OsdkInstance[]>>(IDLE);
+  const [elintAssociation, setElintAssociation] = useState<AsyncLoaded<void>>(IDLE);
 
   // Fetch user on mount
   useEffect(() => {
-    setLoadingUser(true);
-    fetchCurrentUser().then((u) => {
-      setUser(u);
-      setLoadingUser(false);
-    });
+    runAsync(setUser, fetchCurrentUser);
   }, []);
 
   // Fetch map data on mount
   useEffect(() => {
-    setLoadingMapData(true);
-    Promise.all([
-      fetchElints().catch((e): elint.OsdkInstance[] => { console.error("Error fetching ELINT:", e); return []; }),
-      fetchCollateralConcerns().catch((e): collateralConcernCandidateWithGeometry.OsdkInstance[] => { console.error("Error fetching collateral concerns:", e); return []; }),
-      fetchUnitLocations().catch((e): Array<{ unit: unit.OsdkInstance; location: { lat: number; lng: number } }> => { console.error("Error fetching unit locations:", e); return []; }),
-    ]).then(([elintData, ccData, locData]) => {
-      setElints(elintData);
-      setCollateralConcerns(ccData);
-      setUnitLocations(locData);
-      setLoadingMapData(false);
+    runAsync(setMapData, async () => {
+      const [elints, collateralConcerns, unitLocations] = await Promise.all([
+        fetchElints(),
+        fetchCollateralConcerns(),
+        fetchUnitLocations(),
+      ]);
+      return { elints, collateralConcerns, unitLocations };
     });
   }, []);
 
   // Fetch unit-dependent data when selection changes
   useEffect(() => {
     if (selectedUnit == null) {
-      setUnitHierarchy(undefined);
-      setLoadingUnitHierarchy(false);
-      setUnitHierarchyError(undefined);
-      setAssociatedElints([]);
-      setLoadingAssociatedElints(false);
-      setAssociatedElintsError(undefined);
-      setTrackedEntityObservations([]);
-      setLoadingTrackedEntityObservations(false);
-      setTrackedEntityObservationsError(undefined);
+      setUnitHierarchy(IDLE);
+      setAssociatedElints(IDLE);
+      setTrackedEntityObservations(IDLE);
       return;
     }
 
@@ -330,73 +298,33 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const isHostile = affiliation === Affiliations.HOSTILE;
 
     if (isFriendly) {
-      setLoadingUnitHierarchy(true);
-      setUnitHierarchyError(undefined);
-      fetchUnitHierarchy(selectedUnit)
-        .then(setUnitHierarchy)
-        .catch((err) => {
-          console.error("Error fetching unit hierarchy:", err);
-          setUnitHierarchyError("Error loading hierarchy");
-        })
-        .finally(() => setLoadingUnitHierarchy(false));
+      runAsync(setUnitHierarchy, () => fetchUnitHierarchy(selectedUnit));
     } else {
-      setUnitHierarchy(undefined);
-      setUnitHierarchyError(undefined);
+      setUnitHierarchy(IDLE);
     }
 
     if (isHostile) {
-      setLoadingAssociatedElints(true);
-      setAssociatedElintsError(undefined);
-      fetchAssociatedElintsForUnit(selectedUnit)
-        .then(setAssociatedElints)
-        .catch((err) => {
-          console.error("Error fetching associated ELINTs:", err);
-          setAssociatedElintsError("Failed to load associated ELINT");
-        })
-        .finally(() => setLoadingAssociatedElints(false));
-
-      setLoadingTrackedEntityObservations(true);
-      setTrackedEntityObservationsError(undefined);
-      fetchTrackedEntityObservationsForUnit(selectedUnit)
-        .then(setTrackedEntityObservations)
-        .catch((err) => {
-          console.error("Error fetching tracked entity observations:", err);
-          setTrackedEntityObservationsError("Failed to load observations");
-        })
-        .finally(() => setLoadingTrackedEntityObservations(false));
+      runAsync(setAssociatedElints, () => fetchAssociatedElintsForUnit(selectedUnit));
+      runAsync(setTrackedEntityObservations, () => fetchTrackedEntityObservationsForUnit(selectedUnit));
     } else {
-      setAssociatedElints([]);
-      setAssociatedElintsError(undefined);
-      setTrackedEntityObservations([]);
-      setTrackedEntityObservationsError(undefined);
+      setAssociatedElints(IDLE);
+      setTrackedEntityObservations(IDLE);
     }
   }, [selectedUnit]);
 
   const refreshAssociatedElints = useCallback(async (unitInstance: unit.OsdkInstance) => {
-    setLoadingAssociatedElints(true);
-    setAssociatedElintsError(undefined);
-    try {
-      const data = await fetchAssociatedElintsForUnit(unitInstance);
-      setAssociatedElints(data);
-    } catch (err) {
-      console.error("Error fetching associated ELINTs:", err);
-      setAssociatedElintsError("Failed to load associated ELINT");
-    } finally {
-      setLoadingAssociatedElints(false);
-    }
+    await runAsync(setAssociatedElints, () => fetchAssociatedElintsForUnit(unitInstance));
   }, []);
 
   const doAssociateElintWithUnit = useCallback(async (elintInstance: elint.OsdkInstance, unitInstance: unit.OsdkInstance) => {
-    setAssociatingElint(true);
-    setElintAssociationError(undefined);
+    setElintAssociation(LOADING);
     try {
       await performAssociateElintWithUnit(elintInstance, unitInstance);
+      setElintAssociation(loaded(undefined));
       await refreshAssociatedElints(unitInstance);
     } catch (err) {
       console.error("Error associating ELINT with unit:", err);
-      setElintAssociationError("Failed to associate ELINT");
-    } finally {
-      setAssociatingElint(false);
+      setElintAssociation(failed(err));
     }
   }, [refreshAssociatedElints]);
 
@@ -404,22 +332,11 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <OsdkDataContext.Provider value={{
       associateElintWithUnit: doAssociateElintWithUnit,
       associatedElints,
-      associatedElintsError,
-      associatingElint,
-      collateralConcerns,
-      elintAssociationError,
-      elints,
-      loadingAssociatedElints,
-      loadingMapData,
-      loadingTrackedEntityObservations,
-      loadingUnitHierarchy,
-      loadingUser,
+      elintAssociation,
+      mapData,
       refreshAssociatedElints,
       trackedEntityObservations,
-      trackedEntityObservationsError,
       unitHierarchy,
-      unitHierarchyError,
-      unitLocations,
       user,
     }}>
       {children}

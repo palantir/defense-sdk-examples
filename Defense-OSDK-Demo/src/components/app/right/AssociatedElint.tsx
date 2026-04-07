@@ -18,6 +18,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { unit } from "@defense-osdk/sdk";
 import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoading, isIdle, isError, isLoaded } from "../../../types/AsyncLoaded";
 import styles from "./AssociatedElint.module.scss";
 
 interface AssociatedELINTProps {
@@ -26,7 +27,7 @@ interface AssociatedELINTProps {
 
 const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
   const { t } = useTranslation();
-  const { associatedElints: elints, loadingAssociatedElints: loading, associatedElintsError: error } = useOsdkData();
+  const { associatedElints: elintsState } = useOsdkData();
 
   const formatPosition = (position: any): string => {
     if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {
@@ -43,7 +44,7 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
     return `${semiMajor.toFixed(0)}m × ${semiMinor.toFixed(0)}m`;
   };
 
-  if (loading) {
+  if (isLoading(elintsState) || isIdle(elintsState)) {
     return (
       <div className={`${styles.elintCard} ${styles.compact}`}>
         <div className={styles.header}>
@@ -54,17 +55,18 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
     );
   }
 
-  if (error) {
+  if (isError(elintsState)) {
     return (
       <div className={`${styles.elintCard} ${styles.compact}`}>
         <div className={styles.header}>
           <h3 className={styles.title}>{t("associatedELINTTitle")}</h3>
         </div>
-        <div className={styles.error}>{error}</div>
+        <div className={styles.error}>{elintsState.error.message}</div>
       </div>
     );
   }
 
+  const elints = isLoaded(elintsState) ? elintsState.value : [];
   const isEmpty = elints.length === 0;
 
   return (
