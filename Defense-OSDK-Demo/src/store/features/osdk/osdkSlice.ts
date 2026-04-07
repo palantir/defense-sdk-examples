@@ -17,6 +17,7 @@
 import { User } from "@osdk/foundry.admin";
 import { unit, elint, collateralConcernCandidateWithGeometry, trackedEntity } from "@defense-osdk/sdk";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { castDraft } from "immer";
 
 export interface UnitHierarchyData {
   parents: unit.OsdkInstance[];
@@ -131,8 +132,7 @@ const osdkSlice = createSlice({
       state.unitsError = null;
     },
     setUnits: (state, action: PayloadAction<unit.OsdkInstance[]>) => {
-      // TODO: remove `as any` once OSDK types are compatible with Redux Toolkit state assignment
-      state.units = action.payload as any;
+      state.units = castDraft(action.payload);
       state.loadingUnits = false;
     },
     setUnitsError: (state, action: PayloadAction<string>) => {
@@ -145,7 +145,7 @@ const osdkSlice = createSlice({
       state.elintsError = null;
     },
     setElints: (state, action: PayloadAction<elint.OsdkInstance[]>) => {
-      state.elints = action.payload as any;
+      state.elints = castDraft(action.payload);
       state.loadingElints = false;
     },
     setElintsError: (state, action: PayloadAction<string>) => {
@@ -158,7 +158,7 @@ const osdkSlice = createSlice({
       state.collateralConcernsError = null;
     },
     setCollateralConcerns: (state, action: PayloadAction<collateralConcernCandidateWithGeometry.OsdkInstance[]>) => {
-      state.collateralConcerns = action.payload as any;
+      state.collateralConcerns = castDraft(action.payload);
       state.loadingCollateralConcerns = false;
     },
     setCollateralConcernsError: (state, action: PayloadAction<string>) => {
@@ -171,7 +171,7 @@ const osdkSlice = createSlice({
       state.unitLocationsError = null;
     },
     setUnitLocations: (state, action: PayloadAction<Array<{ unit: unit.OsdkInstance; location: { lat: number; lng: number } }>>) => {
-      state.unitLocations = action.payload as any;
+      state.unitLocations = castDraft(action.payload);
       state.loadingUnitLocations = false;
     },
     setUnitLocationsError: (state, action: PayloadAction<string>) => {
@@ -180,7 +180,7 @@ const osdkSlice = createSlice({
     },
 
     selectUnit: (state, action: PayloadAction<unit.OsdkInstance>) => {
-      state.selectedUnit = action.payload as any;
+      state.selectedUnit = castDraft(action.payload);
     },
     clearSelectedUnit: (state) => {
       state.selectedUnit = null;
@@ -207,7 +207,7 @@ const osdkSlice = createSlice({
       state.unitHierarchyError = null;
     },
     setUnitHierarchy: (state, action: PayloadAction<UnitHierarchyData>) => {
-      state.unitHierarchy = action.payload as any;
+      state.unitHierarchy = castDraft(action.payload);
       state.loadingUnitHierarchy = false;
     },
     setUnitHierarchyError: (state, action: PayloadAction<string>) => {
@@ -221,7 +221,7 @@ const osdkSlice = createSlice({
     },
 
     selectElint: (state, action: PayloadAction<elint.OsdkInstance>) => {
-      state.selectedElint = action.payload as any;
+      state.selectedElint = castDraft(action.payload);
     },
     clearSelectedElint: (state) => {
       state.selectedElint = null;
@@ -246,7 +246,7 @@ const osdkSlice = createSlice({
       state.associatedElintsError = null;
     },
     setAssociatedElints: (state, action: PayloadAction<elint.OsdkInstance[]>) => {
-      state.associatedElints = action.payload as any;
+      state.associatedElints = castDraft(action.payload);
       state.loadingAssociatedElints = false;
     },
     setAssociatedElintsError: (state, action: PayloadAction<string>) => {
@@ -264,7 +264,7 @@ const osdkSlice = createSlice({
       state.trackedEntityObservationsError = null;
     },
     setTrackedEntityObservations: (state, action: PayloadAction<trackedEntity.OsdkInstance[]>) => {
-      state.trackedEntityObservations = action.payload as any;
+      state.trackedEntityObservations = castDraft(action.payload);
       state.loadingTrackedEntityObservations = false;
     },
     setTrackedEntityObservationsError: (state, action: PayloadAction<string>) => {

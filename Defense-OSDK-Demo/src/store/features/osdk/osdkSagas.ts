@@ -18,6 +18,7 @@ import { call, put, takeLatest, all } from "redux-saga/effects";
 import { client } from "../../../client";
 import { User, Users } from "@osdk/foundry.admin";
 import { unit, elint, collateralConcernCandidateWithGeometry, trackedEntity, unitHierarchyNodeRelationship, associateIntelligenceWithIntelligenceSubject, intelligenceSubject } from "@defense-osdk/sdk";
+import type { WhereClause } from "@osdk/api";
 import { loadUser, loadUnits, setUnits, setUser, loadElints, setElints, loadCollateralConcerns, setCollateralConcerns, loadUnitLocations, setUnitLocations, loadMapData, startLoadingMapData, finishLoadingMapData, loadUnitHierarchy, setUnitHierarchy, setUnitHierarchyError, associateElintWithUnit, setElintAssociationSuccess, setElintAssociationError, loadAssociatedElints, setAssociatedElints, setAssociatedElintsError, loadTrackedEntityObservations, setTrackedEntityObservations, setTrackedEntityObservationsError } from "./osdkSlice";
 import { OntologyLinkTypes, OntologyActionParams } from "../../../constants";
 
@@ -38,7 +39,8 @@ function* fetchUser(): any {
 
 function* fetchUnits(): any {
   try {
-    const result = yield call([client(unit), "fetchPage"]);
+    const unitClient = client(unit);
+    const result = yield call([unitClient, unitClient.fetchPage] as const);
     const units: unit.OsdkInstance[] = result.data;
     yield put(setUnits(units ?? []));
   } catch (e) {
@@ -49,8 +51,9 @@ function* fetchUnits(): any {
 
 function* fetchElints(): any {
   try {
+    const elintClient = client(elint);
     const result = yield call(
-      [client(elint), "fetchPage"],
+      [elintClient, elintClient.fetchPage] as const,
       { $select: ["intelligenceEllipseGeometry", "reportedPosition", "semiMajorAxisMeters", "semiMinorAxisMeters", "axisOrientation", "elnot", "reportedTimestamp"] }
     );
     const elints: elint.OsdkInstance[] = result.data;
@@ -63,7 +66,8 @@ function* fetchElints(): any {
 
 function* fetchCollateralConcerns(): any {
   try {
-    const result = yield call([client(collateralConcernCandidateWithGeometry), "fetchPage"], {
+    const collateralConcernClient = client(collateralConcernCandidateWithGeometry);
+    const result = yield call([collateralConcernClient, collateralConcernClient.fetchPage] as const, {
       $select: ["geometry"]
     });
     const collateralConcerns: collateralConcernCandidateWithGeometry.OsdkInstance[] = result.data;
@@ -76,7 +80,8 @@ function* fetchCollateralConcerns(): any {
 
 function* fetchUnitLocations(): any {
   try {
-    const result = yield call([client(unit), "fetchPage"]);
+    const unitClient = client(unit);
+    const result = yield call([unitClient, unitClient.fetchPage] as const);
     const units: unit.OsdkInstance[] = result.data;
 
     if (!units || units.length === 0) {
@@ -155,13 +160,13 @@ async function getImmediateChildUnits(nodeId: string | number): Promise<unit.Osd
   try {
     const { data: relationships } = await client(unitHierarchyNodeRelationship)
       .where({
-        OntologyLinkTypes.HIERARCHY_PARENT_ID: String(nodeId),
-      })
+        [OntologyLinkTypes.HIERARCHY_PARENT_ID]: String(nodeId),
+      } as WhereClause<unitHierarchyNodeRelationship>)
       .fetchPage({ $pageSize: 1000 });
 
     const childIds = relationships
-      .map((rel: any) => rel[OntologyLinkTypes.HIERARCHY_CHILD_ID])
-      .filter((id: any) => id);
+      .map((rel) => rel[OntologyLinkTypes.HIERARCHY_CHILD_ID])
+      .filter((id): id is string => id != null);
 
     if (childIds.length === 0) {
       return [];
@@ -169,7 +174,7 @@ async function getImmediateChildUnits(nodeId: string | number): Promise<unit.Osd
 
     const { data: allUnits } = await client(unit).fetchPage({ $pageSize: 10000 });
     return childIds
-      .map(childId => allUnits.find((u: any) => u.$primaryKey === childId))
+      .map(childId => allUnits.find((u) => u.$primaryKey === childId))
       .filter((u): u is unit.OsdkInstance => u !== undefined);
   } catch (err) {
     console.error(`Error fetching children for node ${nodeId}:`, err);
@@ -181,13 +186,13 @@ async function getImmediateParentUnits(nodeId: string | number): Promise<unit.Os
   try {
     const { data: relationships } = await client(unitHierarchyNodeRelationship)
       .where({
-        OntologyLinkTypes.HIERARCHY_CHILD_ID: String(nodeId),
-      })
+        [OntologyLinkTypes.HIERARCHY_CHILD_ID]: String(nodeId),
+      } as WhereClause<unitHierarchyNodeRelationship>)
       .fetchPage({ $pageSize: 1000 });
 
     const parentIds = relationships
-      .map((rel: any) => rel[OntologyLinkTypes.HIERARCHY_PARENT_ID])
-      .filter((id: any) => id);
+      .map((rel) => rel[OntologyLinkTypes.HIERARCHY_PARENT_ID])
+      .filter((id): id is string => id != null);
 
     if (parentIds.length === 0) {
       return [];
@@ -195,7 +200,7 @@ async function getImmediateParentUnits(nodeId: string | number): Promise<unit.Os
 
     const { data: allUnits } = await client(unit).fetchPage({ $pageSize: 10000 });
     return parentIds
-      .map(parentId => allUnits.find((u: any) => u.$primaryKey === parentId))
+      .map(parentId => allUnits.find((u) => u.$primaryKey === parentId))
       .filter((u): u is unit.OsdkInstance => u !== undefined);
   } catch (err) {
     console.error(`Error fetching parents for node ${nodeId}:`, err);
@@ -227,8 +232,9 @@ function* associateElintWithUnitSaga(action: ReturnType<typeof associateElintWit
     const unitObjectType = unitInstance.$objectType;
     const elintObjectType = elintInstance.$objectType;
 
+    const actionClient = client(associateIntelligenceWithIntelligenceSubject);
     yield call(
-      [client(associateIntelligenceWithIntelligenceSubject), "applyAction"],
+      [actionClient, actionClient.applyAction] as const,
       {
         [OntologyActionParams.INTELLIGENCE_SUBJECT]: {
           $objectType: unitObjectType,
@@ -260,10 +266,10 @@ function* fetchAssociatedElints(action: ReturnType<typeof loadAssociatedElints>)
       return;
     }
 
+    const linkedIntelligence = link[OntologyLinkTypes.LINKED_INTELLIGENCE];
     const result = yield call(
-      [link[OntologyLinkTypes.LINKED_INTELLIGENCE], "fetchPage"],
+      [linkedIntelligence, linkedIntelligence.fetchPage] as const,
       {
-        $select: ['reportedPosition', 'semiMajorAxisMeters', 'semiMinorAxisMeters', 'axisOrientation', 'intelligenceEllipseGeometry', 'elnot', 'reportedTimestamp'],
         $pageSize: 100,
       }
     );
@@ -287,8 +293,9 @@ function* fetchTrackedEntityObservations(action: ReturnType<typeof loadTrackedEn
       return;
     }
 
+    const trackedEntityLink = link[OntologyLinkTypes.TRACKED_ENTITY];
     const result = yield call(
-      [link[OntologyLinkTypes.TRACKED_ENTITY], "fetchPage"],
+      [trackedEntityLink, trackedEntityLink.fetchPage] as const,
       {
         $select: ['geotrackablePosition', 'geotrackableTimestamp'],
         $orderBy: { geotrackableTimestamp: 'desc' },

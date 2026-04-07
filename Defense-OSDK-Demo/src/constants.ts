@@ -25,7 +25,7 @@ export const OntologyLinkTypes = {
 // Ontology action parameter identifiers
 export const OntologyActionParams = {
   INTELLIGENCE_SUBJECT: "com.palantir.ontology.defense-types.intelligenceSubject",
-  INTELLIGENCE: "com.palantir.ontology.defense-types.intelligence_1",
+  INTELLIGENCE: "com.palantir.ontology.defense-types.intelligence",
 } as const;
 
 // Unit affiliation values
