@@ -18,7 +18,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Spinner } from "@blueprintjs/core";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { intelligenceSubject } from "@defense-osdk/sdk";
+import { unit, intelligenceSubject } from "@defense-osdk/sdk";
 import { useTheme } from "../../../context/ThemeContext";
 import { useSelection } from "../../../context/SelectionContext";
 import { useOsdkData } from "../../../context/OsdkDataContext";
@@ -71,7 +71,7 @@ function getUnitColor(affiliation: string | undefined, colors: MapColors): strin
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 // Fetches primary keys of ELINTs linked to a hostile unit via the intelligence subject interface
-async function getAssociatedElintPrimaryKeys(selectedUnit: any): Promise<Set<string>> {
+async function getAssociatedElintPrimaryKeys(selectedUnit: unit.OsdkInstance | null): Promise<Set<string>> {
   if (selectedUnit == null || selectedUnit.affiliation?.toLowerCase() !== Affiliations.HOSTILE) {
     return new Set();
   }
@@ -88,7 +88,7 @@ async function getAssociatedElintPrimaryKeys(selectedUnit: any): Promise<Set<str
       $pageSize: 1000,
     });
 
-    return new Set(data.map((elint: any) => elint.$primaryKey));
+    return new Set(data.map((d) => String(d.$primaryKey)));
   } catch {
     return new Set();
   }
@@ -383,10 +383,10 @@ const LeftMapContainer: React.FC = () => {
 
     const bounds = L.latLngBounds([]);
 
-    const extendBounds = (layer: any) => {
-      if (layer.getBounds) {
+    const extendBounds = (layer: L.Layer) => {
+      if (layer instanceof L.Polyline) {
         bounds.extend(layer.getBounds());
-      } else if (layer.getLatLng) {
+      } else if (layer instanceof L.CircleMarker) {
         bounds.extend(layer.getLatLng());
       }
     };

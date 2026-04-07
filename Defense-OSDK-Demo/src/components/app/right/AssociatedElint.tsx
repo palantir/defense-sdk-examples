@@ -29,8 +29,8 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
   const { t } = useTranslation();
   const { associatedElints: elintsState } = useOsdkData();
 
-  const formatPosition = (position: any): string => {
-    if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {
+  const formatPosition = (position: GeoJSON.Point | undefined): string => {
+    if (position == null || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;

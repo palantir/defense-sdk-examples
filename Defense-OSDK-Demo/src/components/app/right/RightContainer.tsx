@@ -16,6 +16,7 @@
 
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { unit } from "@defense-osdk/sdk";
 import { useSelection } from "../../../context/SelectionContext";
 import { useOsdkData } from "../../../context/OsdkDataContext";
 import { isLoaded, isLoading, isError } from "../../../types/AsyncLoaded";
@@ -35,8 +36,8 @@ const RightContainer: React.FC = () => {
     clearSelectedUnit();
   }, [clearSelectedUnit]);
 
-  const handleSelectUnit = useCallback((unit: any) => {
-    selectUnit(unit);
+  const handleSelectUnit = useCallback((u: unit.OsdkInstance) => {
+    selectUnit(u);
   }, [selectUnit]);
 
   // Check unit affiliation
