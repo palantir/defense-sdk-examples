@@ -76,41 +76,45 @@ async function fetchUnitLocations(): Promise<Array<{ unit: unit.OsdkInstance; lo
     return [];
   }
 
-  const unitLocations: Array<{ unit: unit.OsdkInstance; location: { lat: number; lng: number } }> = [];
+  type UnitLocation = { unit: unit.OsdkInstance; location: { lat: number; lng: number } };
 
-  for (const unitInstance of units) {
-    try {
-      const asTrackedEntity = unitInstance.$as(trackedEntity);
-      const link = asTrackedEntity.$link;
+  const results = await Promise.all(
+    units.map(async (unitInstance): Promise<UnitLocation | undefined> => {
+      try {
+        const asTrackedEntity = unitInstance.$as(trackedEntity);
+        const link = asTrackedEntity.$link;
 
-      if (link?.[OntologyLinkTypes.TRACKED_ENTITY] != null) {
+        if (link?.[OntologyLinkTypes.TRACKED_ENTITY] == null) {
+          return undefined;
+        }
+
         const { data } = await link[OntologyLinkTypes.TRACKED_ENTITY].fetchPage({
           $select: ["geotrackablePosition", "geotrackableTimestamp"],
           $orderBy: { geotrackableTimestamp: "desc" },
           $pageSize: 1,
         });
 
-        if (data && data.length > 0) {
-          const latestObservation = data[0];
-          const position = latestObservation.geotrackablePosition;
+        const position = data[0]?.geotrackablePosition;
 
-          if (position && position.coordinates && position.coordinates.length === 2) {
-            unitLocations.push({
-              unit: unitInstance,
-              location: {
-                lat: position.coordinates[1],
-                lng: position.coordinates[0],
-              },
-            });
-          }
+        if (position == null || !position.coordinates || position.coordinates.length !== 2) {
+          return undefined;
         }
-      }
-    } catch (err) {
-      console.error(`Error fetching location for unit ${unitInstance.$title}:`, err);
-    }
-  }
 
-  return unitLocations;
+        return {
+          unit: unitInstance,
+          location: {
+            lat: position.coordinates[1],
+            lng: position.coordinates[0],
+          },
+        };
+      } catch (err) {
+        console.error(`Error fetching location for unit ${unitInstance.$title}:`, err);
+        return undefined;
+      }
+    })
+  );
+
+  return results.filter((r): r is UnitLocation => r != null);
 }
 
 async function getImmediateChildUnits(nodeId: string | number): Promise<unit.OsdkInstance[]> {
