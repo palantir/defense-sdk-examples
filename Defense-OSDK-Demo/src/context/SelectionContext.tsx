@@ -18,10 +18,10 @@ import React, { createContext, useCallback, useContext, useState } from "react";
 import { unit, elint } from "@defense-osdk/sdk";
 
 interface SelectionContextType {
-  selectedUnit: unit.OsdkInstance | null;
+  selectedUnit?: unit.OsdkInstance;
   selectUnit: (u: unit.OsdkInstance) => void;
   clearSelectedUnit: () => void;
-  selectedElint: elint.OsdkInstance | null;
+  selectedElint?: elint.OsdkInstance;
   selectElint: (e: elint.OsdkInstance) => void;
   clearSelectedElint: () => void;
 }
@@ -29,16 +29,16 @@ interface SelectionContextType {
 const SelectionContext = createContext<SelectionContextType | undefined>(undefined);
 
 export const SelectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedUnit, setSelectedUnit] = useState<unit.OsdkInstance | null>(null);
-  const [selectedElint, setSelectedElint] = useState<elint.OsdkInstance | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<unit.OsdkInstance>();
+  const [selectedElint, setSelectedElint] = useState<elint.OsdkInstance>();
 
   const selectUnit = useCallback((u: unit.OsdkInstance) => {
     setSelectedUnit(u);
   }, []);
 
   const clearSelectedUnit = useCallback(() => {
-    setSelectedUnit(null);
-    setSelectedElint(null);
+    setSelectedUnit(undefined);
+    setSelectedElint(undefined);
   }, []);
 
   const selectElint = useCallback((e: elint.OsdkInstance) => {
@@ -46,7 +46,7 @@ export const SelectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const clearSelectedElint = useCallback(() => {
-    setSelectedElint(null);
+    setSelectedElint(undefined);
   }, []);
 
   return (

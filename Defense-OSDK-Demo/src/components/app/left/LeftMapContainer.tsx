@@ -71,7 +71,7 @@ function getUnitColor(affiliation: string | undefined, colors: MapColors): strin
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 // Fetches primary keys of ELINTs linked to a hostile unit via the intelligence subject interface
-async function getAssociatedElintPrimaryKeys(selectedUnit: unit.OsdkInstance | null): Promise<Set<string>> {
+async function getAssociatedElintPrimaryKeys(selectedUnit?: unit.OsdkInstance): Promise<Set<string>> {
   if (selectedUnit == null || selectedUnit.affiliation?.toLowerCase() !== Affiliations.HOSTILE) {
     return new Set();
   }
