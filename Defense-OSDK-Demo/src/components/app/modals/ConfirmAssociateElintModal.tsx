@@ -15,11 +15,10 @@
  */
 
 import React, { useEffect, useRef, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { Dialog, Button, Intent, Toaster, Position } from "@blueprintjs/core";
 import { useTranslation } from "react-i18next";
-import { associateElintWithUnit, clearSelectedElint } from "../../../store/features/osdk/osdkSlice";
-import { selectSelectedElint, selectSelectedUnit, selectAssociatingElint, selectAssociatedElints, selectLoadingAssociatedElints, selectElintAssociationError } from "../../../store/features/osdk/osdkSelectors";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
 import styles from "./ConfirmAssociateElintModal.module.scss";
 
 const AppToaster = Toaster.create({
@@ -28,13 +27,13 @@ const AppToaster = Toaster.create({
 
 const ConfirmAssociateElintModal: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-
-  const selectedElint = useSelector(selectSelectedElint);
-  const selectedUnit = useSelector(selectSelectedUnit);
-  const associatingElint = useSelector(selectAssociatingElint);
-  const associatedElints = useSelector(selectAssociatedElints);
-  const loadingAssociatedElints = useSelector(selectLoadingAssociatedElints);
+  const { selectedElint, selectedUnit, clearSelectedElint } = useSelection();
+  const {
+    associatingElint,
+    associatedElints,
+    loadingAssociatedElints,
+    associateElintWithUnit,
+  } = useOsdkData();
 
   const isOpen = selectedElint != null && selectedUnit != null;
 
@@ -48,12 +47,14 @@ const ConfirmAssociateElintModal: React.FC = () => {
 
   const handleConfirm = () => {
     if (selectedElint != null && selectedUnit != null) {
-      dispatch(associateElintWithUnit({ elint: selectedElint, unit: selectedUnit }));
+      associateElintWithUnit(selectedElint, selectedUnit).then(() => {
+        clearSelectedElint();
+      });
     }
   };
 
   const handleCancel = () => {
-    dispatch(clearSelectedElint());
+    clearSelectedElint();
   };
 
   const formatPosition = (position: any): string => {
@@ -175,9 +176,8 @@ const ConfirmAssociateElintModal: React.FC = () => {
 // Separated from the dialog so toast side effects don't trigger dialog re-renders
 export const AssociationToaster: React.FC = () => {
   const { t } = useTranslation();
-  const associatingElint = useSelector(selectAssociatingElint);
-  const elintAssociationError = useSelector(selectElintAssociationError);
-  const selectedElint = useSelector(selectSelectedElint);
+  const { associatingElint, elintAssociationError } = useOsdkData();
+  const { selectedElint } = useSelection();
   const previousAssociatingRef = useRef(false);
 
   useEffect(() => {

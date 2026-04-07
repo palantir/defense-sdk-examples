@@ -14,39 +14,19 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector, useDispatch } from "react-redux";
 import { unit } from "@defense-osdk/sdk";
-import { loadAssociatedElints } from "../../../store/features/osdk/osdkSlice";
-import { selectAssociatedElints, selectLoadingAssociatedElints, selectAssociatedElintsError, selectAssociatingElint } from "../../../store/features/osdk/osdkSelectors";
+import { useOsdkData } from "../../../context/OsdkDataContext";
 import styles from "./AssociatedElint.module.scss";
 
 interface AssociatedELINTProps {
   unit: unit.OsdkInstance;
 }
 
-const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance }) => {
+const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-
-  const elints = useSelector(selectAssociatedElints);
-  const loading = useSelector(selectLoadingAssociatedElints);
-  const error = useSelector(selectAssociatedElintsError);
-  const associatingElint = useSelector(selectAssociatingElint);
-
-  const prevAssociatingRef = React.useRef(associatingElint);
-
-  useEffect(() => {
-    if (prevAssociatingRef.current && !associatingElint) {
-      dispatch(loadAssociatedElints(unitInstance));
-    }
-    prevAssociatingRef.current = associatingElint;
-  }, [associatingElint, dispatch, unitInstance]);
-
-  useEffect(() => {
-    dispatch(loadAssociatedElints(unitInstance));
-  }, [unitInstance, dispatch]);
+  const { associatedElints: elints, loadingAssociatedElints: loading, associatedElintsError: error } = useOsdkData();
 
   const formatPosition = (position: any): string => {
     if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { clearSelectedUnit, loadUnitHierarchy, clearUnitHierarchy, selectUnit } from "../../../store/features/osdk/osdkSlice";
-import { selectSelectedUnit, selectUnitHierarchy, selectLoadingUnitHierarchy, selectUnitHierarchyError } from "../../../store/features/osdk/osdkSelectors";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
 import UnitCard from "./UnitCard";
 import AssociatedELINT from "./AssociatedElint";
 import TrackedEntityHistory from "./TrackedEntityHistory";
@@ -28,35 +27,21 @@ import styles from "./RightContainer.module.scss";
 
 const RightContainer: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-  const selectedUnit = useSelector(selectSelectedUnit);
-  const unitHierarchy = useSelector(selectUnitHierarchy);
-  const loadingHierarchy = useSelector(selectLoadingUnitHierarchy);
-  const hierarchyError = useSelector(selectUnitHierarchyError);
+  const { selectedUnit, clearSelectedUnit, selectUnit } = useSelection();
+  const { unitHierarchy, loadingUnitHierarchy, unitHierarchyError } = useOsdkData();
 
   const handleClearSelection = useCallback(() => {
-    dispatch(clearSelectedUnit());
-  }, [dispatch]);
+    clearSelectedUnit();
+  }, [clearSelectedUnit]);
 
   const handleSelectUnit = useCallback((unit: any) => {
-    dispatch(selectUnit(unit));
-  }, [dispatch]);
+    selectUnit(unit);
+  }, [selectUnit]);
 
   // Check unit affiliation
   const affiliation = selectedUnit?.affiliation?.toLowerCase();
   const isHostile = affiliation === Affiliations.HOSTILE;
   const isFriendly = affiliation?.includes(Affiliations.FRIEND);
-
-  // Load hierarchy for friendly units
-  useEffect(() => {
-    if (selectedUnit && isFriendly) {
-      dispatch(loadUnitHierarchy(selectedUnit));
-    }
-
-    return () => {
-      dispatch(clearUnitHierarchy());
-    };
-  }, [selectedUnit, isFriendly, dispatch]);
 
   return (
     <div className={styles.container}>
@@ -74,8 +59,8 @@ const RightContainer: React.FC = () => {
               unit={selectedUnit}
               parents={unitHierarchy?.parents ?? []}
               children={unitHierarchy?.children ?? []}
-              loading={loadingHierarchy}
-              error={hierarchyError ?? undefined}
+              loading={loadingUnitHierarchy}
+              error={unitHierarchyError ?? undefined}
               onSelectUnit={handleSelectUnit}
             />
           )}

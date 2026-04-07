@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector, useDispatch } from "react-redux";
 import { unit } from "@defense-osdk/sdk";
-import { loadTrackedEntityObservations } from "../../../store/features/osdk/osdkSlice";
-import { selectTrackedEntityObservations, selectLoadingTrackedEntityObservations, selectTrackedEntityObservationsError } from "../../../store/features/osdk/osdkSelectors";
+import { useOsdkData } from "../../../context/OsdkDataContext";
 import styles from "./TrackedEntityHistory.module.scss";
 
 interface TrackedEntityHistoryProps {
   unit: unit.OsdkInstance;
 }
 
-const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitInstance }) => {
+const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-
-  const observations = useSelector(selectTrackedEntityObservations);
-  const loading = useSelector(selectLoadingTrackedEntityObservations);
-  const error = useSelector(selectTrackedEntityObservationsError);
-
-  useEffect(() => {
-    dispatch(loadTrackedEntityObservations(unitInstance));
-  }, [unitInstance, dispatch]);
+  const {
+    trackedEntityObservations: observations,
+    loadingTrackedEntityObservations: loading,
+    trackedEntityObservationsError: error,
+  } = useOsdkData();
 
   const formatTimestamp = (timestamp: string | undefined): string => {
     if (timestamp == null) {
@@ -102,7 +96,7 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
             <tbody>
               {observations.map((obs, index) => (
                 <tr key={obs.$primaryKey ?? index}>
-                  <td>{formatTimestamp(obs.geotrackableTimestamp)}</td>
+                  <td>{formatTimestamp(obs.geotrackableTimestamp as string | undefined)}</td>
                   <td>{formatPosition(obs.geotrackablePosition)}</td>
                 </tr>
               ))}

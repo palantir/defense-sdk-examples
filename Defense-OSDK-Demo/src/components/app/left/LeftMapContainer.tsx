@@ -15,14 +15,13 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { Spinner } from "@blueprintjs/core";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { loadMapData, selectUnit, selectElint } from "../../../store/features/osdk/osdkSlice";
-import { selectElints, selectCollateralConcerns, selectUnitLocations, selectLoadingMapData, selectSelectedUnit, selectAssociatingElint } from "../../../store/features/osdk/osdkSelectors";
 import { intelligenceSubject } from "@defense-osdk/sdk";
 import { useTheme } from "../../../context/ThemeContext";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
 import { Affiliations, CssVariables, OntologyLinkTypes } from "../../../constants";
 import styles from "./LeftMapContainer.module.scss";
 
@@ -104,13 +103,8 @@ const LeftMapContainer: React.FC = () => {
   const unitsLayerRef = useRef<L.LayerGroup | null>(null);
   const hoverMarkerRef = useRef<L.CircleMarker | null>(null);
 
-  const dispatch = useDispatch();
-  const elints = useSelector(selectElints);
-  const collateralConcerns = useSelector(selectCollateralConcerns);
-  const unitLocations = useSelector(selectUnitLocations);
-  const loadingMapData = useSelector(selectLoadingMapData);
-  const selectedUnit = useSelector(selectSelectedUnit);
-  const associatingElint = useSelector(selectAssociatingElint);
+  const { selectUnit, selectElint, selectedUnit } = useSelection();
+  const { elints, collateralConcerns, unitLocations, loadingMapData, associatingElint } = useOsdkData();
 
   const [associatedElintPrimaryKeys, setAssociatedElintPrimaryKeys] = useState<Set<string>>(new Set());
 
@@ -212,10 +206,6 @@ const LeftMapContainer: React.FC = () => {
   }, [selectedUnit, associatingElint]);
 
   useEffect(() => {
-    dispatch(loadMapData());
-  }, [dispatch]);
-
-  useEffect(() => {
     if (mapRef.current == null || ellipsesLayerRef.current == null) {
       return;
     }
@@ -271,7 +261,7 @@ const LeftMapContainer: React.FC = () => {
               marker.on('click', (e) => {
                 e.originalEvent.stopPropagation();
                 hideHoverMarker();
-                dispatch(selectElint(elintData));
+                selectElint(elintData);
               });
             }
           }
@@ -280,7 +270,7 @@ const LeftMapContainer: React.FC = () => {
         console.error("Malformed ELINT: ", elintData);
       }
     });
-  }, [elints, selectedUnit, dispatch, associatedElintPrimaryKeys, hideHoverMarker, showHoverMarker]);
+  }, [elints, selectedUnit, selectElint, associatedElintPrimaryKeys, hideHoverMarker, showHoverMarker]);
 
   useEffect(() => {
     if (mapRef.current == null || collateralConcernsLayerRef.current == null) {
@@ -365,13 +355,13 @@ const LeftMapContainer: React.FC = () => {
         );
 
         marker.on('click', () => {
-          dispatch(selectUnit(unit));
+          selectUnit(unit);
         });
       } catch {
         console.error("Malformed unit data: ", unitLocation);
       }
     });
-  }, [unitLocations, dispatch]);
+  }, [unitLocations, selectUnit]);
 
   useEffect(() => {
     if (
