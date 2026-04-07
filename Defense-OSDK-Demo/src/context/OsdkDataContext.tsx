@@ -21,6 +21,7 @@ import {
   elint,
   collateralConcernCandidateWithGeometry,
   trackedEntity,
+  geotemporalObservation,
   unitHierarchyNodeRelationship,
   associateIntelligenceWithIntelligenceSubject,
   intelligenceSubject,
@@ -194,10 +195,12 @@ async function fetchAssociatedElintsForUnit(unitInstance: unit.OsdkInstance): Pr
 
   const linkedIntelligence = link[OntologyLinkTypes.LINKED_INTELLIGENCE];
   const result = await linkedIntelligence.fetchPage({ $pageSize: 100 });
-  return result.data.map(d => d.$as(elint));
+  return result.data
+    .map((d) => { try { return d.$as(elint); } catch { return undefined; } })
+    .filter((d): d is elint.OsdkInstance => d != null);
 }
 
-async function fetchTrackedEntityObservationsForUnit(unitInstance: unit.OsdkInstance): Promise<trackedEntity.OsdkInstance[]> {
+async function fetchObservationsForUnit(unitInstance: unit.OsdkInstance): Promise<geotemporalObservation.OsdkInstance[]> {
   const asTracked = unitInstance.$as(trackedEntity);
   const link = asTracked.$link;
 
@@ -211,7 +214,8 @@ async function fetchTrackedEntityObservationsForUnit(unitInstance: unit.OsdkInst
     $orderBy: { geotrackableTimestamp: "desc" },
     $pageSize: 100,
   });
-  return result.data.map(d => d.$as(trackedEntity));
+  // $select narrows the return type; `as` needed to widen back
+  return result.data as geotemporalObservation.OsdkInstance[];
 }
 
 async function performAssociateElintWithUnit(
@@ -253,7 +257,7 @@ interface OsdkDataContextType {
   mapData: AsyncLoaded<MapData>;
   unitHierarchy: AsyncLoaded<UnitHierarchyData>;
   associatedElints: AsyncLoaded<elint.OsdkInstance[]>;
-  trackedEntityObservations: AsyncLoaded<trackedEntity.OsdkInstance[]>;
+  observations: AsyncLoaded<geotemporalObservation.OsdkInstance[]>;
   elintAssociation: AsyncLoaded<void>;
   associateElintWithUnit: (elintInstance: elint.OsdkInstance, unitInstance: unit.OsdkInstance) => Promise<void>;
   refreshAssociatedElints: (unitInstance: unit.OsdkInstance) => Promise<void>;
@@ -268,7 +272,7 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [mapData, setMapData] = useState<AsyncLoaded<MapData>>(LOADING);
   const [unitHierarchy, setUnitHierarchy] = useState<AsyncLoaded<UnitHierarchyData>>(IDLE);
   const [associatedElints, setAssociatedElints] = useState<AsyncLoaded<elint.OsdkInstance[]>>(IDLE);
-  const [trackedEntityObservations, setTrackedEntityObservations] = useState<AsyncLoaded<trackedEntity.OsdkInstance[]>>(IDLE);
+  const [observations, setObservations] = useState<AsyncLoaded<geotemporalObservation.OsdkInstance[]>>(IDLE);
   const [elintAssociation, setElintAssociation] = useState<AsyncLoaded<void>>(IDLE);
 
   // Fetch user on mount
@@ -293,7 +297,7 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (selectedUnit == null) {
       setUnitHierarchy(IDLE);
       setAssociatedElints(IDLE);
-      setTrackedEntityObservations(IDLE);
+      setObservations(IDLE);
       return;
     }
 
@@ -309,10 +313,10 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     if (isHostile) {
       runAsync(setAssociatedElints, () => fetchAssociatedElintsForUnit(selectedUnit));
-      runAsync(setTrackedEntityObservations, () => fetchTrackedEntityObservationsForUnit(selectedUnit));
+      runAsync(setObservations, () => fetchObservationsForUnit(selectedUnit));
     } else {
       setAssociatedElints(IDLE);
-      setTrackedEntityObservations(IDLE);
+      setObservations(IDLE);
     }
   }, [selectedUnit]);
 
@@ -338,8 +342,8 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       associatedElints,
       elintAssociation,
       mapData,
+      observations,
       refreshAssociatedElints,
-      trackedEntityObservations,
       unitHierarchy,
       user,
     }}>

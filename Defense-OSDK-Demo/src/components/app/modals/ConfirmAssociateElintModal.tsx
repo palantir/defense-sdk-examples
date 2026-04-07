@@ -46,7 +46,7 @@ const ConfirmAssociateElintModal: React.FC = () => {
       return false;
     }
     const elintPrimaryKey = selectedElint.$primaryKey;
-    return associatedElints.some((linkedElint) => linkedElint.$primaryKey === elintPrimaryKey);
+    return associatedElints.some((linked) => linked.$primaryKey === elintPrimaryKey);
   }, [selectedElint, associatedElints]);
 
   const handleConfirm = () => {

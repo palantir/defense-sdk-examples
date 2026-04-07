@@ -232,7 +232,7 @@ const LeftMapContainer: React.FC = () => {
             elintData.reportedPosition.coordinates[0]
           ];
 
-          const elintPrimaryKey = elintData.$primaryKey;
+          const elintPrimaryKey = String(elintData.$primaryKey);
           const isAssociated = associatedElintPrimaryKeys.has(elintPrimaryKey);
 
           if (isAssociated && isHostileSelected && ellipsesLayerRef.current != null) {

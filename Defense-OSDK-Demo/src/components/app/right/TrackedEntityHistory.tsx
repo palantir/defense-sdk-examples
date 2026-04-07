@@ -27,7 +27,7 @@ interface TrackedEntityHistoryProps {
 
 const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
   const { t } = useTranslation();
-  const { trackedEntityObservations: observationsState } = useOsdkData();
+  const { observations: observationsState } = useOsdkData();
 
   const formatTimestamp = (timestamp: string | undefined): string => {
     if (timestamp == null) {
