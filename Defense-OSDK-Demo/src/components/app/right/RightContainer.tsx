@@ -60,7 +60,7 @@ const RightContainer: React.FC = () => {
               parents={unitHierarchy?.parents ?? []}
               children={unitHierarchy?.children ?? []}
               loading={loadingUnitHierarchy}
-              error={unitHierarchyError ?? undefined}
+              error={unitHierarchyError}
               onSelectUnit={handleSelectUnit}
             />
           )}
