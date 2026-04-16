@@ -15,11 +15,11 @@
  */
 
 import React, { useEffect, useRef, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { Dialog, Button, Intent, Toaster, Position } from "@blueprintjs/core";
 import { useTranslation } from "react-i18next";
-import { associateElintWithUnit, clearSelectedElint } from "../../../store/features/osdk/osdkSlice";
-import { selectSelectedElint, selectSelectedUnit, selectAssociatingElint, selectAssociatedElints, selectLoadingAssociatedElints, selectElintAssociationError } from "../../../store/features/osdk/osdkSelectors";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoading, isLoaded, isError } from "../../../types/AsyncLoaded";
 import styles from "./ConfirmAssociateElintModal.module.scss";
 
 const AppToaster = Toaster.create({
@@ -28,13 +28,16 @@ const AppToaster = Toaster.create({
 
 const ConfirmAssociateElintModal: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const { selectedElint, selectedUnit, clearSelectedElint } = useSelection();
+  const {
+    elintAssociation,
+    associatedElints: elintsState,
+    associateElintWithUnit,
+  } = useOsdkData();
 
-  const selectedElint = useSelector(selectSelectedElint);
-  const selectedUnit = useSelector(selectSelectedUnit);
-  const associatingElint = useSelector(selectAssociatingElint);
-  const associatedElints = useSelector(selectAssociatedElints);
-  const loadingAssociatedElints = useSelector(selectLoadingAssociatedElints);
+  const associatingElint = isLoading(elintAssociation);
+  const loadingAssociatedElints = isLoading(elintsState);
+  const associatedElints = isLoaded(elintsState) ? elintsState.value : [];
 
   const isOpen = selectedElint != null && selectedUnit != null;
 
@@ -43,21 +46,23 @@ const ConfirmAssociateElintModal: React.FC = () => {
       return false;
     }
     const elintPrimaryKey = selectedElint.$primaryKey;
-    return associatedElints.some((linkedElint) => linkedElint.$primaryKey === elintPrimaryKey);
+    return associatedElints.some((linked) => linked.$primaryKey === elintPrimaryKey);
   }, [selectedElint, associatedElints]);
 
   const handleConfirm = () => {
     if (selectedElint != null && selectedUnit != null) {
-      dispatch(associateElintWithUnit({ elint: selectedElint, unit: selectedUnit }));
+      associateElintWithUnit(selectedElint, selectedUnit).then(() => {
+        clearSelectedElint();
+      });
     }
   };
 
   const handleCancel = () => {
-    dispatch(clearSelectedElint());
+    clearSelectedElint();
   };
 
-  const formatPosition = (position: any): string => {
-    if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {
+  const formatPosition = (position: GeoJSON.Point | undefined): string => {
+    if (position == null || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;
@@ -175,17 +180,16 @@ const ConfirmAssociateElintModal: React.FC = () => {
 // Separated from the dialog so toast side effects don't trigger dialog re-renders
 export const AssociationToaster: React.FC = () => {
   const { t } = useTranslation();
-  const associatingElint = useSelector(selectAssociatingElint);
-  const elintAssociationError = useSelector(selectElintAssociationError);
-  const selectedElint = useSelector(selectSelectedElint);
-  const previousAssociatingRef = useRef(false);
+  const { elintAssociation } = useOsdkData();
+  const { selectedElint } = useSelection();
+  const previousLoadingRef = useRef(isLoading(elintAssociation));
 
   useEffect(() => {
-    const wasAssociating = previousAssociatingRef.current;
-    const isNowDone = !associatingElint;
+    const wasLoading = previousLoadingRef.current;
+    const isNowDone = !isLoading(elintAssociation);
 
-    if (wasAssociating && isNowDone) {
-      if (elintAssociationError != null) {
+    if (wasLoading && isNowDone) {
+      if (isError(elintAssociation)) {
         AppToaster.show({
           intent: Intent.DANGER,
           message: t("associationError"),
@@ -200,8 +204,8 @@ export const AssociationToaster: React.FC = () => {
       }
     }
 
-    previousAssociatingRef.current = associatingElint;
-  }, [associatingElint, elintAssociationError, selectedElint, t]);
+    previousLoadingRef.current = isLoading(elintAssociation);
+  }, [elintAssociation, selectedElint, t]);
 
   return null;
 };

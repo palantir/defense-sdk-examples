@@ -31,7 +31,7 @@ function formatPropertyKey(key: string): string {
     .trim();
 }
 
-function formatPropertyValue(value: any): string {
+function formatPropertyValue(value: unknown): string {
   if (typeof value === 'object') {
     try {
       return JSON.stringify(value, null, 2);

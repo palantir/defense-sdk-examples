@@ -14,42 +14,23 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector, useDispatch } from "react-redux";
 import { unit } from "@defense-osdk/sdk";
-import { loadAssociatedElints } from "../../../store/features/osdk/osdkSlice";
-import { selectAssociatedElints, selectLoadingAssociatedElints, selectAssociatedElintsError, selectAssociatingElint } from "../../../store/features/osdk/osdkSelectors";
+import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoading, isIdle, isError, isLoaded } from "../../../types/AsyncLoaded";
 import styles from "./AssociatedElint.module.scss";
 
 interface AssociatedELINTProps {
   unit: unit.OsdkInstance;
 }
 
-const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance }) => {
+const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const { associatedElints: elintsState } = useOsdkData();
 
-  const elints = useSelector(selectAssociatedElints);
-  const loading = useSelector(selectLoadingAssociatedElints);
-  const error = useSelector(selectAssociatedElintsError);
-  const associatingElint = useSelector(selectAssociatingElint);
-
-  const prevAssociatingRef = React.useRef(associatingElint);
-
-  useEffect(() => {
-    if (prevAssociatingRef.current && !associatingElint) {
-      dispatch(loadAssociatedElints(unitInstance));
-    }
-    prevAssociatingRef.current = associatingElint;
-  }, [associatingElint, dispatch, unitInstance]);
-
-  useEffect(() => {
-    dispatch(loadAssociatedElints(unitInstance));
-  }, [unitInstance, dispatch]);
-
-  const formatPosition = (position: any): string => {
-    if (position == null || !Array.isArray(position.coordinates) || position.coordinates.length < 2) {
+  const formatPosition = (position: GeoJSON.Point | undefined): string => {
+    if (position == null || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;
@@ -63,7 +44,7 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
     return `${semiMajor.toFixed(0)}m × ${semiMinor.toFixed(0)}m`;
   };
 
-  if (loading) {
+  if (isLoading(elintsState) || isIdle(elintsState)) {
     return (
       <div className={`${styles.elintCard} ${styles.compact}`}>
         <div className={styles.header}>
@@ -74,17 +55,18 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = ({ unit: unitInstance })
     );
   }
 
-  if (error) {
+  if (isError(elintsState)) {
     return (
       <div className={`${styles.elintCard} ${styles.compact}`}>
         <div className={styles.header}>
           <h3 className={styles.title}>{t("associatedELINTTitle")}</h3>
         </div>
-        <div className={styles.error}>{error}</div>
+        <div className={styles.error}>{elintsState.error.message}</div>
       </div>
     );
   }
 
+  const elints = isLoaded(elintsState) ? elintsState.value : [];
   const isEmpty = elints.length === 0;
 
   return (
