@@ -15,11 +15,11 @@
  */
 
 import React, { useEffect, useRef, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { Dialog, Button, Intent, Toaster, Position } from "@blueprintjs/core";
 import { useTranslation } from "react-i18next";
-import { RootState } from "../../../store/store";
-import { associateElintWithUnit, clearSelectedElint } from "../../../store/features/osdk/osdkSlice";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoading, isLoaded, isError } from "../../../types/AsyncLoaded";
 import styles from "./ConfirmAssociateElintModal.module.scss";
 
 const AppToaster = Toaster.create({
@@ -28,61 +28,41 @@ const AppToaster = Toaster.create({
 
 const ConfirmAssociateElintModal: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const { selectedElint, selectedUnit, clearSelectedElint } = useSelection();
+  const {
+    elintAssociation,
+    associatedElints: elintsState,
+    associateElintWithUnit,
+  } = useOsdkData();
 
-  const selectedElint = useSelector((state: RootState) => state.osdk.selectedElint);
-  const selectedUnit = useSelector((state: RootState) => state.osdk.selectedUnit);
-  const associatingElint = useSelector((state: RootState) => state.osdk.associatingElint);
-  const elintAssociationError = useSelector((state: RootState) => state.osdk.elintAssociationError);
-  const associatedElints = useSelector((state: RootState) => state.osdk.associatedElints);
-  const loadingAssociatedElints = useSelector((state: RootState) => state.osdk.loadingAssociatedElints);
+  const associatingElint = isLoading(elintAssociation);
+  const loadingAssociatedElints = isLoading(elintsState);
+  const associatedElints = isLoaded(elintsState) ? elintsState.value : [];
 
-  const isOpen = selectedElint !== null && selectedUnit !== null;
-  const previousAssociatingRef = useRef(false);
+  const isOpen = selectedElint != null && selectedUnit != null;
 
   const isAlreadyAssociated = useMemo(() => {
-    if (!selectedElint || associatedElints.length === 0) {
+    if (selectedElint == null || associatedElints.length === 0) {
       return false;
     }
-    const elintPrimaryKey = (selectedElint as any).$primaryKey;
-    return associatedElints.some((linkedElint: any) => linkedElint.$primaryKey === elintPrimaryKey);
+    const elintPrimaryKey = selectedElint.$primaryKey;
+    return associatedElints.some((linked) => linked.$primaryKey === elintPrimaryKey);
   }, [selectedElint, associatedElints]);
 
-  useEffect(() => {
-    const wasAssociating = previousAssociatingRef.current;
-    const isNowDone = !associatingElint;
-
-    if (wasAssociating && isNowDone) {
-      if (elintAssociationError) {
-        AppToaster.show({
-          message: t("associationError"),
-          intent: Intent.DANGER,
-          timeout: 5000,
-        });
-      } else if (selectedElint === null) {
-        AppToaster.show({
-          message: t("associationSuccess"),
-          intent: Intent.SUCCESS,
-          timeout: 3000,
-        });
-      }
-    }
-
-    previousAssociatingRef.current = associatingElint;
-  }, [associatingElint, elintAssociationError, selectedElint, t]);
-
   const handleConfirm = () => {
-    if (selectedElint && selectedUnit) {
-      dispatch(associateElintWithUnit({ elint: selectedElint, unit: selectedUnit }));
+    if (selectedElint != null && selectedUnit != null) {
+      associateElintWithUnit(selectedElint, selectedUnit).then(() => {
+        clearSelectedElint();
+      });
     }
   };
 
   const handleCancel = () => {
-    dispatch(clearSelectedElint());
+    clearSelectedElint();
   };
 
-  const formatPosition = (position: any): string => {
-    if (!position || !position.coordinates || position.coordinates.length < 2) {
+  const formatPosition = (position: GeoJSON.Point | undefined): string => {
+    if (position == null || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;
@@ -90,7 +70,9 @@ const ConfirmAssociateElintModal: React.FC = () => {
   };
 
   const formatTimestamp = (timestamp: string | undefined): string => {
-    if (!timestamp) return t("notAvailable");
+    if (timestamp == null) {
+      return t("notAvailable");
+    }
     try {
       return new Date(timestamp).toLocaleString();
     } catch {
@@ -98,24 +80,19 @@ const ConfirmAssociateElintModal: React.FC = () => {
     }
   };
 
-  const getUnitTitle = () => {
-    return (selectedUnit as any)?.$title || (selectedUnit as any)?.$primaryKey || t("unknown");
-  };
-
-  const getElintTitle = () => {
-    return (selectedElint as any)?.$title || (selectedElint as any)?.$primaryKey || t("unknown");
-  };
+  const unitTitle = selectedUnit?.$title ?? selectedUnit?.$primaryKey ?? t("unknown");
+  const elintTitle = selectedElint?.$title ?? selectedElint?.$primaryKey ?? t("unknown");
 
   return (
     <Dialog
-      isOpen={isOpen}
-      onClose={handleCancel}
-      title={isAlreadyAssociated ? t("alreadyAssociatedTitle") : t("confirmAssociateElintTitle")}
-      className="confirmAssociateElintDialog"
-      canOutsideClickClose={!associatingElint}
-      canEscapeKeyClose={!associatingElint}
-      usePortal={true}
       autoFocus={true}
+      canEscapeKeyClose={!associatingElint}
+      canOutsideClickClose={!associatingElint}
+      className="confirmAssociateElintDialog"
+      isOpen={isOpen}
+      title={isAlreadyAssociated ? t("alreadyAssociatedTitle") : t("confirmAssociateElintTitle")}
+      usePortal={true}
+      onClose={handleCancel}
     >
       <div className={styles.content}>
         {loadingAssociatedElints ? (
@@ -123,8 +100,8 @@ const ConfirmAssociateElintModal: React.FC = () => {
         ) : isAlreadyAssociated ? (
           <p className={styles.confirmText}>
             {t("alreadyAssociatedMessage", {
-              elint: getElintTitle(),
-              unit: getUnitTitle()
+              elint: elintTitle,
+              unit: unitTitle,
             })}
           </p>
         ) : (
@@ -135,32 +112,32 @@ const ConfirmAssociateElintModal: React.FC = () => {
               <div className={styles.detailGroup}>
                 <h4>{t("unit")}</h4>
                 <div className={styles.detailItem}>
-                  <span className={styles.label}>{t("unitId")}:</span>
-                  <span className={styles.value}>{getUnitTitle()}</span>
+                  <span className={styles.label}>{t("unitIdLabel")}</span>
+                  <span className={styles.value}>{unitTitle}</span>
                 </div>
                 <div className={styles.detailItem}>
-                  <span className={styles.label}>{t("affiliation")}:</span>
-                  <span className={styles.value}>{(selectedUnit as any)?.affiliation || t("notAvailable")}</span>
+                  <span className={styles.label}>{t("affiliationLabel")}</span>
+                  <span className={styles.value}>{selectedUnit?.affiliation ?? t("notAvailable")}</span>
                 </div>
               </div>
 
               <div className={styles.detailGroup}>
                 <h4>{t("elint")}</h4>
                 <div className={styles.detailItem}>
-                  <span className={styles.label}>{t("elintId")}:</span>
-                  <span className={styles.value}>{getElintTitle()}</span>
+                  <span className={styles.label}>{t("elintIdLabel")}</span>
+                  <span className={styles.value}>{elintTitle}</span>
                 </div>
                 <div className={styles.detailItem}>
-                  <span className={styles.label}>{t("elnot")}:</span>
-                  <span className={styles.value}>{(selectedElint as any)?.elnot || t("notAvailable")}</span>
+                  <span className={styles.label}>{t("elnotLabel")}</span>
+                  <span className={styles.value}>{selectedElint?.elnot ?? t("notAvailable")}</span>
                 </div>
                 <div className={styles.detailItem}>
-                  <span className={styles.label}>{t("timestamp")}:</span>
-                  <span className={styles.value}>{formatTimestamp((selectedElint as any)?.reportedTimestamp)}</span>
+                  <span className={styles.label}>{t("timestampLabel")}</span>
+                  <span className={styles.value}>{formatTimestamp(selectedElint?.reportedTimestamp)}</span>
                 </div>
                 <div className={styles.detailItem}>
-                  <span className={styles.label}>{t("position")}:</span>
-                  <span className={styles.value}>{formatPosition((selectedElint as any)?.reportedPosition)}</span>
+                  <span className={styles.label}>{t("positionLabel")}</span>
+                  <span className={styles.value}>{formatPosition(selectedElint?.reportedPosition)}</span>
                 </div>
               </div>
             </div>
@@ -171,25 +148,25 @@ const ConfirmAssociateElintModal: React.FC = () => {
       <div className={styles.footer}>
         {isAlreadyAssociated ? (
           <Button
-            onClick={handleCancel}
             intent={Intent.PRIMARY}
+            onClick={handleCancel}
           >
             {t("ok")}
           </Button>
         ) : (
           <>
             <Button
-              onClick={handleCancel}
               disabled={associatingElint}
               intent={Intent.NONE}
+              onClick={handleCancel}
             >
               {t("cancel")}
             </Button>
             <Button
-              onClick={handleConfirm}
-              loading={associatingElint}
-              intent={Intent.PRIMARY}
               disabled={associatingElint || loadingAssociatedElints}
+              intent={Intent.PRIMARY}
+              loading={associatingElint}
+              onClick={handleConfirm}
             >
               {t("confirm")}
             </Button>
@@ -198,6 +175,39 @@ const ConfirmAssociateElintModal: React.FC = () => {
       </div>
     </Dialog>
   );
+};
+
+// Separated from the dialog so toast side effects don't trigger dialog re-renders
+export const AssociationToaster: React.FC = () => {
+  const { t } = useTranslation();
+  const { elintAssociation } = useOsdkData();
+  const { selectedElint } = useSelection();
+  const previousLoadingRef = useRef(isLoading(elintAssociation));
+
+  useEffect(() => {
+    const wasLoading = previousLoadingRef.current;
+    const isNowDone = !isLoading(elintAssociation);
+
+    if (wasLoading && isNowDone) {
+      if (isError(elintAssociation)) {
+        AppToaster.show({
+          intent: Intent.DANGER,
+          message: t("associationError"),
+          timeout: 5000,
+        });
+      } else if (selectedElint == null) {
+        AppToaster.show({
+          intent: Intent.SUCCESS,
+          message: t("associationSuccess"),
+          timeout: 3000,
+        });
+      }
+    }
+
+    previousLoadingRef.current = isLoading(elintAssociation);
+  }, [elintAssociation, selectedElint, t]);
+
+  return null;
 };
 
 export default ConfirmAssociateElintModal;

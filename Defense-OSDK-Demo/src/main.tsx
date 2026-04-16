@@ -15,12 +15,12 @@
  */
 
 import ReactDOM from "react-dom/client";
-import { Provider } from "react-redux";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import store from "./store/store";
 import AuthCallback from "./AuthCallback";
 import AppWithErrorBoundary from "./components/app/AppWithErrorBoundary";
 import { ThemeProvider } from "./context/ThemeContext";
+import { SelectionProvider } from "./context/SelectionContext";
+import { OsdkDataProvider } from "./context/OsdkDataContext";
 import "./i18n/config";
 import "./index.scss";
 
@@ -52,8 +52,10 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <ThemeProvider>
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
+    <SelectionProvider>
+      <OsdkDataProvider>
+        <RouterProvider router={router} />
+      </OsdkDataProvider>
+    </SelectionProvider>
   </ThemeProvider>,
 );

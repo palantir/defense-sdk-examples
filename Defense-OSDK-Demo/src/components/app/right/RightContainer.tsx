@@ -14,48 +14,36 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { RootState } from "../../../store/store";
-import { clearSelectedUnit, loadUnitHierarchy, clearUnitHierarchy, selectUnit } from "../../../store/features/osdk/osdkSlice";
+import { unit } from "@defense-osdk/sdk";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoaded, isLoading, isError } from "../../../types/AsyncLoaded";
 import UnitCard from "./UnitCard";
 import AssociatedELINT from "./AssociatedElint";
 import TrackedEntityHistory from "./TrackedEntityHistory";
 import UnitHierarchyView from "./UnitHierarchyView";
+import { Affiliations } from "../../../constants";
 import styles from "./RightContainer.module.scss";
 
 const RightContainer: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-  const selectedUnit = useSelector((state: RootState) => state.osdk.selectedUnit);
-  const unitHierarchy = useSelector((state: RootState) => state.osdk.unitHierarchy);
-  const loadingHierarchy = useSelector((state: RootState) => state.osdk.loadingUnitHierarchy);
-  const hierarchyError = useSelector((state: RootState) => state.osdk.unitHierarchyError);
+  const { selectedUnit, clearSelectedUnit, selectUnit } = useSelection();
+  const { unitHierarchy: hierarchyState } = useOsdkData();
 
-  const handleClearSelection = () => {
-    dispatch(clearSelectedUnit());
-  };
+  const handleClearSelection = useCallback(() => {
+    clearSelectedUnit();
+  }, [clearSelectedUnit]);
 
-  const handleSelectUnit = (unit: any) => {
-    dispatch(selectUnit(unit));
-  };
+  const handleSelectUnit = useCallback((u: unit.OsdkInstance) => {
+    selectUnit(u);
+  }, [selectUnit]);
 
   // Check unit affiliation
   const affiliation = selectedUnit?.affiliation?.toLowerCase();
-  const isHostile = affiliation === 'hostile';
-  const isFriendly = affiliation?.includes('friend');
-
-  // Load hierarchy for friendly units
-  useEffect(() => {
-    if (selectedUnit && isFriendly) {
-      dispatch(loadUnitHierarchy(selectedUnit));
-    }
-
-    return () => {
-      dispatch(clearUnitHierarchy());
-    };
-  }, [selectedUnit, isFriendly, dispatch]);
+  const isHostile = affiliation === Affiliations.HOSTILE;
+  const isFriendly = affiliation?.includes(Affiliations.FRIEND);
 
   return (
     <div className={styles.container}>
@@ -71,10 +59,10 @@ const RightContainer: React.FC = () => {
           {isFriendly && (
             <UnitHierarchyView
               unit={selectedUnit}
-              parents={unitHierarchy?.parents || []}
-              children={unitHierarchy?.children || []}
-              loading={loadingHierarchy}
-              error={hierarchyError}
+              parents={isLoaded(hierarchyState) ? hierarchyState.value.parents : []}
+              children={isLoaded(hierarchyState) ? hierarchyState.value.children : []}
+              loading={isLoading(hierarchyState)}
+              error={isError(hierarchyState) ? hierarchyState.error.message : undefined}
               onSelectUnit={handleSelectUnit}
             />
           )}

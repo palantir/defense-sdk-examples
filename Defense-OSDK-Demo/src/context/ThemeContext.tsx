@@ -15,8 +15,23 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { THEME_STORAGE_KEY, THEME_DATA_ATTRIBUTE } from '../constants';
 
-type ThemeName = 'devcon' | 'katie-classic' | 'retro' | 'synthwave';
+export const Themes = {
+  DEVCON: { id: 'devcon', label: 'DEVCON' },
+  KATIE_CLASSIC: { id: 'katie-classic', label: 'Katie Classic' },
+  RETRO: { id: 'retro', label: 'Retro' },
+  SYNTHWAVE: { id: 'synthwave', label: 'Synthwave' },
+} as const;
+
+export type ThemeName = typeof Themes[keyof typeof Themes]['id'];
+
+export const ThemeValues = Object.values(Themes);
+const DEFAULT_THEME: ThemeName = Themes.DEVCON.id;
+
+function isValidTheme(value: string | null): value is ThemeName {
+  return value != null && ThemeValues.some(({ id }) => id === value);
+}
 
 interface ThemeContextType {
   theme: ThemeName;
@@ -27,22 +42,21 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeName>(() => {
-    // Load theme from localStorage or default to devcon
-    const savedTheme = localStorage.getItem('app-theme') as ThemeName;
-    const initialTheme = savedTheme || 'devcon';
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const initialTheme = isValidTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
 
     // Set data-theme attribute immediately to prevent flash of wrong theme
-    document.documentElement.setAttribute('data-theme', initialTheme);
+    document.documentElement.setAttribute(THEME_DATA_ATTRIBUTE, initialTheme);
 
     return initialTheme;
   });
 
   useEffect(() => {
     // Save theme to localStorage
-    localStorage.setItem('app-theme', theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
 
     // Apply theme to document root
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute(THEME_DATA_ATTRIBUTE, theme);
   }, [theme]);
 
   const setTheme = (newTheme: ThemeName) => {

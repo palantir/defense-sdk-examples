@@ -14,26 +14,68 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { unit } from "@defense-osdk/sdk";
 import styles from "./UnitHierarchyView.module.scss";
 
 interface UnitHierarchyViewProps {
-  unit: unit.OsdkInstance;
-  parents: unit.OsdkInstance[];
   children: unit.OsdkInstance[];
+  error?: string;
   loading?: boolean;
-  error?: string | null;
+  parents: unit.OsdkInstance[];
+  unit: unit.OsdkInstance;
   onSelectUnit?: (unit: unit.OsdkInstance) => void;
 }
+
+interface HierarchyNodeProps {
+  indentLevel: number;
+  isLast?: boolean;
+  showLines?: boolean;
+  unitInstance: unit.OsdkInstance;
+  onSelect?: (unit: unit.OsdkInstance) => void;
+}
+
+const HierarchyNode: React.FC<HierarchyNodeProps> = ({ indentLevel, isLast = true, showLines = true, unitInstance, onSelect }) => {
+  const { t } = useTranslation();
+  const nodeTitle = unitInstance.$title ?? t("unknownNode");
+
+  const handleClick = useCallback(() => {
+    onSelect?.(unitInstance);
+  }, [onSelect, unitInstance]);
+
+  return (
+    <div
+      key={unitInstance.$primaryKey}
+      className={styles.treeRow}
+      style={{ paddingLeft: `${indentLevel * 20}px` }}
+    >
+      <div className={styles.treeLines}>
+        {showLines && indentLevel > 0 && (
+          <>
+            <div className={styles.verticalLine} />
+            <div className={styles.horizontalLine} />
+            {!isLast && <div className={styles.verticalLineExtend} />}
+          </>
+        )}
+      </div>
+      <div
+        className={`${styles.nodeContent} ${onSelect != null ? styles.clickable : ''}`}
+        title={nodeTitle}
+        onClick={onSelect != null ? handleClick : undefined}
+      >
+        <div className={styles.nodeName}>{nodeTitle}</div>
+      </div>
+    </div>
+  );
+};
 
 const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
   unit: unitInstance,
   parents,
   children,
   loading = false,
-  error = null,
+  error,
   onSelectUnit
 }) => {
   const { t } = useTranslation();
@@ -49,7 +91,7 @@ const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
     );
   }
 
-  if (error) {
+  if (error != null) {
     return (
       <div className={styles.hierarchyCard}>
         <div className={styles.header}>
@@ -61,6 +103,7 @@ const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
   }
 
   const hasNoData = parents.length === 0 && children.length === 0;
+  const childIndentLevel = parents.length > 0 ? 2 : 1;
 
   return (
     <div className={styles.hierarchyCard}>
@@ -73,32 +116,16 @@ const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
       ) : (
         <div className={styles.treeContainer}>
           <div className={styles.tree}>
-            {/* Parents */}
-            {parents.map((parentUnit, index) => {
-              const nodeTitle = (parentUnit as any).$title || t("unknownNode");
-              const indentLevel = 0;
+            {parents.map((parentUnit) => (
+              <HierarchyNode
+                key={parentUnit.$primaryKey}
+                indentLevel={0}
+                showLines={false}
+                unitInstance={parentUnit}
+                onSelect={onSelectUnit}
+              />
+            ))}
 
-              return (
-                <div
-                  key={(parentUnit as any).$primaryKey || `parent-${index}`}
-                  className={styles.treeRow}
-                  style={{ paddingLeft: `${indentLevel * 20}px` }}
-                >
-                  <div className={styles.treeLines}>
-                    {indentLevel > 0 && <div className={styles.verticalLine} />}
-                  </div>
-                  <div
-                    className={`${styles.nodeContent} ${styles.clickable}`}
-                    title={nodeTitle}
-                    onClick={() => onSelectUnit?.(parentUnit)}
-                  >
-                    <div className={styles.nodeName}>{nodeTitle}</div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Current unit */}
             <div
               className={styles.treeRow}
               style={{ paddingLeft: `${parents.length > 0 ? 20 : 0}px` }}
@@ -113,41 +140,23 @@ const UnitHierarchyView: React.FC<UnitHierarchyViewProps> = ({
               </div>
               <div
                 className={`${styles.nodeContent} ${styles.currentUnit}`}
-                title={(unitInstance as any).$title || t("unknownNode")}
+                title={unitInstance.$title ?? t("unknownNode")}
               >
                 <div className={styles.nodeName}>
-                  {(unitInstance as any).$title || t("unknownNode")}
+                  {unitInstance.$title ?? t("unknownNode")}
                 </div>
               </div>
             </div>
 
-            {/* Children */}
-            {children.map((childUnit, index) => {
-              const nodeTitle = (childUnit as any).$title || t("unknownNode");
-              const isLast = index === children.length - 1;
-              const indentLevel = parents.length > 0 ? 2 : 1;
-
-              return (
-                <div
-                  key={(childUnit as any).$primaryKey || `child-${index}`}
-                  className={styles.treeRow}
-                  style={{ paddingLeft: `${indentLevel * 20}px` }}
-                >
-                  <div className={styles.treeLines}>
-                    <div className={styles.verticalLine} />
-                    <div className={styles.horizontalLine} />
-                    {!isLast && <div className={styles.verticalLineExtend} />}
-                  </div>
-                  <div
-                    className={`${styles.nodeContent} ${styles.clickable}`}
-                    title={nodeTitle}
-                    onClick={() => onSelectUnit?.(childUnit)}
-                  >
-                    <div className={styles.nodeName}>{nodeTitle}</div>
-                  </div>
-                </div>
-              );
-            })}
+            {children.map((childUnit, index) => (
+              <HierarchyNode
+                key={childUnit.$primaryKey}
+                indentLevel={childIndentLevel}
+                isLast={index === children.length - 1}
+                unitInstance={childUnit}
+                onSelect={onSelectUnit}
+              />
+            ))}
           </div>
         </div>
       )}

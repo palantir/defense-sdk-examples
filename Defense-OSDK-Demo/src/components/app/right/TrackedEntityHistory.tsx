@@ -14,32 +14,25 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector, useDispatch } from "react-redux";
 import { unit } from "@defense-osdk/sdk";
-import { RootState } from "../../../store/store";
-import { loadTrackedEntityObservations } from "../../../store/features/osdk/osdkSlice";
+import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoading, isIdle, isError } from "../../../types/AsyncLoaded";
 import styles from "./TrackedEntityHistory.module.scss";
 
 interface TrackedEntityHistoryProps {
   unit: unit.OsdkInstance;
 }
 
-const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitInstance }) => {
+const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-
-  const observations = useSelector((state: RootState) => state.osdk.trackedEntityObservations);
-  const loading = useSelector((state: RootState) => state.osdk.loadingTrackedEntityObservations);
-  const error = useSelector((state: RootState) => state.osdk.trackedEntityObservationsError);
-
-  useEffect(() => {
-    dispatch(loadTrackedEntityObservations(unitInstance));
-  }, [unitInstance, dispatch]);
+  const { observations: observationsState } = useOsdkData();
 
   const formatTimestamp = (timestamp: string | undefined): string => {
-    if (!timestamp) return t("noTimestamp");
+    if (timestamp == null) {
+      return t("noTimestamp");
+    }
     try {
       return new Date(timestamp).toLocaleString();
     } catch {
@@ -47,15 +40,15 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
     }
   };
 
-  const formatPosition = (position: any): string => {
-    if (!position || !position.coordinates || position.coordinates.length < 2) {
+  const formatPosition = (position: GeoJSON.Point | undefined): string => {
+    if (position == null || position.coordinates.length < 2) {
       return t("noPosition");
     }
     const [lng, lat] = position.coordinates;
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   };
 
-  if (loading) {
+  if (isLoading(observationsState) || isIdle(observationsState)) {
     return (
       <div className={styles.historyCard}>
         <div className={styles.header}>
@@ -66,16 +59,18 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
     );
   }
 
-  if (error) {
+  if (isError(observationsState)) {
     return (
       <div className={styles.historyCard}>
         <div className={styles.header}>
           <h3 className={styles.title}>{t("locationHistoryTitle")}</h3>
         </div>
-        <div className={styles.error}>{error}</div>
+        <div className={styles.error}>{observationsState.error.message}</div>
       </div>
     );
   }
+
+  const observations = observationsState.status === "loaded" ? observationsState.value : [];
 
   return (
     <div className={styles.historyCard}>
@@ -99,7 +94,7 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = ({ unit: unitI
             </thead>
             <tbody>
               {observations.map((obs, index) => (
-                <tr key={(obs as any).$primaryKey || index}>
+                <tr key={obs.$primaryKey ?? index}>
                   <td>{formatTimestamp(obs.geotrackableTimestamp)}</td>
                   <td>{formatPosition(obs.geotrackablePosition)}</td>
                 </tr>

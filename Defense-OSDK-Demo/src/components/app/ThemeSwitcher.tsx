@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button, Menu, MenuItem, Popover, Position } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme, ThemeValues, ThemeName } from '../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import styles from './ThemeSwitcher.module.scss';
 
@@ -26,52 +26,37 @@ const ThemeSwitcher: React.FC = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleThemeChange = (newTheme: 'devcon' | 'katie-classic' | 'retro' | 'synthwave') => {
+  const handleThemeChange = useCallback((newTheme: ThemeName) => {
     setTheme(newTheme);
     setIsOpen(false);
-  };
+  }, [setTheme]);
 
   const menu = (
     <Menu className={styles.menu}>
-      <MenuItem
-        text="DEVCON"
-        icon={theme === 'devcon' ? IconNames.TICK : IconNames.BLANK}
-        onClick={() => handleThemeChange('devcon')}
-        className={theme === 'devcon' ? styles.active : ''}
-      />
-      <MenuItem
-        text="Katie Classic"
-        icon={theme === 'katie-classic' ? IconNames.TICK : IconNames.BLANK}
-        onClick={() => handleThemeChange('katie-classic')}
-        className={theme === 'katie-classic' ? styles.active : ''}
-      />
-      <MenuItem
-        text="Retro"
-        icon={theme === 'retro' ? IconNames.TICK : IconNames.BLANK}
-        onClick={() => handleThemeChange('retro')}
-        className={theme === 'retro' ? styles.active : ''}
-      />
-      <MenuItem
-        text="Synthwave"
-        icon={theme === 'synthwave' ? IconNames.TICK : IconNames.BLANK}
-        onClick={() => handleThemeChange('synthwave')}
-        className={theme === 'synthwave' ? styles.active : ''}
-      />
+      {ThemeValues.map(({ id, label }) => (
+        <MenuItem
+          key={id}
+          className={theme === id ? styles.active : ''}
+          icon={theme === id ? IconNames.TICK : IconNames.BLANK}
+          text={label}
+          onClick={() => handleThemeChange(id)}
+        />
+      ))}
     </Menu>
   );
 
   return (
     <Popover
       content={menu}
-      position={Position.BOTTOM_RIGHT}
       isOpen={isOpen}
+      position={Position.BOTTOM_RIGHT}
       onInteraction={(state) => setIsOpen(state)}
     >
       <Button
+        aria-label={t('themeSettings') ?? 'Theme Settings'}
+        className={styles.button}
         icon={IconNames.COG}
         minimal
-        className={styles.button}
-        aria-label={t('themeSettings') || 'Theme Settings'}
       />
     </Popover>
   );

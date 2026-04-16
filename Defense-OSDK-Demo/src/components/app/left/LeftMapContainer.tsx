@@ -14,16 +14,85 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Spinner } from "@blueprintjs/core";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { RootState } from "../../../store/store";
-import { loadMapData, selectUnit, selectElint } from "../../../store/features/osdk/osdkSlice";
-import { intelligenceSubject } from "@defense-osdk/sdk";
+import { unit, intelligenceSubject } from "@defense-osdk/sdk";
 import { useTheme } from "../../../context/ThemeContext";
+import { useSelection } from "../../../context/SelectionContext";
+import { useOsdkData } from "../../../context/OsdkDataContext";
+import { isLoaded, isLoading } from "../../../types/AsyncLoaded";
+import { Affiliations, CssVariables, OntologyLinkTypes } from "../../../constants";
 import styles from "./LeftMapContainer.module.scss";
+
+function getCssVariable(name: string): string {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+}
+
+function getMapTileUrl(): string {
+  return getCssVariable(CssVariables.MAP_TILE_URL).replace(/^["']|["']$/g, '');
+}
+
+interface MapColors {
+  collateralConcernColor: string;
+  elintColor: string;
+  unitFriendColor: string;
+  unitHostileColor: string;
+  unitOtherColor: string;
+}
+
+function getMapColors(): MapColors {
+  return {
+    collateralConcernColor: getCssVariable(CssVariables.COLLATERAL_CONCERN_COLOR),
+    elintColor: getCssVariable(CssVariables.ELINT_COLOR),
+    unitFriendColor: getCssVariable(CssVariables.UNIT_FRIEND_COLOR),
+    unitHostileColor: getCssVariable(CssVariables.UNIT_HOSTILE_COLOR),
+    unitOtherColor: getCssVariable(CssVariables.UNIT_OTHER_COLOR),
+  };
+}
+
+function getUnitColor(affiliation: string | undefined, colors: MapColors): string {
+  if (affiliation == null) {
+    return colors.unitOtherColor;
+  }
+  const lowerAffiliation = affiliation.toLowerCase();
+  if (lowerAffiliation === Affiliations.HOSTILE) {
+    return colors.unitHostileColor;
+  }
+  if (lowerAffiliation.includes(Affiliations.FRIEND)) {
+    return colors.unitFriendColor;
+  }
+  return colors.unitOtherColor;
+}
+
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+// Fetches primary keys of ELINTs linked to a hostile unit via the intelligence subject interface
+async function getAssociatedElintPrimaryKeys(selectedUnit?: unit.OsdkInstance): Promise<Set<string>> {
+  if (selectedUnit == null || selectedUnit.affiliation?.toLowerCase() !== Affiliations.HOSTILE) {
+    return new Set();
+  }
+
+  try {
+    const asIntelligenceSubject = selectedUnit.$as(intelligenceSubject);
+    const link = asIntelligenceSubject.$link;
+
+    if (link?.[OntologyLinkTypes.LINKED_INTELLIGENCE] == null) {
+      return new Set();
+    }
+
+    const { data } = await link[OntologyLinkTypes.LINKED_INTELLIGENCE].fetchPage({
+      $pageSize: 1000,
+    });
+
+    return new Set(data.map((d) => String(d.$primaryKey)));
+  } catch {
+    return new Set();
+  }
+}
 
 const LeftMapContainer: React.FC = () => {
   const { theme } = useTheme();
@@ -35,50 +104,56 @@ const LeftMapContainer: React.FC = () => {
   const unitsLayerRef = useRef<L.LayerGroup | null>(null);
   const hoverMarkerRef = useRef<L.CircleMarker | null>(null);
 
-  const dispatch = useDispatch();
-  const elints = useSelector((state: RootState) => state.osdk.elints);
-  const collateralConcerns = useSelector((state: RootState) => state.osdk.collateralConcerns);
-  const unitLocations = useSelector((state: RootState) => state.osdk.unitLocations);
-  const loadingMapData = useSelector((state: RootState) => state.osdk.loadingMapData);
-  const selectedUnit = useSelector((state: RootState) => state.osdk.selectedUnit);
-  const associatingElint = useSelector((state: RootState) => state.osdk.associatingElint);
+  const { selectUnit, selectElint, selectedUnit } = useSelection();
+  const { mapData, elintAssociation } = useOsdkData();
+
+  const elints = isLoaded(mapData) ? mapData.value.elints : [];
+  const collateralConcerns = isLoaded(mapData) ? mapData.value.collateralConcerns : [];
+  const unitLocations = isLoaded(mapData) ? mapData.value.unitLocations : [];
+  const loadingMapData = isLoading(mapData);
+  const associatingElint = isLoading(elintAssociation);
 
   const [associatedElintPrimaryKeys, setAssociatedElintPrimaryKeys] = useState<Set<string>>(new Set());
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const prevAssociatingRef = useRef(associatingElint);
 
-  // Get colors from CSS variables
-  const getMapColors = () => {
-    const rootStyles = getComputedStyle(document.documentElement);
-    return {
-      elintColor: rootStyles.getPropertyValue('--elint-color').trim(),
-      collateralConcernColor: rootStyles.getPropertyValue('--collateral-concern-color').trim(),
-      unitFriendColor: rootStyles.getPropertyValue('--unit-friend-color').trim(),
-      unitHostileColor: rootStyles.getPropertyValue('--unit-hostile-color').trim(),
-      unitOtherColor: rootStyles.getPropertyValue('--unit-other-color').trim(),
-    };
-  };
+  const showHoverMarker = useCallback((center: [number, number], color: string) => {
+    if (mapRef.current == null) {
+      return;
+    }
 
-  const getUnitColor = (affiliation: string | undefined, colors: ReturnType<typeof getMapColors>) => {
-    if (!affiliation) return colors.unitOtherColor;
-    const lowerAffiliation = affiliation.toLowerCase();
-    if (lowerAffiliation === 'hostile') return colors.unitHostileColor;
-    if (lowerAffiliation.includes('friend')) return colors.unitFriendColor;
-    return colors.unitOtherColor;
-  };
+    if (hoverMarkerRef.current != null) {
+      hoverMarkerRef.current.remove();
+    }
+
+    hoverMarkerRef.current = L.circleMarker(center, {
+      color,
+      fillColor: color,
+      fillOpacity: 0.3,
+      interactive: false,
+      opacity: 0.7,
+      radius: 15,
+      weight: 2,
+    }).addTo(mapRef.current);
+
+    hoverMarkerRef.current.bringToFront();
+  }, []);
+
+  const hideHoverMarker = useCallback(() => {
+    if (hoverMarkerRef.current != null) {
+      hoverMarkerRef.current.remove();
+      hoverMarkerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (mapContainerRef.current == null || mapRef.current != null) {
+      return;
+    }
 
-    const tileUrl = getComputedStyle(document.documentElement)
-      .getPropertyValue('--map-tile-url')
-      .trim()
-      .replace(/^["']|["']$/g, '');
-
+    const tileUrl = getMapTileUrl();
     const map = L.map(mapContainerRef.current).setView([55.5, 18.0], 6);
 
     const tileLayer = L.tileLayer(tileUrl, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      attribution: TILE_ATTRIBUTION,
       maxZoom: 19,
     }).addTo(map);
 
@@ -89,15 +164,15 @@ const LeftMapContainer: React.FC = () => {
     mapRef.current = map;
 
     return () => {
-      if (hoverMarkerRef.current) {
+      if (hoverMarkerRef.current != null) {
         hoverMarkerRef.current.remove();
         hoverMarkerRef.current = null;
       }
-      if (tileLayerRef.current) {
+      if (tileLayerRef.current != null) {
         tileLayerRef.current.remove();
         tileLayerRef.current = null;
       }
-      if (mapRef.current) {
+      if (mapRef.current != null) {
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -106,23 +181,22 @@ const LeftMapContainer: React.FC = () => {
 
   // Update tile layer when theme changes
   useEffect(() => {
-    if (!mapRef.current || !tileLayerRef.current) return;
+    if (mapRef.current == null || tileLayerRef.current == null) {
+      return;
+    }
 
     // Defer reading CSS variable to next tick to ensure computed styles are updated
     setTimeout(() => {
-      if (!mapRef.current || !tileLayerRef.current) return;
+      if (mapRef.current == null || tileLayerRef.current == null) {
+        return;
+      }
 
-      const tileUrl = getComputedStyle(document.documentElement)
-        .getPropertyValue('--map-tile-url')
-        .trim()
-        .replace(/^["']|["']$/g, '');
+      const tileUrl = getMapTileUrl();
 
-      // Remove old tile layer
       tileLayerRef.current.remove();
 
-      // Add new tile layer with updated URL
       const newTileLayer = L.tileLayer(tileUrl, {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        attribution: TILE_ATTRIBUTION,
         maxZoom: 19,
       }).addTo(mapRef.current);
 
@@ -131,84 +205,17 @@ const LeftMapContainer: React.FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    if (prevAssociatingRef.current === true && associatingElint === false) {
-      setRefreshTrigger(prev => prev + 1);
-    }
-    prevAssociatingRef.current = associatingElint;
-  }, [associatingElint]);
-
-  useEffect(() => {
-    const fetchAssociatedElints = async () => {
-      if (!selectedUnit) {
-        setAssociatedElintPrimaryKeys(new Set());
-        return;
-      }
-
-      const affiliation = selectedUnit.affiliation?.toLowerCase();
-      const isHostile = affiliation === 'hostile';
-
-      if (!isHostile) {
-        setAssociatedElintPrimaryKeys(new Set());
-        return;
-      }
-
-      try {
-        const asIntelligenceSubject = (selectedUnit as any).$as(intelligenceSubject);
-        const link = (asIntelligenceSubject as any).$link;
-
-        if (!link || !link["com.palantir.ontology.defense-types.linkedIntelligence"]) {
-          setAssociatedElintPrimaryKeys(new Set());
-          return;
-        }
-
-        const { data } = await link["com.palantir.ontology.defense-types.linkedIntelligence"].fetchPage({
-          $pageSize: 1000,
-        });
-
-        const primaryKeys = new Set(data.map((elint: any) => elint.$primaryKey));
-        setAssociatedElintPrimaryKeys(primaryKeys);
-      } catch {
-        setAssociatedElintPrimaryKeys(new Set());
-      }
-    };
-
-    fetchAssociatedElints();
-  }, [selectedUnit, refreshTrigger]);
-
-  const showHoverMarker = (center: [number, number], color: string) => {
-    if (!mapRef.current) return;
-
-    if (hoverMarkerRef.current) {
-      hoverMarkerRef.current.remove();
+    if (associatingElint) {
+      return;
     }
 
-    hoverMarkerRef.current = L.circleMarker(center, {
-      radius: 15,
-      color: color,
-      fillColor: color,
-      fillOpacity: 0.3,
-      weight: 2,
-      opacity: 0.7,
-      interactive: false,
-    }).addTo(mapRef.current);
+    getAssociatedElintPrimaryKeys(selectedUnit).then(setAssociatedElintPrimaryKeys);
+  }, [selectedUnit, associatingElint]);
 
-    hoverMarkerRef.current.bringToFront();
-  };
-
-  const hideHoverMarker = () => {
-    if (hoverMarkerRef.current) {
-      hoverMarkerRef.current.remove();
-      hoverMarkerRef.current = null;
+  useEffect(() => {
+    if (mapRef.current == null || ellipsesLayerRef.current == null) {
+      return;
     }
-  };
-
-
-  useEffect(() => {
-    dispatch(loadMapData());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (!mapRef.current || !ellipsesLayerRef.current) return;
 
     ellipsesLayerRef.current.clearLayers();
     hideHoverMarker();
@@ -217,115 +224,123 @@ const LeftMapContainer: React.FC = () => {
 
     elints.forEach((elintData) => {
       try {
-        const isHostileSelected = selectedUnit && selectedUnit.affiliation?.toLowerCase() === 'hostile';
+        const isHostileSelected = selectedUnit != null && selectedUnit.affiliation?.toLowerCase() === Affiliations.HOSTILE;
 
-        if (elintData.reportedPosition && elintData.reportedPosition.coordinates) {
+        if (elintData.reportedPosition != null && elintData.reportedPosition.coordinates != null) {
           const center: [number, number] = [
             elintData.reportedPosition.coordinates[1],
             elintData.reportedPosition.coordinates[0]
           ];
 
-          const elintPrimaryKey = (elintData as any).$primaryKey;
+          const elintPrimaryKey = String(elintData.$primaryKey);
           const isAssociated = associatedElintPrimaryKeys.has(elintPrimaryKey);
 
-          if (isAssociated && isHostileSelected) {
+          if (isAssociated && isHostileSelected && ellipsesLayerRef.current != null) {
             L.circleMarker(center, {
-              radius: 10,
               color: colors.unitHostileColor,
               fillColor: colors.unitHostileColor,
               fillOpacity: 0.2,
-              weight: 2,
               interactive: false,
-            }).addTo(ellipsesLayerRef.current!);
+              radius: 10,
+              weight: 2,
+            }).addTo(ellipsesLayerRef.current);
           }
 
-          const marker = L.circleMarker(center, {
-            radius: 6,
-            color: colors.elintColor,
-            fillColor: colors.elintColor,
-            fillOpacity: 0.7,
-            weight: 2,
-            className: isHostileSelected ? 'elint-selectable' : '',
-          }).addTo(ellipsesLayerRef.current!);
+          if (ellipsesLayerRef.current != null) {
+            const marker = L.circleMarker(center, {
+              className: isHostileSelected ? 'elint-selectable' : '',
+              color: colors.elintColor,
+              fillColor: colors.elintColor,
+              fillOpacity: 0.7,
+              radius: 6,
+              weight: 2,
+            }).addTo(ellipsesLayerRef.current);
 
-          if (isHostileSelected) {
-            marker.on('mouseover', () => {
-              showHoverMarker(center, colors.elintColor);
-            });
+            if (isHostileSelected) {
+              marker.on('mouseover', () => {
+                showHoverMarker(center, colors.elintColor);
+              });
 
-            marker.on('mouseout', () => {
-              hideHoverMarker();
-            });
+              marker.on('mouseout', () => {
+                hideHoverMarker();
+              });
 
-            marker.on('click', (e) => {
-              e.originalEvent.stopPropagation();
-              hideHoverMarker();
-              dispatch(selectElint(elintData));
-            });
+              marker.on('click', (e) => {
+                e.originalEvent.stopPropagation();
+                hideHoverMarker();
+                selectElint(elintData);
+              });
+            }
           }
         }
       } catch {
         console.error("Malformed ELINT: ", elintData);
       }
     });
-  }, [elints, selectedUnit, dispatch, associatedElintPrimaryKeys]);
+  }, [elints, selectedUnit, selectElint, associatedElintPrimaryKeys, hideHoverMarker, showHoverMarker]);
 
   useEffect(() => {
-    if (!mapRef.current || !collateralConcernsLayerRef.current) return;
+    if (mapRef.current == null || collateralConcernsLayerRef.current == null) {
+      return;
+    }
 
     collateralConcernsLayerRef.current.clearLayers();
-
     const colors = getMapColors();
+    const layerGroup = collateralConcernsLayerRef.current;
 
     collateralConcerns.forEach((concern) => {
       try {
-        const geometry = concern.geometry;
+        const { geometry } = concern;
 
-        if (!geometry) return;
+        if (geometry == null) {
+          return;
+        }
 
-        if (geometry.type === "Polygon" && geometry.coordinates) {
-          const coords = geometry.coordinates[0].map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
+        if (geometry.type === "Polygon" && geometry.coordinates != null) {
+          const coords = geometry.coordinates[0].map<[number, number]>((coord: number[]) => [coord[1], coord[0]]);
           L.polygon(coords, {
             color: colors.collateralConcernColor,
             fillOpacity: 0,
             weight: 4,
-          }).addTo(collateralConcernsLayerRef.current!);
-        } else if (geometry.type === "MultiPolygon" && geometry.coordinates) {
+          }).addTo(layerGroup);
+        } else if (geometry.type === "MultiPolygon" && geometry.coordinates != null) {
           geometry.coordinates.forEach((polygon: number[][][]) => {
-            const coords = polygon[0].map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
+            const coords = polygon[0].map<[number, number]>((coord: number[]) => [coord[1], coord[0]]);
             L.polygon(coords, {
               color: colors.collateralConcernColor,
               fillOpacity: 0,
               weight: 4,
-            }).addTo(collateralConcernsLayerRef.current!);
+            }).addTo(layerGroup);
           });
-        } else if (geometry.type === "LineString" && geometry.coordinates) {
-          const coords = geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
+        } else if (geometry.type === "LineString" && geometry.coordinates != null) {
+          const coords = geometry.coordinates.map<[number, number]>((coord: number[]) => [coord[1], coord[0]]);
           L.polyline(coords, {
             color: colors.collateralConcernColor,
             weight: 4,
-          }).addTo(collateralConcernsLayerRef.current!);
-        } else if (geometry.type === "Point" && geometry.coordinates) {
+          }).addTo(layerGroup);
+        } else if (geometry.type === "Point" && geometry.coordinates != null) {
           const center: [number, number] = [geometry.coordinates[1], geometry.coordinates[0]];
           L.circle(center, {
-            radius: 100,
             color: colors.collateralConcernColor,
             fillOpacity: 0,
+            radius: 100,
             weight: 4,
-          }).addTo(collateralConcernsLayerRef.current!);
+          }).addTo(layerGroup);
         }
       } catch {
-        console.error("Malformed collateral concern geometry: ", concern)
+        console.error("Malformed collateral concern geometry: ", concern);
       }
     });
   }, [collateralConcerns]);
 
   useEffect(() => {
-    if (!mapRef.current || !unitsLayerRef.current) return;
+    if (mapRef.current == null || unitsLayerRef.current == null) {
+      return;
+    }
 
     unitsLayerRef.current.clearLayers();
-
     const colors = getMapColors();
+    const layerGroup = unitsLayerRef.current;
 
     unitLocations.forEach((unitLocation) => {
       try {
@@ -333,57 +348,52 @@ const LeftMapContainer: React.FC = () => {
         const unitColor = getUnitColor(unit.affiliation, colors);
 
         const marker = L.circleMarker([location.lat, location.lng], {
-          radius: 6,
           color: unitColor,
           fillColor: unitColor,
           fillOpacity: 0.7,
+          radius: 6,
           weight: 2,
-        }).addTo(unitsLayerRef.current!);
+        }).addTo(layerGroup);
 
         marker.bindPopup(
-          `<strong>${unit.$title || 'Unit'}</strong><br/>
-           ${unit.affiliation ? `Affiliation: ${unit.affiliation}<br/>` : ''}
-           ${unit.allegiance ? `Allegiance: ${unit.allegiance}` : ''}`
+          `<strong>${unit.$title ?? 'Unit'}</strong><br/>
+           ${unit.affiliation != null ? `Affiliation: ${unit.affiliation}<br/>` : ''}
+           ${unit.allegiance != null ? `Allegiance: ${unit.allegiance}` : ''}`
         );
 
         marker.on('click', () => {
-          dispatch(selectUnit(unit));
+          selectUnit(unit);
         });
       } catch {
         console.error("Malformed unit data: ", unitLocation);
       }
     });
-  }, [unitLocations]);
+  }, [unitLocations, selectUnit]);
 
   useEffect(() => {
-    if (!mapRef.current || !ellipsesLayerRef.current || !collateralConcernsLayerRef.current || !unitsLayerRef.current) return;
-    if (elints.length === 0 && collateralConcerns.length === 0 && unitLocations.length === 0) return;
+    if (
+      mapRef.current == null ||
+      ellipsesLayerRef.current == null ||
+      collateralConcernsLayerRef.current == null ||
+      unitsLayerRef.current == null ||
+      (elints.length === 0 && collateralConcerns.length === 0 && unitLocations.length === 0)
+    ) {
+      return;
+    }
 
     const bounds = L.latLngBounds([]);
 
-    ellipsesLayerRef.current.eachLayer((layer: any) => {
-      if (layer.getBounds) {
+    const extendBounds = (layer: L.Layer) => {
+      if (layer instanceof L.Polyline) {
         bounds.extend(layer.getBounds());
-      } else if (layer.getLatLng) {
+      } else if (layer instanceof L.CircleMarker) {
         bounds.extend(layer.getLatLng());
       }
-    });
+    };
 
-    collateralConcernsLayerRef.current.eachLayer((layer: any) => {
-      if (layer.getBounds) {
-        bounds.extend(layer.getBounds());
-      } else if (layer.getLatLng) {
-        bounds.extend(layer.getLatLng());
-      }
-    });
-
-    unitsLayerRef.current.eachLayer((layer: any) => {
-      if (layer.getBounds) {
-        bounds.extend(layer.getBounds());
-      } else if (layer.getLatLng) {
-        bounds.extend(layer.getLatLng());
-      }
-    });
+    ellipsesLayerRef.current.eachLayer(extendBounds);
+    collateralConcernsLayerRef.current.eachLayer(extendBounds);
+    unitsLayerRef.current.eachLayer(extendBounds);
 
     if (bounds.isValid()) {
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });

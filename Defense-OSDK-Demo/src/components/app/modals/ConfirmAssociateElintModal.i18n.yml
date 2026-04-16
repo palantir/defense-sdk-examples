@@ -4,15 +4,22 @@ messages:
   alreadyAssociatedTitle: ELINT Already Associated
   alreadyAssociatedMessage: "ELINT {{elint}} is already associated with Hostile Unit {{unit}}"
   checkingAssociation: Checking association...
+  loadingAssociatedElints: Checking existing associations...
   unit: Unit
   unitId: Unit ID
+  unitIdLabel: "Unit ID:"
   affiliation: Affiliation
+  affiliationLabel: "Affiliation:"
   elint: ELINT
   elintId: ELINT ID
+  elintIdLabel: "ELINT ID:"
   elnot: ELNOT
+  elnotLabel: "ELNOT:"
   trackQuality: Track Quality
   timestamp: Timestamp
+  timestampLabel: "Timestamp:"
   position: Position
+  positionLabel: "Position:"
   confirm: Confirm
   cancel: Cancel
   ok: OK
@@ -30,13 +37,19 @@ de:
   checkingAssociation: Zuordnung wird überprüft...
   unit: Einheit
   unitId: Einheiten-ID
+  unitIdLabel: "Einheiten-ID:"
   affiliation: Zugehörigkeit
+  affiliationLabel: "Zugehörigkeit:"
   elint: ELINT
   elintId: ELINT-ID
+  elintIdLabel: "ELINT-ID:"
   elnot: ELNOT
+  elnotLabel: "ELNOT:"
   trackQuality: Spurqualität
   timestamp: Zeitstempel
+  timestampLabel: "Zeitstempel:"
   position: Position
+  positionLabel: "Position:"
   confirm: Bestätigen
   cancel: Abbrechen
   ok: OK
@@ -54,13 +67,19 @@ es:
   checkingAssociation: Verificando asociación...
   unit: Unidad
   unitId: ID de unidad
+  unitIdLabel: "ID de unidad:"
   affiliation: Afiliación
+  affiliationLabel: "Afiliación:"
   elint: ELINT
   elintId: ID de ELINT
+  elintIdLabel: "ID de ELINT:"
   elnot: ELNOT
+  elnotLabel: "ELNOT:"
   trackQuality: Calidad de seguimiento
   timestamp: Marca de tiempo
+  timestampLabel: "Marca de tiempo:"
   position: Posición
+  positionLabel: "Posición:"
   confirm: Confirmar
   cancel: Cancelar
   ok: OK
@@ -78,13 +97,19 @@ fr:
   checkingAssociation: Vérification de l'association...
   unit: Unité
   unitId: ID d'unité
+  unitIdLabel: "ID d'unité :"
   affiliation: Affiliation
+  affiliationLabel: "Affiliation :"
   elint: ELINT
   elintId: ID ELINT
+  elintIdLabel: "ID ELINT :"
   elnot: ELNOT
+  elnotLabel: "ELNOT :"
   trackQuality: Qualité de suivi
   timestamp: Horodatage
+  timestampLabel: "Horodatage :"
   position: Position
+  positionLabel: "Position :"
   confirm: Confirmer
   cancel: Annuler
   ok: OK
@@ -102,13 +127,19 @@ ja:
   checkingAssociation: 関連付けを確認しています...
   unit: ユニット
   unitId: ユニットID
+  unitIdLabel: "ユニットID："
   affiliation: 所属
+  affiliationLabel: "所属："
   elint: ELINT
   elintId: ELINT ID
+  elintIdLabel: "ELINT ID："
   elnot: ELNOT
+  elnotLabel: "ELNOT："
   trackQuality: トラック品質
   timestamp: タイムスタンプ
+  timestampLabel: "タイムスタンプ："
   position: 位置
+  positionLabel: "位置："
   confirm: 確認
   cancel: キャンセル
   ok: OK
@@ -126,13 +157,19 @@ ko:
   checkingAssociation: 연관 확인 중...
   unit: 부대
   unitId: 부대 ID
+  unitIdLabel: "부대 ID:"
   affiliation: 소속
+  affiliationLabel: "소속:"
   elint: ELINT
   elintId: ELINT ID
+  elintIdLabel: "ELINT ID:"
   elnot: ELNOT
+  elnotLabel: "ELNOT:"
   trackQuality: 추적 품질
   timestamp: 타임스탬프
+  timestampLabel: "타임스탬프:"
   position: 위치
+  positionLabel: "위치:"
   confirm: 확인
   cancel: 취소
   ok: 확인
@@ -150,13 +187,19 @@ zh:
   checkingAssociation: 正在检查关联...
   unit: 单位
   unitId: 单位ID
+  unitIdLabel: "单位ID："
   affiliation: 隶属关系
+  affiliationLabel: "隶属关系："
   elint: ELINT
   elintId: ELINT ID
+  elintIdLabel: "ELINT ID："
   elnot: ELNOT
+  elnotLabel: "ELNOT："
   trackQuality: 追踪质量
   timestamp: 时间戳
+  timestampLabel: "时间戳："
   position: 位置
+  positionLabel: "位置："
   confirm: 确认
   cancel: 取消
   ok: 确定

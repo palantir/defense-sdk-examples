@@ -17,14 +17,13 @@
 import { Spinner } from "@blueprintjs/core";
 import { SpinnerSize } from "@blueprintjs/core/lib/esm/components/spinner/spinner";
 import React, { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { loadUser } from "../../store/features/osdk/osdkSlice";
-import { RootState } from "../../store/store";
+import { useOsdkData } from "../../context/OsdkDataContext";
+import { isLoading, isLoaded } from "../../types/AsyncLoaded";
 import styles from "./App.module.scss";
 import LeftMapContainer from "./left/LeftMapContainer";
 import RightContainer from "./right/RightContainer";
-import ConfirmAssociateElintModal from "./modals/ConfirmAssociateElintModal";
+import ConfirmAssociateElintModal, { AssociationToaster } from "./modals/ConfirmAssociateElintModal";
 import ThemeSwitcher from "./ThemeSwitcher";
 
 export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
@@ -36,14 +35,7 @@ export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
 const App: React.FC = () => {
   const { t } = useTranslation();
 
-  const user = useSelector((state: RootState) => state.osdk.user);
-  const loadingUser = useSelector((state: RootState) => state.osdk.loadingUser);
-
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(loadUser());
-  }, [dispatch]);
+  const { user: userState } = useOsdkData();
 
   // Set the browser tab title using i18n
   useEffect(() => {
@@ -71,12 +63,12 @@ const App: React.FC = () => {
           </a>
         </div>
         <div className={styles.headerRight}>
-          {loadingUser ? (
+          {isLoading(userState) ? (
             <Spinner size={SpinnerSize.SMALL} />
           ) : (
             <>
               <span className={styles.greeting}>
-                👋 {t('hello')}, {user?.givenName || t('user')}!
+                👋 {t('hello')}, {isLoaded(userState) ? userState.value.givenName : t('user')}!
               </span>
               <ThemeSwitcher />
             </>
@@ -94,8 +86,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
       <ConfirmAssociateElintModal />
+      <AssociationToaster />
     </div>
   );
 };
