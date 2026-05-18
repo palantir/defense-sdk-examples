@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { unit } from "@defense-osdk/sdk";
 import { useOsdkData } from "../../../context/OsdkDataContext";
 import { isLoading, isIdle, isError } from "../../../types/AsyncLoaded";
+import { formatPosition, formatTimestamp } from "../../../utils/formatters";
 import styles from "./TrackedEntityHistory.module.scss";
 
 interface TrackedEntityHistoryProps {
@@ -28,25 +29,6 @@ interface TrackedEntityHistoryProps {
 const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
   const { t } = useTranslation();
   const { observations: observationsState } = useOsdkData();
-
-  const formatTimestamp = (timestamp: string | undefined): string => {
-    if (timestamp == null) {
-      return t("noTimestamp");
-    }
-    try {
-      return new Date(timestamp).toLocaleString();
-    } catch {
-      return timestamp;
-    }
-  };
-
-  const formatPosition = (position: GeoJSON.Point | undefined): string => {
-    if (position == null || position.coordinates.length < 2) {
-      return t("noPosition");
-    }
-    const [lng, lat] = position.coordinates;
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  };
 
   if (isLoading(observationsState) || isIdle(observationsState)) {
     return (
@@ -95,8 +77,8 @@ const TrackedEntityHistory: React.FC<TrackedEntityHistoryProps> = () => {
             <tbody>
               {observations.map((obs, index) => (
                 <tr key={obs.$primaryKey ?? index}>
-                  <td>{formatTimestamp(obs.geotrackableTimestamp)}</td>
-                  <td>{formatPosition(obs.geotrackablePosition)}</td>
+                  <td>{formatTimestamp(obs.geotrackableTimestamp, t("noTimestamp"))}</td>
+                  <td>{formatPosition(obs.geotrackablePosition, t("noPosition"))}</td>
                 </tr>
               ))}
             </tbody>

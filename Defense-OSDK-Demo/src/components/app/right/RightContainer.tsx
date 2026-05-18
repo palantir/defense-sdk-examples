@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useCallback } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { unit } from "@defense-osdk/sdk";
 import { useSelection } from "../../../context/SelectionContext";
 import { useOsdkData } from "../../../context/OsdkDataContext";
 import { isLoaded, isLoading, isError } from "../../../types/AsyncLoaded";
@@ -32,14 +31,6 @@ const RightContainer: React.FC = () => {
   const { selectedUnit, clearSelectedUnit, selectUnit } = useSelection();
   const { unitHierarchy: hierarchyState } = useOsdkData();
 
-  const handleClearSelection = useCallback(() => {
-    clearSelectedUnit();
-  }, [clearSelectedUnit]);
-
-  const handleSelectUnit = useCallback((u: unit.OsdkInstance) => {
-    selectUnit(u);
-  }, [selectUnit]);
-
   // Check unit affiliation
   const affiliation = selectedUnit?.affiliation?.toLowerCase();
   const isHostile = affiliation === Affiliations.HOSTILE;
@@ -49,7 +40,7 @@ const RightContainer: React.FC = () => {
     <div className={styles.container}>
       {selectedUnit ? (
         <div className={styles.content}>
-          <UnitCard unit={selectedUnit} onClose={handleClearSelection} />
+          <UnitCard unit={selectedUnit} onClose={clearSelectedUnit} />
           {isHostile && (
             <>
               <AssociatedELINT unit={selectedUnit} />
@@ -63,7 +54,7 @@ const RightContainer: React.FC = () => {
               children={isLoaded(hierarchyState) ? hierarchyState.value.children : []}
               loading={isLoading(hierarchyState)}
               error={isError(hierarchyState) ? hierarchyState.error.message : undefined}
-              onSelectUnit={handleSelectUnit}
+              onSelectUnit={selectUnit}
             />
           )}
         </div>

@@ -32,7 +32,7 @@ function AuthCallback() {
     auth
       .signIn()
       .then(() => navigate("/", { replace: true }))
-      .catch((e: unknown) => setError((e as Error).message ?? e));
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
   }, [navigate]);
   return <div>{error != null ? error : "Authenticating…"}</div>;
 }

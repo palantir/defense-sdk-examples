@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useSelection } from "../../../context/SelectionContext";
 import { useOsdkData } from "../../../context/OsdkDataContext";
 import { isLoading, isLoaded, isError } from "../../../types/AsyncLoaded";
+import { formatPosition, formatTimestamp } from "../../../utils/formatters";
 import styles from "./ConfirmAssociateElintModal.module.scss";
 
 const AppToaster = Toaster.create({
@@ -59,25 +60,6 @@ const ConfirmAssociateElintModal: React.FC = () => {
 
   const handleCancel = () => {
     clearSelectedElint();
-  };
-
-  const formatPosition = (position: GeoJSON.Point | undefined): string => {
-    if (position == null || position.coordinates.length < 2) {
-      return t("noPosition");
-    }
-    const [lng, lat] = position.coordinates;
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  };
-
-  const formatTimestamp = (timestamp: string | undefined): string => {
-    if (timestamp == null) {
-      return t("notAvailable");
-    }
-    try {
-      return new Date(timestamp).toLocaleString();
-    } catch {
-      return timestamp;
-    }
   };
 
   const unitTitle = selectedUnit?.$title ?? selectedUnit?.$primaryKey ?? t("unknown");
@@ -133,11 +115,11 @@ const ConfirmAssociateElintModal: React.FC = () => {
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.label}>{t("timestampLabel")}</span>
-                  <span className={styles.value}>{formatTimestamp(selectedElint?.reportedTimestamp)}</span>
+                  <span className={styles.value}>{formatTimestamp(selectedElint?.reportedTimestamp, t("notAvailable"))}</span>
                 </div>
                 <div className={styles.detailItem}>
                   <span className={styles.label}>{t("positionLabel")}</span>
-                  <span className={styles.value}>{formatPosition(selectedElint?.reportedPosition)}</span>
+                  <span className={styles.value}>{formatPosition(selectedElint?.reportedPosition, t("noPosition"))}</span>
                 </div>
               </div>
             </div>

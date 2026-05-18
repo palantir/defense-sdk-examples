@@ -18,7 +18,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { unit } from "@defense-osdk/sdk";
 import { useOsdkData } from "../../../context/OsdkDataContext";
-import { isLoading, isIdle, isError, isLoaded } from "../../../types/AsyncLoaded";
+import { isLoading, isIdle, isError } from "../../../types/AsyncLoaded";
+import { formatPosition, formatDimensions } from "../../../utils/formatters";
 import styles from "./AssociatedElint.module.scss";
 
 interface AssociatedELINTProps {
@@ -28,21 +29,6 @@ interface AssociatedELINTProps {
 const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
   const { t } = useTranslation();
   const { associatedElints: elintsState } = useOsdkData();
-
-  const formatPosition = (position: GeoJSON.Point | undefined): string => {
-    if (position == null || position.coordinates.length < 2) {
-      return t("noPosition");
-    }
-    const [lng, lat] = position.coordinates;
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  };
-
-  const formatDimensions = (semiMajor: number | undefined, semiMinor: number | undefined): string => {
-    if (semiMajor === undefined || semiMinor === undefined) {
-      return t("notAvailable");
-    }
-    return `${semiMajor.toFixed(0)}m × ${semiMinor.toFixed(0)}m`;
-  };
 
   if (isLoading(elintsState) || isIdle(elintsState)) {
     return (
@@ -66,7 +52,7 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
     );
   }
 
-  const elints = isLoaded(elintsState) ? elintsState.value : [];
+  const elints = elintsState.value;
   const isEmpty = elints.length === 0;
 
   return (
@@ -97,8 +83,8 @@ const AssociatedELINT: React.FC<AssociatedELINTProps> = () => {
               {elints.map((elintReport, index) => (
                 <tr key={elintReport.$primaryKey ?? index}>
                   <td>{elintReport.$title ?? elintReport.$primaryKey ?? `ELINT-${index + 1}`}</td>
-                  <td>{formatPosition(elintReport.reportedPosition)}</td>
-                  <td>{formatDimensions(elintReport.semiMajorAxisMeters, elintReport.semiMinorAxisMeters)}</td>
+                  <td>{formatPosition(elintReport.reportedPosition, t("noPosition"))}</td>
+                  <td>{formatDimensions(elintReport.semiMajorAxisMeters, elintReport.semiMinorAxisMeters, t("notAvailable"))}</td>
                   <td>{elintReport.axisOrientation != null ? `${elintReport.axisOrientation.toFixed(1)}°` : t("notAvailable")}</td>
                 </tr>
               ))}
