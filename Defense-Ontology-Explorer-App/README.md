@@ -16,15 +16,20 @@ To use the application, select a domain from the diagram on the main page to see
 #### Developer Console
 
 1. Create a new public client Developer Console Application with Ontology Resources and call it `Defense Ontology Explorer App`
+   1. Select "Client-facing application"
+   2. Autofill `http://localhost:8080/auth/callback` for the redirect URL
    <br />
 
-2. Under the _Data Resources_ tab, add all of the Defense Ontology interfaces and implementing object types
+2. Under _OAuth & restrictions_, select "Unrestricted" for resource and operation restrictions.
+   1. This will allow you to exclusively interact with the interfaces, without having to udpate your OSDK with concrete object type implementations every time you apply the Defense Ontology.
+   2. If you elect to keep your application restricted, you will need to add underlying object type implementations of the Defense Ontolgoy to your OSDK.
    <br />
 
-3. To leverage the media iconography rendering, you will need to add additional Platform SDK resources, specifically the `Media sets read permission`
+3. Under the _Data Resources_ tab, add all of the Defense Ontology interfaces
+   1. If you elected to keep your application restricted in (2), you will need to add concrete object type implementations of the Defense Ontolgoy to your OSDK.
    <br />
 
-4. Generate a new SDK version and be sure to enable beta SDK features
+4. Generate a new SDK version (npm) and be sure to enable beta SDK features
    <br />
 
 #### Run Locally
@@ -36,8 +41,7 @@ To use the application, select a domain from the diagram on the main page to see
 
 2. Navigate to the OAuth & Scopes page of your developer console application
 
-   1. Add `http://localhost:8080/auth/callback` as a redirect URL
-   2. Copy the client ID under "App Credentials"
+   1. Copy the client ID under "App Credentials"
       <br />
 
 3. Edit the `.env.development` file in this cloned repository and set the values:
