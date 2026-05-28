@@ -37,7 +37,6 @@ import {
   setSelectedInterface,
   setSelectedObjectType,
   setSelectedObjectPrimaryKey,
-  fetchFullObjectStart,
   resetLoadingStates,
 } from "../features/osdk/slice";
 import { OntologyCategory } from "../features/osdk/types";
@@ -220,7 +219,6 @@ const Domain: React.FC = () => {
                             onClick={() => {
                               dispatch(setSelectedObjectType(objectType));
                               dispatch(setSelectedObjectPrimaryKey(null));
-                              dispatch(fetchFullObjectStart());
                             }}
                             className={
                               selectedObjectType === objectType
@@ -234,7 +232,9 @@ const Domain: React.FC = () => {
                       </tbody>
                     </table>
                   ) : (
-                    <ComingSoon />
+                    <div className={styles.comingSoonWrapper}>
+                      <span>No object types found</span>
+                    </div>
                   )}
                 </div>
               )}
@@ -251,36 +251,50 @@ const Domain: React.FC = () => {
                   {loadingObjects ? (
                     <LoadingSpinner />
                   ) : interfaceObjects.filter(
-                      (obj) => obj.$objectType === selectedObjectType
+                      (obj) => obj.$objectType === selectedObjectType && obj.$primaryKey !== null
                     ).length > 0 ? (
                     <table className={styles.interfaceTable}>
                       <tbody className={styles.tableBody}>
                         {interfaceObjects
                           .filter(
-                            (obj) => obj.$objectType === selectedObjectType
+                            (obj) => obj.$objectType === selectedObjectType && obj.$primaryKey !== null
                           )
-                          .map((obj, index) => (
-                            <tr
-                              key={index}
-                              onClick={() => {
-                                dispatch(
-                                  setSelectedObjectPrimaryKey(obj.$primaryKey)
-                                );
-                                dispatch(fetchFullObjectStart());
-                              }}
-                              className={
-                                selectedObjectPrimaryKey === obj.$primaryKey
-                                  ? styles.selectedRow
-                                  : ""
-                              }
-                            >
-                              <td>{obj.$title || obj.$primaryKey}</td>
-                            </tr>
-                          ))}
+                          .map((obj, index) => {
+                            const displayText = obj.$title || obj.$primaryKey;
+                            return (
+                              <tr
+                                key={index}
+                                onClick={() => {
+                                  dispatch(
+                                    setSelectedObjectPrimaryKey(obj.$primaryKey)
+                                  );
+                                }}
+                                className={
+                                  selectedObjectPrimaryKey === obj.$primaryKey
+                                    ? styles.selectedRow
+                                    : ""
+                                }
+                              >
+                                <td
+                                  title={displayText}
+                                  style={{
+                                    maxWidth: "200px",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
+                                  }}
+                                >
+                                  {displayText}
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   ) : (
-                    <ComingSoon />
+                    <div className={styles.comingSoonWrapper}>
+                      <span>No {selectedObjectType} objects</span>
+                    </div>
                   )}
                 </div>
               )}

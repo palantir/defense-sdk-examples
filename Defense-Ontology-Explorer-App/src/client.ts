@@ -35,9 +35,6 @@ function checkEnv(
 }
 
 export const auth = createPublicOauthClient(clientId, url, redirectUrl);
-/**
- * Initialize the client to interact with the Ontology SDK
- */
 const client: Client = createClient(url, $ontologyRid, auth);
 
 export default client;
