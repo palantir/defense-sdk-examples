@@ -41,3 +41,4 @@ export const auth = createPublicOauthClient(clientId, url, redirectUrl);
 const client: Client = createClient(url, $ontologyRid, auth);
 
 export default client;
+export { url as foundryUrl, $ontologyRid };

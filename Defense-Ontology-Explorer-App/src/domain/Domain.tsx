@@ -234,7 +234,9 @@ const Domain: React.FC = () => {
                       </tbody>
                     </table>
                   ) : (
-                    <ComingSoon />
+                    <div className={styles.comingSoonWrapper}>
+                      <span>No object types found</span>
+                    </div>
                   )}
                 </div>
               )}
@@ -251,13 +253,13 @@ const Domain: React.FC = () => {
                   {loadingObjects ? (
                     <LoadingSpinner />
                   ) : interfaceObjects.filter(
-                      (obj) => obj.$objectType === selectedObjectType
+                      (obj) => obj.$objectType === selectedObjectType && obj.$primaryKey !== null
                     ).length > 0 ? (
                     <table className={styles.interfaceTable}>
                       <tbody className={styles.tableBody}>
                         {interfaceObjects
                           .filter(
-                            (obj) => obj.$objectType === selectedObjectType
+                            (obj) => obj.$objectType === selectedObjectType && obj.$primaryKey !== null
                           )
                           .map((obj, index) => (
                             <tr
@@ -280,7 +282,9 @@ const Domain: React.FC = () => {
                       </tbody>
                     </table>
                   ) : (
-                    <ComingSoon />
+                    <div className={styles.comingSoonWrapper}>
+                      <span>No {selectedObjectType} objects</span>
+                    </div>
                   )}
                 </div>
               )}

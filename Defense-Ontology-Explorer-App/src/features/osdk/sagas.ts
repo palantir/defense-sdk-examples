@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { call, put, takeLatest, select, all } from "redux-saga/effects";
-import client from "../../client";
+import client, { auth, foundryUrl, $ontologyRid } from "../../client";
 import {
   fetchDomainsSuccess,
   fetchDomainsFailure,
@@ -30,48 +30,19 @@ import {
   selectSelectedObjectType,
   selectSelectedObjectPrimaryKey,
   selectDomainMap,
+  selectInterfaceObjects,
 } from "./selectors";
 import * as $DefenseOntology from "@defense-ontology-explorer-app/sdk";
 import { SagaIterator } from "redux-saga";
 
 function* fetchDomainsSaga(): SagaIterator {
   try {
-    const objects =  yield select(selectDomainMap);
-    console.log("todo got objects: ", objects);
+    const existingDomainMap = yield select(selectDomainMap);
 
-    const domainMap: { [key in DomainCategory]?: DomainMetadata } = {};
-
-    Object.keys(objects).forEach((key) => {
-  const obj: DomainMetadata = objects[key];
-  console.log("todo domain: ", obj);
-
-    let status: string;
-    switch (obj.status) {
-      case "COMING_SOON":
-        status = "time";
-        break;
-      case "UNDER_DEVELOPMENT":
-        status = "build";
-        break;
-      case "PUBLISHED":
-        status = "tag-add";
-        break;
-      default:
-        status = "unknown";
-    }
-
-      const categoryKey = obj.title as keyof typeof DomainCategory;
-      if (DomainCategory[categoryKey]) {
-        domainMap[DomainCategory[categoryKey]] = {
-          title: obj.title || "Untitled",
-          description: obj.description || "No description available",
-          interfaces: obj.interfaces || [],
-          status: status,
-        };
-      }
-    });
-
-    yield put(fetchDomainsSuccess(domainMap));
+    // The domain map is already populated with static data in initialState.
+    // This saga just confirms it's loaded successfully.
+    // No need to reprocess - just pass through the existing map.
+    yield put(fetchDomainsSuccess(existingDomainMap));
   } catch (error) {
     yield put(
       fetchDomainsFailure(
@@ -88,19 +59,71 @@ function* fetchInterfaceObjectsSaga(): SagaIterator {
   if (selectedInterface) {
     try {
       yield put(fetchInterfaceObjectsStart());
+      console.log("Fetching interface:", selectedInterface);
       const InterfaceType = ($DefenseOntology as any)[selectedInterface];
       if (!InterfaceType) {
         throw new Error(`Interface ${String(selectedInterface)} not found`);
       }
+      console.log("Found interface type:", InterfaceType);
 
       const fetchObjects = async () => {
-        const objects: any[] = [];
-        for await (const obj of client(InterfaceType).asyncIter()) {
-          objects.push(obj);
+        const interfaceApiName = InterfaceType.apiName;
+
+        // Make a direct API call to get the raw response with metadata
+        const token = await auth();
+        const response = await fetch(
+          `${foundryUrl}/api/v2/ontologies/${$ontologyRid}/objectSets/loadObjectsMultipleObjectTypes?preview=true`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+              "x-osdk-request-context": JSON.stringify({ finalMethodCall: "fetchPage" }),
+            },
+            body: JSON.stringify({
+              objectSet: {
+                type: "interfaceBase",
+                interfaceType: interfaceApiName,
+              },
+              select: [],
+              selectV2: [],
+              loadPropertySecurities: false,
+              excludeRid: true,
+              snapshot: false,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
         }
-        return objects;
+
+        const result = await response.json();
+        console.log("Raw API result:", result);
+
+        // If we have actual object data, return it
+        if (result.data && result.data.length > 0) {
+          return result.data;
+        }
+
+        // Otherwise, extract object types from metadata
+        if (result.interfaceToObjectTypeMappings) {
+          const mappings = result.interfaceToObjectTypeMappings[interfaceApiName] || {};
+          const objectTypes = Object.keys(mappings);
+
+          console.log(`Found ${objectTypes.length} object types from metadata:`, objectTypes);
+
+          // Create stub objects with just the $objectType field
+          return objectTypes.map(objectType => ({
+            $objectType: objectType,
+            $primaryKey: null,
+          }));
+        }
+
+        return [];
       };
       const objects = yield call(fetchObjects);
+      console.log(`Fetched ${objects.length} objects for interface ${selectedInterface}`, objects.slice(0, 3));
       yield put(fetchInterfaceObjectsSuccess(objects));
     } catch (error) {
       yield put(
@@ -108,6 +131,74 @@ function* fetchInterfaceObjectsSaga(): SagaIterator {
           error instanceof Error
             ? error.message
             : "Error fetching interface objects"
+        )
+      );
+    }
+  }
+}
+
+function* fetchObjectsByTypeSaga(): SagaIterator {
+  const selectedObjectType = yield select(selectSelectedObjectType);
+  if (selectedObjectType) {
+    try {
+      yield put(fetchInterfaceObjectsStart());
+      console.log("Fetching objects for type:", selectedObjectType);
+
+      // Get existing interfaceObjects (which contains the object type stubs)
+      const existingObjects = yield select(selectInterfaceObjects);
+
+      const fetchByType = async () => {
+        const token = await auth();
+        const response = await fetch(
+          `${foundryUrl}/api/v2/ontologies/${$ontologyRid}/objectSets/loadObjectsMultipleObjectTypes?preview=true`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+              "x-osdk-request-context": JSON.stringify({ finalMethodCall: "fetchPage" }),
+            },
+            body: JSON.stringify({
+              objectSet: {
+                type: "base",
+                objectType: selectedObjectType,
+              },
+              select: [],
+              selectV2: [],
+              loadPropertySecurities: false,
+              excludeRid: false,
+              snapshot: false,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+      };
+
+      const result = yield call(fetchByType);
+      console.log("Objects by type result:", result);
+
+      // Remove existing objects of this type (if any) and the stub, then add the new ones
+      const filteredObjects = existingObjects.filter(
+        (obj: any) => obj.$objectType !== selectedObjectType
+      );
+
+      // If we got actual objects, add them; otherwise add back the stub
+      const updatedObjects = result.data && result.data.length > 0
+        ? [...filteredObjects, ...result.data]
+        : [...filteredObjects, { $objectType: selectedObjectType, $primaryKey: null }];
+
+      yield put(fetchInterfaceObjectsSuccess(updatedObjects));
+    } catch (error) {
+      yield put(
+        fetchInterfaceObjectsFailure(
+          error instanceof Error
+            ? error.message
+            : "Error fetching objects by type"
         )
       );
     }
@@ -165,7 +256,7 @@ export function* osdkSaga() {
   yield all([
     takeLatest("osdk/fetchDomainsStart", fetchDomainsSaga),
     takeLatest("osdk/setSelectedInterface", fetchInterfaceObjectsSaga),
-    takeLatest("osdk/setSelectedObjectType", fetchInterfaceObjectsSaga),
+    takeLatest("osdk/setSelectedObjectType", fetchObjectsByTypeSaga),
     takeLatest("osdk/setSelectedObjectPrimaryKey", fetchFullObjectSaga),
   ]);
 }
