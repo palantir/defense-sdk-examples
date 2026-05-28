@@ -17,7 +17,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DomainCategory, DomainMetadata, OsdkState } from "./types";
 import { DOMAIN_INTERFACE_MAPPINGS } from "./domainMappings";
 
-// Create static domain map from the generated mappings
 const staticDomainMap: { [key in DomainCategory]?: DomainMetadata } = {
   [DomainCategory.targetingFires]: {
     title: "Targeting and Fires",
@@ -84,7 +83,6 @@ const osdkSlice = createSlice({
       state.selectedDomain = action.payload;
     },
     fetchDomainsStart(state) {
-      // No longer needed - using static mappings
       state.loadingInterfaces = false;
       state.errors.fetchDomains = null;
     },
@@ -92,7 +90,6 @@ const osdkSlice = createSlice({
       state,
       action: PayloadAction<{ [key in DomainCategory]?: DomainMetadata }>
     ) {
-      // No longer needed - using static mappings
       state.loadingInterfaces = false;
     },
     fetchDomainsFailure(state, action: PayloadAction<string>) {
@@ -107,12 +104,19 @@ const osdkSlice = createSlice({
     },
     setSelectedObjectPrimaryKey(state, action: PayloadAction<string | null>) {
       state.selectedObjectPrimaryKey = action.payload;
+      if (action.payload) {
+        const selectedObject = state.interfaceObjects.find(
+          (obj: any) => obj.$primaryKey === action.payload
+        );
+        state.selectedObject = selectedObject || null;
+      } else {
+        state.selectedObject = null;
+      }
     },
     setSelectedObjectType(state, action: PayloadAction<string | null>) {
       state.selectedObjectType = action.payload;
       state.selectedObject = null;
       state.selectedObjectPrimaryKey = null;
-      state.loadingObjectTypes = true;
     },
     fetchInterfaceObjectsStart(state) {
       state.loadingObjectTypes = true;
