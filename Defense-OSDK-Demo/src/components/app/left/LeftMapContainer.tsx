@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Spinner } from "@blueprintjs/core";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -89,7 +89,8 @@ async function getAssociatedElintPrimaryKeys(selectedUnit?: unit.OsdkInstance): 
     });
 
     return new Set(data.map((d) => String(d.$primaryKey)));
-  } catch {
+  } catch (err) {
+    console.warn("Failed to fetch associated ELINT keys:", err);
     return new Set();
   }
 }
@@ -114,6 +115,8 @@ const LeftMapContainer: React.FC = () => {
   const associatingElint = isLoading(elintAssociation);
 
   const [associatedElintPrimaryKeys, setAssociatedElintPrimaryKeys] = useState<Set<string>>(new Set());
+
+  const mapColors = useMemo(() => getMapColors(), [theme]);
 
   const showHoverMarker = useCallback((center: [number, number], color: string) => {
     if (mapRef.current == null) {
@@ -209,7 +212,16 @@ const LeftMapContainer: React.FC = () => {
       return;
     }
 
-    getAssociatedElintPrimaryKeys(selectedUnit).then(setAssociatedElintPrimaryKeys);
+    let cancelled = false;
+    getAssociatedElintPrimaryKeys(selectedUnit).then((keys) => {
+      if (!cancelled) {
+        setAssociatedElintPrimaryKeys(keys);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedUnit, associatingElint]);
 
   useEffect(() => {
@@ -220,7 +232,7 @@ const LeftMapContainer: React.FC = () => {
     ellipsesLayerRef.current.clearLayers();
     hideHoverMarker();
 
-    const colors = getMapColors();
+    const colors = mapColors;
 
     elints.forEach((elintData) => {
       try {
@@ -277,7 +289,7 @@ const LeftMapContainer: React.FC = () => {
         console.error("Malformed ELINT: ", elintData);
       }
     });
-  }, [elints, selectedUnit, selectElint, associatedElintPrimaryKeys, hideHoverMarker, showHoverMarker]);
+  }, [elints, selectedUnit, selectElint, associatedElintPrimaryKeys, hideHoverMarker, showHoverMarker, mapColors]);
 
   useEffect(() => {
     if (mapRef.current == null || collateralConcernsLayerRef.current == null) {
@@ -285,7 +297,7 @@ const LeftMapContainer: React.FC = () => {
     }
 
     collateralConcernsLayerRef.current.clearLayers();
-    const colors = getMapColors();
+    const colors = mapColors;
     const layerGroup = collateralConcernsLayerRef.current;
 
     collateralConcerns.forEach((concern) => {
@@ -331,7 +343,7 @@ const LeftMapContainer: React.FC = () => {
         console.error("Malformed collateral concern geometry: ", concern);
       }
     });
-  }, [collateralConcerns]);
+  }, [collateralConcerns, mapColors]);
 
   useEffect(() => {
     if (mapRef.current == null || unitsLayerRef.current == null) {
@@ -339,7 +351,7 @@ const LeftMapContainer: React.FC = () => {
     }
 
     unitsLayerRef.current.clearLayers();
-    const colors = getMapColors();
+    const colors = mapColors;
     const layerGroup = unitsLayerRef.current;
 
     unitLocations.forEach((unitLocation) => {
@@ -368,7 +380,7 @@ const LeftMapContainer: React.FC = () => {
         console.error("Malformed unit data: ", unitLocation);
       }
     });
-  }, [unitLocations, selectUnit]);
+  }, [unitLocations, selectUnit, mapColors]);
 
   useEffect(() => {
     if (

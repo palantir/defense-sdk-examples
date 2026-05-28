@@ -26,12 +26,6 @@ import RightContainer from "./right/RightContainer";
 import ConfirmAssociateElintModal, { AssociationToaster } from "./modals/ConfirmAssociateElintModal";
 import ThemeSwitcher from "./ThemeSwitcher";
 
-export const AppAuthGate: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  return <>{children}</>;
-};
-
 const App: React.FC = () => {
   const { t } = useTranslation();
 

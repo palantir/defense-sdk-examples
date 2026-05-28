@@ -15,7 +15,8 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { User, Users } from "@osdk/foundry.admin";
+import type { User } from "@osdk/foundry.admin";
+import { Users } from "@osdk/foundry.admin";
 import {
   unit,
   elint,
@@ -73,7 +74,7 @@ async function fetchUnitLocations(): Promise<Array<{ unit: unit.OsdkInstance; lo
   const result = await unitClient.fetchPage();
   const units: unit.OsdkInstance[] = result.data;
 
-  if (!units || units.length === 0) {
+  if (units == null || units.length === 0) {
     return [];
   }
 
@@ -97,7 +98,7 @@ async function fetchUnitLocations(): Promise<Array<{ unit: unit.OsdkInstance; lo
 
         const position = data[0]?.geotrackablePosition;
 
-        if (position == null || !position.coordinates || position.coordinates.length !== 2) {
+        if (position == null || position.coordinates == null || position.coordinates.length !== 2) {
           return undefined;
         }
 
@@ -118,56 +119,48 @@ async function fetchUnitLocations(): Promise<Array<{ unit: unit.OsdkInstance; lo
   return results.filter((r): r is UnitLocation => r != null);
 }
 
-async function getImmediateChildUnits(nodeId: string | number): Promise<unit.OsdkInstance[]> {
+const HIERARCHY_DIRECTION = {
+  parent: { filterKey: OntologyLinkTypes.HIERARCHY_CHILD_ID, extractKey: OntologyLinkTypes.HIERARCHY_PARENT_ID },
+  child: { filterKey: OntologyLinkTypes.HIERARCHY_PARENT_ID, extractKey: OntologyLinkTypes.HIERARCHY_CHILD_ID },
+} as const;
+
+type HierarchyDirection = keyof typeof HIERARCHY_DIRECTION;
+
+async function getRelatedUnits(nodeId: string | number, direction: HierarchyDirection): Promise<unit.OsdkInstance[]> {
+  const { filterKey, extractKey } = HIERARCHY_DIRECTION[direction];
+
   try {
     const { data: relationships } = await client(unitHierarchyNodeRelationship)
       .where({
-        [OntologyLinkTypes.HIERARCHY_PARENT_ID]: String(nodeId),
+        [filterKey]: String(nodeId),
       })
       .fetchPage({ $pageSize: 1000 });
 
-    const childIds = relationships
-      .map((rel) => rel[OntologyLinkTypes.HIERARCHY_CHILD_ID])
+    const relatedIds = relationships
+      .map((rel) => rel[extractKey])
       .filter((id): id is string => id != null);
 
-    if (childIds.length === 0) {
+    if (relatedIds.length === 0) {
       return [];
     }
 
     const { data: allUnits } = await client(unit).fetchPage({ $pageSize: 10000 });
-    return childIds
-      .map(childId => allUnits.find((u) => u.$primaryKey === childId))
+    const unitMap = new Map(allUnits.map((u) => [u.$primaryKey, u]));
+    return relatedIds
+      .map(id => unitMap.get(id))
       .filter((u): u is unit.OsdkInstance => u !== undefined);
   } catch (err) {
-    console.error(`Error fetching children for node ${nodeId}:`, err);
+    console.error(`Error fetching ${direction}s for node ${nodeId}:`, err);
     return [];
   }
 }
 
 async function getImmediateParentUnits(nodeId: string | number): Promise<unit.OsdkInstance[]> {
-  try {
-    const { data: relationships } = await client(unitHierarchyNodeRelationship)
-      .where({
-        [OntologyLinkTypes.HIERARCHY_CHILD_ID]: String(nodeId),
-      })
-      .fetchPage({ $pageSize: 1000 });
+  return getRelatedUnits(nodeId, "parent");
+}
 
-    const parentIds = relationships
-      .map((rel) => rel[OntologyLinkTypes.HIERARCHY_PARENT_ID])
-      .filter((id): id is string => id != null);
-
-    if (parentIds.length === 0) {
-      return [];
-    }
-
-    const { data: allUnits } = await client(unit).fetchPage({ $pageSize: 10000 });
-    return parentIds
-      .map(parentId => allUnits.find((u) => u.$primaryKey === parentId))
-      .filter((u): u is unit.OsdkInstance => u !== undefined);
-  } catch (err) {
-    console.error(`Error fetching parents for node ${nodeId}:`, err);
-    return [];
-  }
+async function getImmediateChildUnits(nodeId: string | number): Promise<unit.OsdkInstance[]> {
+  return getRelatedUnits(nodeId, "child");
 }
 
 async function fetchUnitHierarchy(unitInstance: unit.OsdkInstance): Promise<UnitHierarchyData> {
@@ -196,7 +189,7 @@ async function fetchAssociatedElintsForUnit(unitInstance: unit.OsdkInstance): Pr
   const linkedIntelligence = link[OntologyLinkTypes.LINKED_INTELLIGENCE];
   const result = await linkedIntelligence.fetchPage({ $pageSize: 100 });
   return result.data
-    .map((d) => { try { return d.$as(elint); } catch { return undefined; } })
+    .map((d) => { try { return d.$as(elint); } catch (err) { console.warn("Failed to convert to elint:", err); return undefined; } })
     .filter((d): d is elint.OsdkInstance => d != null);
 }
 
@@ -301,23 +294,31 @@ export const OsdkDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
+    let cancelled = false;
+    const guardedSet = <V,>(setter: (s: AsyncLoaded<V>) => void) =>
+      (s: AsyncLoaded<V>) => { if (!cancelled) { setter(s); } };
+
     const affiliation = selectedUnit.affiliation?.toLowerCase();
     const isFriendly = affiliation?.includes(Affiliations.FRIEND);
     const isHostile = affiliation === Affiliations.HOSTILE;
 
     if (isFriendly) {
-      runAsync(setUnitHierarchy, () => fetchUnitHierarchy(selectedUnit));
+      runAsync(guardedSet(setUnitHierarchy), () => fetchUnitHierarchy(selectedUnit));
     } else {
       setUnitHierarchy(IDLE);
     }
 
     if (isHostile) {
-      runAsync(setAssociatedElints, () => fetchAssociatedElintsForUnit(selectedUnit));
-      runAsync(setObservations, () => fetchObservationsForUnit(selectedUnit));
+      runAsync(guardedSet(setAssociatedElints), () => fetchAssociatedElintsForUnit(selectedUnit));
+      runAsync(guardedSet(setObservations), () => fetchObservationsForUnit(selectedUnit));
     } else {
       setAssociatedElints(IDLE);
       setObservations(IDLE);
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedUnit]);
 
   const refreshAssociatedElints = useCallback(async (unitInstance: unit.OsdkInstance) => {
