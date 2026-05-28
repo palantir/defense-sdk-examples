@@ -38,10 +38,6 @@ import { SagaIterator } from "redux-saga";
 function* fetchDomainsSaga(): SagaIterator {
   try {
     const existingDomainMap = yield select(selectDomainMap);
-
-    // The domain map is already populated with static data in initialState.
-    // This saga just confirms it's loaded successfully.
-    // No need to reprocess - just pass through the existing map.
     yield put(fetchDomainsSuccess(existingDomainMap));
   } catch (error) {
     yield put(
@@ -59,17 +55,13 @@ function* fetchInterfaceObjectsSaga(): SagaIterator {
   if (selectedInterface) {
     try {
       yield put(fetchInterfaceObjectsStart());
-      console.log("Fetching interface:", selectedInterface);
       const InterfaceType = ($DefenseOntology as any)[selectedInterface];
       if (!InterfaceType) {
         throw new Error(`Interface ${String(selectedInterface)} not found`);
       }
-      console.log("Found interface type:", InterfaceType);
 
       const fetchObjects = async () => {
         const interfaceApiName = InterfaceType.apiName;
-
-        // Make a direct API call to get the raw response with metadata
         const token = await auth();
         const response = await fetch(
           `${foundryUrl}/api/v2/ontologies/${$ontologyRid}/objectSets/loadObjectsMultipleObjectTypes?preview=true`,
@@ -99,21 +91,15 @@ function* fetchInterfaceObjectsSaga(): SagaIterator {
         }
 
         const result = await response.json();
-        console.log("Raw API result:", result);
 
-        // If we have actual object data, return it
         if (result.data && result.data.length > 0) {
           return result.data;
         }
 
-        // Otherwise, extract object types from metadata
         if (result.interfaceToObjectTypeMappings) {
           const mappings = result.interfaceToObjectTypeMappings[interfaceApiName] || {};
           const objectTypes = Object.keys(mappings);
 
-          console.log(`Found ${objectTypes.length} object types from metadata:`, objectTypes);
-
-          // Create stub objects with just the $objectType field
           return objectTypes.map(objectType => ({
             $objectType: objectType,
             $primaryKey: null,
@@ -123,7 +109,6 @@ function* fetchInterfaceObjectsSaga(): SagaIterator {
         return [];
       };
       const objects = yield call(fetchObjects);
-      console.log(`Fetched ${objects.length} objects for interface ${selectedInterface}`, objects.slice(0, 3));
       yield put(fetchInterfaceObjectsSuccess(objects));
     } catch (error) {
       yield put(
@@ -142,9 +127,6 @@ function* fetchObjectsByTypeSaga(): SagaIterator {
   if (selectedObjectType) {
     try {
       yield put(fetchInterfaceObjectsStart());
-      console.log("Fetching objects for type:", selectedObjectType);
-
-      // Get existing interfaceObjects (which contains the object type stubs)
       const existingObjects = yield select(selectInterfaceObjects);
 
       const fetchByType = async () => {
@@ -180,14 +162,11 @@ function* fetchObjectsByTypeSaga(): SagaIterator {
       };
 
       const result = yield call(fetchByType);
-      console.log("Objects by type result:", result);
 
-      // Remove existing objects of this type (if any) and the stub, then add the new ones
       const filteredObjects = existingObjects.filter(
         (obj: any) => obj.$objectType !== selectedObjectType
       );
 
-      // If we got actual objects, add them; otherwise add back the stub
       const updatedObjects = result.data && result.data.length > 0
         ? [...filteredObjects, ...result.data]
         : [...filteredObjects, { $objectType: selectedObjectType, $primaryKey: null }];
@@ -242,7 +221,6 @@ function* fetchFullObjectSaga(): SagaIterator {
         fetchFullObjectSuccess({ ...serializableObject, mediaContent })
       );
     } catch (error) {
-      console.log("Error fetching object: ", error);
       yield put(
         fetchFullObjectFailure(
           error instanceof Error ? error.message : "Error fetching object"
