@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-// Blueprint component overrides require !important because Blueprint's
-// internal class selectors have high specificity that cannot be matched
-// by a single wrapper class. This is the standard approach for theming
-// Blueprint applications.
+// !important needed to override Blueprint's high-specificity internal selectors.
 
 /* ============================================
    RETRO THEME - Comic Book/Pop Art Aesthetic

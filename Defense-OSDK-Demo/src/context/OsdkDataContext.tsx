@@ -119,13 +119,15 @@ async function fetchUnitLocations(): Promise<Array<{ unit: unit.OsdkInstance; lo
   return results.filter((r): r is UnitLocation => r != null);
 }
 
-async function getRelatedUnits(nodeId: string | number, direction: "parent" | "child"): Promise<unit.OsdkInstance[]> {
-  const filterKey = direction === "child"
-    ? OntologyLinkTypes.HIERARCHY_PARENT_ID
-    : OntologyLinkTypes.HIERARCHY_CHILD_ID;
-  const extractKey = direction === "child"
-    ? OntologyLinkTypes.HIERARCHY_CHILD_ID
-    : OntologyLinkTypes.HIERARCHY_PARENT_ID;
+const HIERARCHY_DIRECTION = {
+  parent: { filterKey: OntologyLinkTypes.HIERARCHY_CHILD_ID, extractKey: OntologyLinkTypes.HIERARCHY_PARENT_ID },
+  child: { filterKey: OntologyLinkTypes.HIERARCHY_PARENT_ID, extractKey: OntologyLinkTypes.HIERARCHY_CHILD_ID },
+} as const;
+
+type HierarchyDirection = keyof typeof HIERARCHY_DIRECTION;
+
+async function getRelatedUnits(nodeId: string | number, direction: HierarchyDirection): Promise<unit.OsdkInstance[]> {
+  const { filterKey, extractKey } = HIERARCHY_DIRECTION[direction];
 
   try {
     const { data: relationships } = await client(unitHierarchyNodeRelationship)
@@ -153,6 +155,14 @@ async function getRelatedUnits(nodeId: string | number, direction: "parent" | "c
   }
 }
 
+async function getImmediateParentUnits(nodeId: string | number): Promise<unit.OsdkInstance[]> {
+  return getRelatedUnits(nodeId, "parent");
+}
+
+async function getImmediateChildUnits(nodeId: string | number): Promise<unit.OsdkInstance[]> {
+  return getRelatedUnits(nodeId, "child");
+}
+
 async function fetchUnitHierarchy(unitInstance: unit.OsdkInstance): Promise<UnitHierarchyData> {
   const nodeId = unitInstance.$primaryKey;
 
@@ -161,8 +171,8 @@ async function fetchUnitHierarchy(unitInstance: unit.OsdkInstance): Promise<Unit
   }
 
   const [parents, children] = await Promise.all([
-    getRelatedUnits(nodeId, "parent"),
-    getRelatedUnits(nodeId, "child"),
+    getImmediateParentUnits(nodeId),
+    getImmediateChildUnits(nodeId),
   ]);
 
   return { parents, children };
