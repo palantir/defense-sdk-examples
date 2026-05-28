@@ -1,0 +1,190 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "@blueprintjs/core/lib/scss/variables" as bp;
+
+/* ============================================
+   🎨 DEFENSE OSDK DEMO - SHARED VARIABLES
+   ============================================
+
+   This file contains only shared variables that
+   are theme-independent. Individual theme styling
+   is managed in src/themes/*.scss files.
+
+   AVAILABLE THEMES:
+   - devcon: Terminal/Matrix aesthetic
+   - katie-classic: Basic / default
+   - retro: Comic book/pop art aesthetic
+   - synthwave: 80s retro-futuristic
+
+   To add a new theme:
+   1. Create src/themes/your-theme.scss
+   2. Add import to src/themes/index.scss
+   3. Update ThemeContext.tsx with theme name
+   4. Done! No component files need modification.
+
+   ============================================ */
+
+/* ==========================================
+   SHARED CSS CUSTOM PROPERTIES
+   ========================================== */
+
+:root {
+  /* Typography */
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+  --font-size-xxl: 28px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-loose: 1.8;
+
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  /* Spacing & Sizing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-xxl: 24px;
+  --space-xxxl: 32px;
+
+  --header-height: 60px;
+  --title-bar-height: 70px;
+  --sidebar-width: 280px;
+
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-thick: 3px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
+
+  /* Z-Index Layers */
+  --z-base: 0;
+  --z-elevated: 10;
+  --z-dropdown: 100;
+  --z-modal: 1000;
+  --z-tooltip: 2000;
+  --z-notification: 3000;
+
+  /* Global Map Marker Colors - Consistent across all themes */
+  --map-elint-yellow: #FFEA00;
+  --map-unit-friend-blue: #137cbd;
+  --map-unit-hostile-red: #db3737;
+  --map-collateral-concern-orange: #ff6b6b;
+}
+
+/* ==========================================
+   SCSS VARIABLE EXPORTS
+   (for component @use imports)
+   ========================================== */
+
+// Spacing
+$spaceXs: 4px;
+$spaceSm: 8px;
+$spaceMd: 12px;
+$spaceLg: 16px;
+$spaceXl: 20px;
+$spaceXxl: 24px;
+$spaceXxxl: 32px;
+
+// Component Sizing
+$cardPadding: $spaceMd;
+$panelPadding: $spaceLg;
+
+// Transitions
+$transitionFast: 150ms ease;
+$transitionBase: 250ms ease;
+$transitionSlow: 350ms ease;
+
+// Border Radius (default, themes override via CSS custom properties)
+$borderRadius: 3px;
+
+// Theme-aware CSS custom property accessors
+// Components should use these to reference theme colors
+$bgPrimary: var(--bg-primary);
+$bgSecondary: var(--bg-secondary);
+$bgTertiary: var(--bg-tertiary);
+$bgHover: var(--bg-hover);
+$bgActive: var(--bg-active);
+
+$textPrimary: var(--text-primary);
+$textSecondary: var(--text-secondary);
+$textTertiary: var(--text-tertiary);
+$textWhite: var(--text-white);
+
+$accentPrimary: var(--accent-primary);
+$accentSecondary: var(--accent-secondary);
+$accentBlue: var(--accent-blue);
+
+$borderPrimary: var(--border-primary);
+$borderSecondary: var(--border-secondary);
+$borderTertiary: var(--border-tertiary);
+
+$cardBg: var(--card-bg);
+$cardHeaderBg: var(--card-header-bg);
+$modalBg: var(--modal-bg);
+$modalBorder: var(--modal-border);
+$modalOverlay: var(--modal-overlay);
+$mapBg: var(--map-bg);
+$buttonColor: var(--button-color);
+$buttonTextColor: var(--button-text-color);
+
+$glowPrimary: var(--glow-primary);
+$glowStrong: var(--glow-strong);
+
+$fontPrimary: var(--font-primary);
+$fontTitle: var(--font-title);
+$textTransformTitle: var(--text-transform-title);
+$textTransformLabel: var(--text-transform-label);
+$textTransformPropertyLabel: var(--text-transform-property-label);
+
+// Legacy/compatibility color variables
+$backgroundColor: var(--bg-primary);
+$secondaryBackgroundColor: var(--bg-secondary);
+$panelBackgroundColor: var(--bg-secondary);
+$textColor: var(--text-primary);
+$secondaryTextColor: var(--text-secondary);
+$disabledTextColor: var(--text-tertiary);
+$errorColor: var(--accent-red, #ff3b3b);
+$successColor: var(--status-success, #00ff41);
+$borderColor: var(--border-secondary);
+$accentColor: var(--accent-primary);
+$hoverBackgroundColor: var(--bg-hover);
+$modalOverlayColor: var(--modal-overlay, rgba(0, 0, 0, 0.85));
+$modalBackgroundColor: var(--modal-bg);
+
+/* ==========================================
+   IMPORT ALL THEMES
+   ========================================== */
+
+@import "./themes/index.scss";

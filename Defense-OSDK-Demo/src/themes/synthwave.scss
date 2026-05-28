@@ -1,0 +1,397 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* ============================================
+   SYNTHWAVE THEME - 80s Retro Futuristic
+   ============================================ */
+
+// Theme Colors
+$pink-neon: #ff006e;
+$cyan-neon: #00f5ff;
+$purple-light: #b794f6;
+$purple-border: #3d2463;
+$orange-sun: #ff6b00;
+$gold-sun: #ffd700;
+$bg-dark: #0a0a0f;
+$bg-medium: #151520;
+$bg-light: #1f1f35;
+$white: #ffffff;
+
+// CSS Custom Properties
+:root[data-theme="synthwave"] {
+  // Background colors - almost black with subtle purple tint
+  --bg-primary: #{$bg-dark};
+  --bg-secondary: #{$bg-medium};
+  --bg-tertiary: #{$bg-light};
+  --bg-hover: rgba($pink-neon, 0.15);
+  --bg-active: rgba($cyan-neon, 0.2);
+
+  // Text colors
+  --text-primary: #{$cyan-neon};
+  --text-secondary: #{$pink-neon};
+  --text-tertiary: #{$purple-light};
+  --text-white: #{$white};
+
+  // Accent colors
+  --accent-primary: #{$pink-neon};
+  --accent-secondary: #{$cyan-neon};
+  --accent-blue: #{$cyan-neon};
+
+  // Border colors
+  --border-primary: #{$pink-neon};
+  --border-secondary: #{$cyan-neon};
+  --border-tertiary: #{$purple-border};
+
+  // Component-specific
+  --card-bg: rgba($bg-dark, 0.95);
+  --card-header-bg: #{$bg-medium};
+  --modal-bg: rgba($bg-dark, 0.95);
+  --modal-border: #{$pink-neon};
+  --modal-overlay: rgba($bg-dark, 0.9);
+  --map-bg: #{$bg-dark};
+  --map-tile-url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  --button-color: #{$pink-neon};
+  --button-text-color: #{$white};
+
+  // Effects
+  --glow-primary: 0 0 10px rgba($pink-neon, 0.5);
+  --glow-strong: 0 0 20px rgba($pink-neon, 0.8);
+
+  // Map marker colors - using global constants
+  --elint-color: var(--map-elint-yellow);
+  --elint-primary: var(--map-elint-yellow);
+  --elint-secondary: var(--map-elint-yellow);
+  --collateral-concern-color: var(--map-collateral-concern-orange);
+  --unit-friend-color: var(--map-unit-friend-blue);
+  --unit-hostile-color: var(--map-unit-hostile-red);
+  --unit-other-color: #{$purple-light};
+  --unit-selected: #{$cyan-neon};
+
+  // Typography
+  --font-primary: "Tahoma", "Arial", sans-serif;
+  --font-title: "Tahoma", "Arial", sans-serif;
+  --text-transform-title: uppercase;
+  --text-transform-label: uppercase;
+  --text-transform-property-label: uppercase;
+
+  // Spacing
+  --border-radius: 4px;
+}
+
+// Keyframe Animations
+@keyframes sun-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow:
+      0 0 40px rgba(255, 107, 0, 0.8),
+      0 0 80px rgba(255, 107, 0, 0.6),
+      0 0 120px rgba(255, 107, 0, 0.4);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow:
+      0 0 60px rgba(255, 107, 0, 1),
+      0 0 120px rgba(255, 107, 0, 0.8),
+      0 0 180px rgba(255, 107, 0, 0.6);
+  }
+}
+
+@keyframes neon-flicker {
+  0%,
+  100% {
+    opacity: 1;
+    text-shadow:
+      0 0 10px rgba(255, 0, 110, 0.8),
+      0 0 20px rgba(255, 0, 110, 0.6),
+      0 0 30px rgba(0, 245, 255, 0.6),
+      0 0 40px rgba(0, 245, 255, 0.4);
+  }
+  94% {
+    opacity: 1;
+    text-shadow:
+      0 0 10px rgba(255, 0, 110, 0.8),
+      0 0 20px rgba(255, 0, 110, 0.6),
+      0 0 30px rgba(0, 245, 255, 0.6),
+      0 0 40px rgba(0, 245, 255, 0.4);
+  }
+  95% {
+    opacity: 0.8;
+    text-shadow:
+      0 0 5px rgba(255, 0, 110, 0.6),
+      0 0 10px rgba(255, 0, 110, 0.4),
+      0 0 15px rgba(0, 245, 255, 0.4),
+      0 0 20px rgba(0, 245, 255, 0.2);
+  }
+  96% {
+    opacity: 1;
+    text-shadow:
+      0 0 10px rgba(255, 0, 110, 0.8),
+      0 0 20px rgba(255, 0, 110, 0.6),
+      0 0 30px rgba(0, 245, 255, 0.6),
+      0 0 40px rgba(0, 245, 255, 0.4);
+  }
+}
+
+// Global Component Styling
+:root[data-theme="synthwave"] {
+  // Title Bar - dark gradient bar
+  .titleBar {
+    background: linear-gradient(180deg, #1f1f35 0%, #151520 100%);
+    border-bottom: 2px solid #ff006e;
+    box-shadow: 0 2px 10px rgba(255, 0, 110, 0.3);
+  }
+
+  // Title - subtle neon glow text
+  .title {
+    color: #ff006e;
+    text-shadow:
+      0 0 10px rgba(255, 0, 110, 0.8),
+      0 0 20px rgba(255, 0, 110, 0.4);
+    font-style: italic;
+    letter-spacing: 0.2em;
+  }
+
+  // Header - dark gradient header
+  .header {
+    background: linear-gradient(90deg, #151520 0%, #1f1f35 50%, #151520 100%);
+    border-bottom: 2px solid #00f5ff;
+    box-shadow: 0 2px 8px rgba(0, 245, 255, 0.3);
+  }
+
+  // Workspace - dark gradient background
+  .workspace {
+    position: relative;
+    background: linear-gradient(180deg, #0a0a0f 0%, #151520 100%);
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  // Left Map - clean neon border
+  .leftMap {
+    border: 2px solid #00f5ff;
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+  }
+
+  // Right Container - clean neon border
+  .rightContainer {
+    border: 2px solid #ff006e;
+    border-left: 2px solid #ff006e;
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+    background: rgba(10, 10, 15, 0.6);
+    backdrop-filter: blur(3px);
+  }
+
+  // Map Loading - pulsating sun
+  .loadingOverlay {
+    background: linear-gradient(180deg, #0a0a0f 0%, #151520 100%);
+    border: 2px solid #ff006e;
+    box-shadow: 0 0 15px rgba(255, 0, 110, 0.3);
+
+    // Sun circle
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffd700 0%, #ff6b00 70%, #ff006e 100%);
+      animation: sun-pulse 3s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    // Subtle horizontal lines
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 150px;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 12px,
+        rgba(10, 10, 15, 0.5) 12px,
+        rgba(10, 10, 15, 0.5) 14px
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .bp5-spinner {
+      display: none !important;
+    }
+  }
+
+  // Theme Switcher Button - neon pink/cyan glow
+  .button {
+    color: #ff006e !important;
+    border: 2px solid #ff006e !important;
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.1) 0%, rgba(0, 245, 255, 0.1) 100%) !important;
+    box-shadow:
+      0 0 15px rgba(255, 0, 110, 0.6),
+      0 0 25px rgba(0, 245, 255, 0.3);
+
+    &:hover {
+      color: #00f5ff !important;
+      border-color: #00f5ff !important;
+      background: linear-gradient(135deg, rgba(0, 245, 255, 0.2) 0%, rgba(255, 0, 110, 0.2) 100%) !important;
+      box-shadow:
+        0 0 20px rgba(0, 245, 255, 0.8),
+        0 0 35px rgba(255, 0, 110, 0.5);
+      transform: rotate(180deg);
+    }
+  }
+
+  // Cards - neon borders with different colors
+  .hierarchyCard {
+    border: 2px solid #ff006e;
+    background: rgba(10, 10, 15, 0.95);
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+    backdrop-filter: blur(3px);
+  }
+
+  .unitCard {
+    border: 2px solid #ff006e;
+    background: rgba(10, 10, 15, 0.95);
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+    backdrop-filter: blur(3px);
+  }
+
+  // Unit Card title - PROMINENT 80s neon pink with moderate glow
+  .unitCard .title {
+    color: #ff006e !important;
+    font-size: var(--font-size-xxl) !important;
+    font-weight: var(--font-weight-bold) !important;
+    font-style: italic !important;
+    letter-spacing: 0.15em !important;
+    text-shadow:
+      0 0 5px rgba(255, 0, 110, 0.8),
+      0 0 10px rgba(255, 0, 110, 0.6),
+      0 0 20px rgba(255, 0, 110, 0.4) !important;
+    animation: neon-flicker 8s infinite !important;
+  }
+
+  .unitTitle {
+    color: #ff006e !important;
+    text-shadow: 0 0 8px rgba(255, 0, 110, 0.6) !important;
+  }
+
+  .closeButton {
+    border: 2px solid #ff006e !important;
+    background: rgba(10, 10, 15, 0.9) !important;
+    color: #ff006e !important;
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.4) !important;
+
+    &:hover {
+      background: rgba(255, 0, 110, 0.2) !important;
+      box-shadow: 0 0 15px rgba(255, 0, 110, 0.6) !important;
+    }
+  }
+
+  .elintCard {
+    border: 2px solid #ffd700;
+    background: rgba(10, 10, 15, 0.95);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    backdrop-filter: blur(3px);
+  }
+
+  .elintTitle {
+    color: #ffd700 !important;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6) !important;
+  }
+
+  .historyCard {
+    border: 2px solid #00f5ff;
+    background: rgba(10, 10, 15, 0.95);
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+    backdrop-filter: blur(3px);
+  }
+
+  .historyTitle {
+    color: #00f5ff !important;
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.6) !important;
+  }
+
+  // Modal Dialog - neon glow
+  .bp5-dialog.confirmAssociateElintDialog {
+    border: 2px solid #ff006e !important;
+    box-shadow:
+      0 0 30px rgba(255, 0, 110, 0.8),
+      0 0 60px rgba(0, 245, 255, 0.4),
+      0 10px 50px rgba(0, 0, 0, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+
+    .bp5-dialog-header {
+      background: linear-gradient(90deg, #1f1f35 0%, #151520 100%) !important;
+      border-bottom: 2px solid #00f5ff !important;
+    }
+
+    .bp5-dialog-body {
+      background-color: rgba(10, 10, 15, 0.95) !important;
+    }
+
+    .bp5-dialog-footer {
+      background: linear-gradient(90deg, #151520 0%, #1f1f35 100%) !important;
+      border-top: 2px solid #ff006e !important;
+    }
+
+    .bp5-heading {
+      color: #00f5ff !important;
+      text-shadow: 0 0 10px rgba(0, 245, 255, 0.8) !important;
+    }
+
+    .bp5-overlay-backdrop {
+      background-color: rgba(10, 10, 15, 0.9) !important;
+    }
+
+    .bp5-button {
+      border: 2px solid #ff006e !important;
+      background: rgba(10, 10, 15, 0.9) !important;
+      color: #ff006e !important;
+      font-family: "Tahoma", "Arial", sans-serif !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.1em !important;
+      box-shadow: 0 0 10px rgba(255, 0, 110, 0.4) !important;
+
+      &:hover {
+        background: rgba(255, 0, 110, 0.2) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 15px rgba(255, 0, 110, 0.6) !important;
+      }
+
+      &.bp5-intent-primary {
+        border-color: #00f5ff !important;
+        background: rgba(0, 245, 255, 0.2) !important;
+        color: #00f5ff !important;
+        box-shadow: 0 0 15px rgba(0, 245, 255, 0.6) !important;
+
+        &:hover {
+          background: rgba(0, 245, 255, 0.3) !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 20px rgba(0, 245, 255, 0.8) !important;
+        }
+      }
+    }
+  }
+}

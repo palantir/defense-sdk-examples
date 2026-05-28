@@ -1,0 +1,50 @@
+messages:
+  title: Defense OSDK - Example Order of Battle
+  browserTitle: "Defense OSDK - Example Order of Battle"
+  viewThe: View the
+  defenseOsdkDocumentation: Defense OSDK documentation.
+  hello: Hello
+  user: User
+translations:
+  de:
+    title: Defense OSDK - Beispiel-Gefechtsordnung
+    browserTitle: "Defense OSDK - Beispiel-Gefechtsordnung"
+    viewThe: Sehen Sie sich die
+    defenseOsdkDocumentation: Defense OSDK-Dokumentation an.
+    hello: Hallo
+    user: Benutzer
+  fr:
+    title: Defense OSDK - Exemple d'Ordre de Bataille
+    browserTitle: "Defense OSDK - Exemple d'Ordre de Bataille"
+    viewThe: Consultez la
+    defenseOsdkDocumentation: documentation Defense OSDK.
+    hello: Bonjour
+    user: Utilisateur
+  it:
+    title: Defense OSDK - Esempio di Ordine di Battaglia
+    browserTitle: "Defense OSDK - Esempio di Ordine di Battaglia"
+    viewThe: Visualizza la
+    defenseOsdkDocumentation: documentazione Defense OSDK.
+    hello: Ciao
+    user: Utente
+  ko:
+    title: Defense OSDK - 전투 서열 예제
+    browserTitle: "Defense OSDK - 전투 서열 예제"
+    viewThe: 보기
+    defenseOsdkDocumentation: Defense OSDK 문서.
+    hello: 안녕하세요
+    user: 사용자
+  ru:
+    title: Defense OSDK - Пример боевого порядка
+    browserTitle: "Defense OSDK - Пример боевого порядка"
+    viewThe: Просмотреть
+    defenseOsdkDocumentation: документацию Defense OSDK.
+    hello: Здравствуйте
+    user: Пользователь
+  ar:
+    title: Defense OSDK - مثال ترتيب المعركة
+    browserTitle: "Defense OSDK - مثال ترتيب المعركة"
+    viewThe: عرض
+    defenseOsdkDocumentation: وثائق Defense OSDK.
+    hello: مرحبا
+    user: المستخدم

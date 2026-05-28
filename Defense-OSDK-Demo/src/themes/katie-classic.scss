@@ -1,0 +1,218 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* ============================================
+   KATIE-CLASSIC THEME - Neo-Modern Purple + Glow Teal
+   ============================================ */
+
+// Theme Colors
+$purple-deep: #4A1B44;
+$purple-light: #5A2B54;
+$teal-glow: #00FFC8;
+$teal-dark: #00E6B8;
+
+// CSS Custom Properties
+:root[data-theme="katie-classic"] {
+  // Background colors - clean light theme
+  --bg-primary: #fafbfc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f7f9;
+  --bg-hover: rgba(74, 27, 68, 0.08);
+  --bg-active: rgba(74, 27, 68, 0.15);
+
+  // Text colors
+  --text-primary: #1a1a1a;
+  --text-secondary: #5c5c5c;
+  --text-tertiary: #8a8a8a;
+  --text-white: #ffffff;
+
+  // Accent colors - neo-modern deep purple + glow-in-the-dark teal
+  --accent-primary: #{$purple-deep};
+  --accent-secondary: #{$teal-glow};
+  --accent-blue: #137cbd;
+
+  // Border colors
+  --border-primary: #{$purple-deep};
+  --border-secondary: rgba($purple-deep, 0.2);
+  --border-tertiary: #e8e8e8;
+
+  // Component-specific
+  --card-bg: #ffffff;
+  --card-header-bg: #fafbfc;
+  --modal-bg: #ffffff;
+  --modal-border: #{$purple-deep};
+  --modal-overlay: rgba(74, 27, 68, 0.5);
+  --map-bg: #fafbfc;
+  --map-tile-url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  --button-color: #{$purple-deep};
+  --button-text-color: #ffffff;
+
+  // Effects - subtle teal glow
+  --glow-primary: 0 0 8px rgba(0, 255, 200, 0.3);
+  --glow-strong: 0 0 16px rgba(0, 255, 200, 0.5);
+
+  // Map marker colors - using global constants
+  --elint-color: var(--map-elint-yellow);
+  --elint-primary: var(--map-elint-yellow);
+  --elint-secondary: var(--map-elint-yellow);
+  --collateral-concern-color: var(--map-collateral-concern-orange);
+  --unit-friend-color: var(--map-unit-friend-blue);
+  --unit-hostile-color: var(--map-unit-hostile-red);
+  --unit-other-color: #8a8a8a;
+  --unit-selected: #{$purple-deep};
+
+  // Typography
+  --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-title: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --text-transform-title: none;
+  --text-transform-label: none;
+  --text-transform-property-label: uppercase;
+
+  // Spacing
+  --border-radius: 3px;
+}
+
+// Global Component Styling
+:root[data-theme="katie-classic"] {
+  // Hide hierarchy card header (as per original design)
+  .hierarchyCard .header {
+    display: none;
+  }
+
+  // Add top padding to tree container since header is hidden
+  .treeContainer {
+    padding-top: 12px;
+  }
+
+  // Unit Hierarchy - solid rose background for current unit
+  .nodeContent.currentUnit {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+
+    .nodeName {
+      color: var(--text-white);
+    }
+  }
+
+  // Cards - bold purple borders with teal glow
+  .hierarchyCard,
+  .unitCard,
+  .elintCard,
+  .historyCard {
+    border: 2px solid $purple-deep !important;
+    box-shadow: 0 0 24px rgba($teal-glow, 0.25), 0 4px 12px rgba($purple-deep, 0.1) !important;
+  }
+
+  // Card headers - clean with purple border and teal glow
+  .hierarchyCard .header,
+  .elintCard .header,
+  .historyCard .header {
+    background: #ffffff !important;
+    border-bottom: 3px solid $purple-deep !important;
+    box-shadow: 0 4px 12px rgba($teal-glow, 0.2) !important;
+  }
+
+  // Section header titles - deep purple with teal glow
+  .hierarchyCard .title,
+  .elintCard .title,
+  .historyCard .title {
+    color: $purple-deep !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 16px rgba($teal-glow, 0.4) !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  // Count badges - purple with subtle teal glow
+  .elintCard .count,
+  .historyCard .count {
+    color: $purple-deep !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 8px rgba($teal-glow, 0.3) !important;
+  }
+
+  // Unit Card title - bold purple with strong teal glow
+  .unitCard .title {
+    color: $purple-deep !important;
+    font-size: var(--font-size-xxl) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    text-shadow:
+      0 0 20px rgba($teal-glow, 0.6),
+      0 0 40px rgba($teal-glow, 0.4) !important;
+    position: relative !important;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: $purple-deep;
+      box-shadow: 0 0 16px rgba($teal-glow, 1);
+    }
+  }
+
+  // Button styling - clean purple X with white background
+  .unitCard .closeButton {
+    background-color: #ffffff !important;
+    border: 2px solid $purple-deep !important;
+    color: $purple-deep !important;
+    box-shadow: none !important;
+    transition: all 0.3s ease !important;
+
+    &:hover {
+      background-color: #ffffff !important;
+      border-color: $purple-deep !important;
+      color: $purple-deep !important;
+      box-shadow: 0 0 20px rgba($teal-glow, 0.6) !important;
+      transform: scale(1.05) !important;
+    }
+  }
+
+  // Table headers - purple with purple border and teal glow
+  .table thead th {
+    color: $purple-deep !important;
+    border-bottom: 2px solid $purple-deep !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 8px rgba($teal-glow, 0.2) !important;
+  }
+
+  // Table rows - subtle teal glow on hover
+  .table tbody tr:hover {
+    background-color: rgba($teal-glow, 0.05) !important;
+    box-shadow: inset 0 0 20px rgba($teal-glow, 0.15) !important;
+  }
+
+  // Current unit in hierarchy - clean purple on white, teal glow on hover
+  .nodeContent.currentUnit {
+    background: #ffffff !important;
+    border: 2px solid $purple-deep !important;
+    box-shadow: none !important;
+    transition: all 0.3s ease !important;
+
+    .nodeName {
+      color: $purple-deep !important;
+      text-shadow: none !important;
+      font-weight: 700 !important;
+    }
+
+    &:hover {
+      box-shadow: 0 0 16px rgba($teal-glow, 0.5) !important;
+    }
+  }
+}

@@ -1,0 +1,83 @@
+messages:
+  locationHistoryTitle: Location History
+  observations: observations
+  timestamp: Timestamp
+  position: Position
+  loadingObservations: Loading observations...
+  errorFetching: Error loading observations
+  entityNotFound: Entity not found
+  noObservations: No location history available
+  noTimestamp: No timestamp
+  noPosition: No position
+
+de:
+  locationHistoryTitle: Standortverlauf
+  observations: Beobachtungen
+  timestamp: Zeitstempel
+  position: Position
+  loadingObservations: Beobachtungen werden geladen...
+  errorFetching: Fehler beim Laden der Beobachtungen
+  entityNotFound: Entität nicht gefunden
+  noObservations: Kein Standortverlauf verfügbar
+  noTimestamp: Kein Zeitstempel
+  noPosition: Keine Position
+
+es:
+  locationHistoryTitle: Historial de ubicación
+  observations: observaciones
+  timestamp: Marca de tiempo
+  position: Posición
+  loadingObservations: Cargando observaciones...
+  errorFetching: Error al cargar observaciones
+  entityNotFound: Entidad no encontrada
+  noObservations: No hay historial de ubicación disponible
+  noTimestamp: Sin marca de tiempo
+  noPosition: Sin posición
+
+fr:
+  locationHistoryTitle: Historique de localisation
+  observations: observations
+  timestamp: Horodatage
+  position: Position
+  loadingObservations: Chargement des observations...
+  errorFetching: Erreur lors du chargement des observations
+  entityNotFound: Entité introuvable
+  noObservations: Aucun historique de localisation disponible
+  noTimestamp: Pas d'horodatage
+  noPosition: Pas de position
+
+ja:
+  locationHistoryTitle: 位置履歴
+  observations: 観測
+  timestamp: タイムスタンプ
+  position: 位置
+  loadingObservations: 観測を読み込んでいます...
+  errorFetching: 観測の読み込みエラー
+  entityNotFound: エンティティが見つかりません
+  noObservations: 位置履歴がありません
+  noTimestamp: タイムスタンプなし
+  noPosition: 位置なし
+
+ko:
+  locationHistoryTitle: 위치 이력
+  observations: 관측
+  timestamp: 타임스탬프
+  position: 위치
+  loadingObservations: 관측을 로드하는 중...
+  errorFetching: 관측 로드 오류
+  entityNotFound: 엔티티를 찾을 수 없음
+  noObservations: 위치 이력 없음
+  noTimestamp: 타임스탬프 없음
+  noPosition: 위치 없음
+
+zh:
+  locationHistoryTitle: 位置历史
+  observations: 观测
+  timestamp: 时间戳
+  position: 位置
+  loadingObservations: 正在加载观测...
+  errorFetching: 加载观测时出错
+  entityNotFound: 未找到实体
+  noObservations: 没有位置历史记录
+  noTimestamp: 无时间戳
+  noPosition: 无位置

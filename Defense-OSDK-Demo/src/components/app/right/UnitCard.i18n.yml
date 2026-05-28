@@ -1,0 +1,62 @@
+messages:
+  selectedUnit: SELECTED UNIT
+  untitledUnit: Untitled Unit
+  closeButton: Close
+  affiliation: Affiliation
+  allegiance: Allegiance
+  primaryKey: Primary Key
+  apiName: API Name
+
+de:
+  selectedUnit: AUSGEWÄHLTE EINHEIT
+  untitledUnit: Einheit ohne Titel
+  closeButton: Schließen
+  affiliation: Zugehörigkeit
+  allegiance: Treue
+  primaryKey: Primärschlüssel
+  apiName: API-Name
+
+es:
+  selectedUnit: UNIDAD SELECCIONADA
+  untitledUnit: Unidad sin título
+  closeButton: Cerrar
+  affiliation: Afiliación
+  allegiance: Lealtad
+  primaryKey: Clave primaria
+  apiName: Nombre de API
+
+fr:
+  selectedUnit: UNITÉ SÉLECTIONNÉE
+  untitledUnit: Unité sans titre
+  closeButton: Fermer
+  affiliation: Affiliation
+  allegiance: Allégeance
+  primaryKey: Clé primaire
+  apiName: Nom d'API
+
+ja:
+  selectedUnit: 選択されたユニット
+  untitledUnit: タイトルなしのユニット
+  closeButton: 閉じる
+  affiliation: 所属
+  allegiance: 忠誠
+  primaryKey: プライマリキー
+  apiName: API名
+
+ko:
+  selectedUnit: 선택된 부대
+  untitledUnit: 제목 없는 부대
+  closeButton: 닫기
+  affiliation: 소속
+  allegiance: 충성
+  primaryKey: 기본 키
+  apiName: API 이름
+
+zh:
+  selectedUnit: 选定的单位
+  untitledUnit: 无标题单位
+  closeButton: 关闭
+  affiliation: 隶属关系
+  allegiance: 效忠
+  primaryKey: 主键
+  apiName: API名称

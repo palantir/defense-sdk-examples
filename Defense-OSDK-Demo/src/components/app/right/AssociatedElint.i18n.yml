@@ -1,0 +1,111 @@
+messages:
+  associatedELINTTitle: Associated ELINT
+  elintReports: ELINT reports
+  elintId: ELINT ID
+  position: Position
+  dimensions: Dimensions
+  orientation: Orientation
+  loadingElint: Loading ELINT data...
+  errorFetching: Error loading ELINT data
+  noLinkedELINT: No ELINT associated with this unit
+  selectElintFromMap: Select an ELINT geometry from the map to associate with this Unit!
+  noPosition: No position
+  notAvailable: N/A
+  associationSuccess: ELINT successfully associated
+  associationError: Failed to associate ELINT
+
+de:
+  associatedELINTTitle: Zugeordnete ELINT
+  elintReports: ELINT-Berichte
+  elintId: ELINT-ID
+  position: Position
+  dimensions: Abmessungen
+  orientation: Ausrichtung
+  loadingElint: ELINT-Daten werden geladen...
+  errorFetching: Fehler beim Laden der ELINT-Daten
+  noLinkedELINT: Keine ELINT mit dieser Einheit verbunden
+  selectElintFromMap: Wählen Sie eine ELINT-Geometrie aus der Karte aus, um sie mit dieser Einheit zu verknüpfen!
+  noPosition: Keine Position
+  notAvailable: N/V
+  associationSuccess: ELINT erfolgreich zugeordnet
+  associationError: ELINT-Zuordnung fehlgeschlagen
+
+es:
+  associatedELINTTitle: ELINT asociado
+  elintReports: Informes ELINT
+  elintId: ID de ELINT
+  position: Posición
+  dimensions: Dimensiones
+  orientation: Orientación
+  loadingElint: Cargando datos ELINT...
+  errorFetching: Error al cargar datos ELINT
+  noLinkedELINT: No hay ELINT asociado con esta unidad
+  selectElintFromMap: ¡Seleccione una geometría ELINT del mapa para asociarla con esta unidad!
+  noPosition: Sin posición
+  notAvailable: N/D
+  associationSuccess: ELINT asociado exitosamente
+  associationError: Error al asociar ELINT
+
+fr:
+  associatedELINTTitle: ELINT associé
+  elintReports: Rapports ELINT
+  elintId: ID ELINT
+  position: Position
+  dimensions: Dimensions
+  orientation: Orientation
+  loadingElint: Chargement des données ELINT...
+  errorFetching: Erreur lors du chargement des données ELINT
+  noLinkedELINT: Aucun ELINT associé à cette unité
+  selectElintFromMap: Sélectionnez une géométrie ELINT sur la carte pour l'associer à cette unité!
+  noPosition: Pas de position
+  notAvailable: N/D
+  associationSuccess: ELINT associé avec succès
+  associationError: Échec de l'association ELINT
+
+ja:
+  associatedELINTTitle: 関連付けられたELINT
+  elintReports: ELINTレポート
+  elintId: ELINT ID
+  position: 位置
+  dimensions: 寸法
+  orientation: 方向
+  loadingElint: ELINTデータを読み込んでいます...
+  errorFetching: ELINTデータの読み込みエラー
+  noLinkedELINT: このユニットに関連付けられたELINTはありません
+  selectElintFromMap: このユニットに関連付けるELINTジオメトリをマップから選択してください！
+  noPosition: 位置なし
+  notAvailable: N/A
+  associationSuccess: ELINTが正常に関連付けられました
+  associationError: ELINTの関連付けに失敗しました
+
+ko:
+  associatedELINTTitle: 연관된 ELINT
+  elintReports: ELINT 보고서
+  elintId: ELINT ID
+  position: 위치
+  dimensions: 치수
+  orientation: 방향
+  loadingElint: ELINT 데이터를 로드하는 중...
+  errorFetching: ELINT 데이터 로드 오류
+  noLinkedELINT: 이 부대와 연관된 ELINT가 없습니다
+  selectElintFromMap: 이 부대와 연관시킬 ELINT 지오메트리를 지도에서 선택하세요!
+  noPosition: 위치 없음
+  notAvailable: N/A
+  associationSuccess: ELINT가 성공적으로 연관되었습니다
+  associationError: ELINT 연관 실패
+
+zh:
+  associatedELINTTitle: 关联的ELINT
+  elintReports: ELINT报告
+  elintId: ELINT ID
+  position: 位置
+  dimensions: 尺寸
+  orientation: 方向
+  loadingElint: 正在加载ELINT数据...
+  errorFetching: 加载ELINT数据时出错
+  noLinkedELINT: 没有与此单位关联的ELINT
+  selectElintFromMap: 从地图中选择ELINT几何图形以与此单位关联！
+  noPosition: 无位置
+  notAvailable: N/A
+  associationSuccess: ELINT关联成功
+  associationError: ELINT关联失败

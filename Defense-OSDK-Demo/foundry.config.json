@@ -1,0 +1,12 @@
+{
+  "foundryUrl": "https://devcon.palantircloud.com",
+  "site": {
+    "application": "ri.third-party-applications.main.application.c067e667-2e85-46f5-af81-3c8e8be17727",
+    "directory": "./dist",
+    "autoVersion": {
+      "type": "git-describe",
+      "tagPrefix": ""
+    },
+    "uploadOnly": false
+  }
+}

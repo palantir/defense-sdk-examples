@@ -1,0 +1,129 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../../variables" as vars;
+
+.unitCard {
+  background-color: vars.$cardBg;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  border-radius: vars.$borderRadius;
+  padding: vars.$cardPadding;
+  transition: all vars.$transitionBase;
+  margin-bottom: vars.$spaceMd;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spaceMd;
+  padding-bottom: vars.$spaceSm;
+  border-bottom: var(--border-width-thin) solid vars.$borderTertiary;
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+  gap: vars.$spaceSm;
+  flex: 1;
+  min-width: 0;
+}
+
+.symbolContainer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: vars.$textPrimary;
+  font-family: vars.$fontTitle;
+  text-transform: vars.$textTransformTitle;
+  letter-spacing: var(--letter-spacing-normal);
+  text-shadow: vars.$glowPrimary;
+  word-wrap: break-word;
+  flex: 1;
+}
+
+.closeButton {
+  background-color: transparent;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  border-radius: vars.$borderRadius;
+  color: vars.$textSecondary;
+  font-size: var(--font-size-lg);
+  font-family: vars.$fontPrimary;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all vars.$transitionBase;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: vars.$bgHover;
+    border-color: vars.$borderPrimary;
+    color: vars.$textPrimary;
+    box-shadow: vars.$glowPrimary;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.propertiesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: vars.$spaceSm vars.$spaceLg;
+}
+
+.property {
+  display: flex;
+  flex-direction: row;
+  gap: vars.$spaceXs;
+  min-width: 0;
+  align-items: baseline;
+}
+
+.label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: vars.$textTransformPropertyLabel;
+  color: vars.$textSecondary;
+  letter-spacing: var(--letter-spacing-wide);
+  flex-shrink: 0;
+  font-family: vars.$fontPrimary;
+}
+
+.value {
+  font-size: var(--font-size-sm);
+  color: vars.$textPrimary;
+  word-break: break-word;
+  font-family: vars.$fontPrimary;
+}

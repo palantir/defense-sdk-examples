@@ -1,0 +1,211 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../../variables" as vars;
+
+/* ============================================
+   UNIT HIERARCHY VIEW
+   ============================================ */
+
+.hierarchyCard {
+  background-color: vars.$cardBg;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  border-radius: vars.$borderRadius;
+  padding: vars.$cardPadding;
+  margin-top: vars.$spaceMd;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: vars.$spaceMd;
+  margin-bottom: vars.$spaceMd;
+  padding-bottom: vars.$spaceSm;
+  border-bottom: var(--border-width-thin) solid vars.$borderTertiary;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: vars.$textPrimary;
+  font-family: vars.$fontTitle;
+  text-transform: vars.$textTransformLabel;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.toggle {
+  display: flex;
+  gap: 0;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  border-radius: vars.$borderRadius;
+  overflow: hidden;
+}
+
+.toggleButton {
+  padding: vars.$spaceXs vars.$spaceMd;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  background-color: transparent;
+  border: none;
+  border-right: var(--border-width-thin) solid vars.$borderSecondary;
+  color: vars.$textSecondary;
+  cursor: pointer;
+  transition: all vars.$transitionBase;
+  font-family: vars.$fontPrimary;
+  text-transform: vars.$textTransformLabel;
+  letter-spacing: var(--letter-spacing-wide);
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover {
+    background-color: vars.$bgHover;
+    color: vars.$textPrimary;
+  }
+
+  &.active {
+    background-color: vars.$bgActive;
+    color: vars.$accentPrimary;
+    text-shadow: vars.$glowPrimary;
+  }
+}
+
+.loading,
+.error,
+.empty {
+  padding: 20px;
+  text-align: center;
+  color: vars.$secondaryTextColor;
+  font-size: 14px;
+}
+
+.error {
+  color: vars.$errorColor;
+}
+
+.treeContainer {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 12px 0;
+}
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 8px 0;
+}
+
+.treeRow {
+  display: flex;
+  align-items: stretch;
+  min-height: 36px;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.treeLines {
+  position: relative;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.verticalLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: vars.$textColor;
+  opacity: 0.5;
+}
+
+.verticalLineExtend {
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: -4px;
+  width: 1px;
+  background-color: vars.$textColor;
+  opacity: 0.5;
+}
+
+.horizontalLine {
+  position: absolute;
+  left: 0;
+  top: 17px;
+  width: 20px;
+  height: 1px;
+  background-color: vars.$textColor;
+  opacity: 0.5;
+}
+
+.nodeContent {
+  display: flex;
+  align-items: center;
+  gap: vars.$spaceSm;
+  padding: vars.$spaceSm vars.$spaceMd;
+  border-radius: vars.$borderRadius;
+  border: var(--border-width-thin) solid vars.$borderTertiary;
+  background-color: vars.$bgSecondary;
+  transition: all vars.$transitionBase;
+  flex: 1;
+  min-height: 34px;
+
+  &:hover {
+    background-color: vars.$bgHover;
+    border-color: vars.$borderSecondary;
+  }
+
+  &.currentUnit {
+    border-color: vars.$borderPrimary;
+
+    .nodeName {
+      font-weight: var(--font-weight-bold);
+    }
+  }
+
+  &.clickable {
+    cursor: pointer;
+
+    &:hover {
+      background-color: vars.$bgHover;
+      border-color: vars.$borderPrimary;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+}
+
+.nodeName {
+  font-size: var(--font-size-sm);
+  color: vars.$textSecondary;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: vars.$fontPrimary;
+}

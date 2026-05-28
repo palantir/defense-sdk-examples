@@ -1,0 +1,492 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* ============================================
+   RETRO THEME - Comic Book/Pop Art Aesthetic
+   ============================================ */
+
+// Theme Colors
+$magenta: #ff10f0;
+$magenta-light: #ff3388;
+$lime-green: #c1ff3a;
+$cyan: #00ccff;
+$yellow: #ffff00;
+$pink-accent: #ff0066;
+$black: #000000;
+$white: #ffffff;
+$gray: #808080;
+$light-gray: #eeeeee;
+
+// CSS Custom Properties
+:root[data-theme="retro"] {
+  // Background colors
+  --bg-primary: #{$white};
+  --bg-secondary: #{$white};
+  --bg-tertiary: #{$white};
+  --bg-hover: #{$lime-green};
+  --bg-active: #{$magenta};
+
+  // Text colors
+  --text-primary: #{$black};
+  --text-secondary: #{$black};
+  --text-tertiary: #{$black};
+  --text-white: #{$white};
+
+  // Accent colors
+  --accent-primary: #{$magenta};
+  --accent-secondary: #{$lime-green};
+  --accent-blue: #{$cyan};
+
+  // Border colors
+  --border-primary: #{$black};
+  --border-secondary: #{$black};
+  --border-tertiary: #{$black};
+
+  // Component-specific
+  --card-bg: #{$white};
+  --card-header-bg: #{$white};
+  --modal-bg: #{$white};
+  --modal-border: #{$black};
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --map-bg: #{$white};
+  --map-tile-url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  --button-color: #{$white};
+  --button-text-color: #{$black};
+
+  // Effects
+  --glow-primary: 6px 6px 0px #{$black};
+  --glow-strong: 10px 10px 0px #{$black};
+
+  // Map marker colors - using global constants
+  --elint-color: var(--map-elint-yellow);
+  --elint-primary: var(--map-elint-yellow);
+  --elint-secondary: var(--map-elint-yellow);
+  --collateral-concern-color: var(--map-collateral-concern-orange);
+  --unit-friend-color: var(--map-unit-friend-blue);
+  --unit-hostile-color: var(--map-unit-hostile-red);
+  --unit-other-color: #{$gray};
+  --unit-selected: #{$magenta};
+
+  // Typography
+  --font-primary: "Arial Black", "Arial", sans-serif;
+  --font-title: "Arial Black", "Arial", sans-serif;
+  --text-transform-title: uppercase;
+  --text-transform-label: uppercase;
+  --text-transform-property-label: uppercase;
+
+  // Spacing
+  --border-radius: 0px;
+}
+
+// Keyframe Animations
+@keyframes comic-word-cycle {
+  0%,
+  20% {
+    content: "POW!";
+    color: #ff0066;
+    transform: scale(1) rotate(0deg);
+  }
+  10% {
+    transform: scale(1.3) rotate(-5deg);
+  }
+  20%,
+  40% {
+    content: "ZAP!";
+    color: #ffff00;
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.3) rotate(5deg);
+  }
+  40%,
+  60% {
+    content: "BOOM!";
+    color: #ff3300;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.4) rotate(-3deg);
+  }
+  60%,
+  80% {
+    content: "WHAM!";
+    color: #00ccff;
+    transform: scale(1) rotate(0deg);
+  }
+  70% {
+    transform: scale(1.3) rotate(4deg);
+  }
+  80%,
+  100% {
+    content: "BAM!";
+    color: #c1ff3a;
+    transform: scale(1) rotate(0deg);
+  }
+  90% {
+    transform: scale(1.35) rotate(-4deg);
+  }
+}
+
+@keyframes starburst-rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes halftone-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+// Global Component Styling
+:root[data-theme="retro"] {
+  // Title Bar - WHITE background with comic book halftone pattern
+  .titleBar {
+    background-image: radial-gradient(circle, $magenta 1.5px, transparent 1.5px);
+    background-size: 12px 12px;
+    background-color: $white;
+    border-bottom: 4px solid $black;
+  }
+
+  // Main title - comic book style with thick black outline and shadow
+  .titleBar .title {
+    color: $lime-green;
+    -webkit-text-stroke: 3px $black;
+    paint-order: stroke fill;
+    text-shadow: 6px 6px 0px $black;
+    font-style: italic;
+    transform: skew(-5deg);
+    display: inline-block;
+  }
+
+  // Header bar below title - yellow background
+  .header {
+    background-color: $yellow;
+    border-bottom: 4px solid $black;
+  }
+
+  // Override for card headers - keep them white with simple styling
+  .hierarchyCard .header,
+  .elintCard .header,
+  .historyCard .header,
+  .unitCard .header {
+    background-color: $white !important;
+    border-bottom: 4px solid $black !important;
+  }
+
+  // Header text - black text on yellow
+  .exploreText {
+    color: $black;
+    font-weight: 700;
+  }
+
+  .greeting {
+    color: $black;
+    font-weight: 700;
+  }
+
+  // Link styling
+  .defenseOsdkLink {
+    color: $black;
+    font-weight: 900;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    border-bottom: none;
+
+    &:hover {
+      color: $pink-accent;
+      text-shadow: 2px 2px 0px $black;
+      background-color: $lime-green;
+      padding: 2px 6px;
+    }
+  }
+
+  // Left Map - thick comic book border
+  .leftMap {
+    border: 4px solid $black;
+    box-shadow: 8px 8px 0px $black;
+  }
+
+  // Right Container - border and shadow
+  .rightContainer {
+    border: 4px solid $black;
+    border-left: 4px solid $black;
+    box-shadow: 8px 8px 0px $black;
+  }
+
+  // Map Loading - comic book action words
+  .loadingOverlay {
+    background: radial-gradient(circle, $white 0%, $light-gray 100%);
+    border: 4px solid $black;
+
+    // Starburst background
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(150vw, 150vh);
+      height: max(150vw, 150vh);
+      background: repeating-conic-gradient(
+        from 0deg,
+        $yellow 0deg 5deg,
+        $magenta 5deg 10deg,
+        $lime-green 10deg 15deg,
+        $cyan 15deg 20deg
+      );
+      border-radius: 50%;
+      animation: starburst-rotate 3s linear infinite;
+      opacity: 0.3;
+    }
+
+    // Halftone dots pattern
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(circle, $black 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
+      animation: halftone-pulse 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .bp5-spinner {
+      display: none !important;
+    }
+  }
+
+  .comicLoadingText {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    pointer-events: none;
+    font-family: "Arial Black", "Arial", sans-serif;
+    font-size: 72px;
+    font-weight: 900;
+    text-align: center;
+    -webkit-text-stroke: 5px $black;
+    paint-order: stroke fill;
+    text-shadow: 10px 10px 0px $black;
+    letter-spacing: 0.15em;
+    font-style: italic;
+    white-space: nowrap;
+    line-height: 1;
+
+    &::before {
+      content: "POW!";
+      display: block;
+      animation: comic-word-cycle 5s infinite;
+    }
+  }
+
+  // Theme Switcher Button - comic style
+  .button {
+    color: $black !important;
+    border: 3px solid $black !important;
+    border-radius: 50% !important;
+    background-color: $white !important;
+
+    &:hover {
+      background-color: $lime-green !important;
+      color: $black !important;
+      box-shadow: 4px 4px 0px $black;
+      transform: rotate(45deg);
+    }
+  }
+
+  // Theme Switcher Menu - comic book style dropdown
+  .menu {
+    background-color: $white !important;
+    border: 4px solid $black !important;
+    border-radius: 0px !important;
+    box-shadow: 6px 6px 0px $black !important;
+
+    // Target Blueprint menu items
+    .bp5-menu-item,
+    [class*="bp5-menu-item"] {
+      color: $black !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      border: 2px solid transparent !important;
+      border-radius: 0px !important;
+      text-shadow: none !important;
+      -webkit-text-stroke: 0px !important;
+
+      &:hover {
+        background-color: $lime-green !important;
+        color: $black !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        -webkit-text-stroke: 0px !important;
+        font-weight: 900 !important;
+      }
+
+      &.active,
+      &[class*="active"] {
+        background-color: $magenta !important;
+        color: $white !important;
+        font-weight: 900 !important;
+        border: 2px solid $black !important;
+        text-shadow: none !important;
+        -webkit-text-stroke: 0px !important;
+      }
+    }
+  }
+
+  // Cards - comic book panel style
+  .hierarchyCard,
+  .unitCard,
+  .elintCard,
+  .historyCard {
+    border: 4px solid $black;
+    box-shadow: 8px 8px 0px $black;
+    background-image: radial-gradient(circle, rgba($magenta, 0.1) 1px, transparent 1px);
+    background-size: 8px 8px;
+  }
+
+  // Modal Dialog - comic book style
+  .bp5-dialog.confirmAssociateElintDialog {
+    border: 4px solid $black !important;
+    box-shadow: 8px 8px 0px $black !important;
+    background-image: radial-gradient(circle, rgba($magenta, 0.1) 1px, transparent 1px) !important;
+    background-size: 8px 8px !important;
+
+    .bp5-dialog-header {
+      background-color: $magenta !important;
+      border-bottom: 3px solid $black !important;
+    }
+
+    .bp5-dialog-body {
+      background-color: $white !important;
+      color: $black !important;
+    }
+
+    .bp5-dialog-footer {
+      background-color: $white !important;
+      border-top: 3px solid $black !important;
+    }
+
+    .bp5-heading {
+      color: $white !important;
+      font-family: "Arial Black", "Arial", sans-serif !important;
+      text-shadow: 3px 3px 0px $black !important;
+    }
+
+    .bp5-overlay-backdrop {
+      background-color: rgba($black, 0.7) !important;
+      background-image: radial-gradient(circle, rgba($magenta, 0.3) 1px, transparent 1px) !important;
+      background-size: 12px 12px !important;
+    }
+
+    .bp5-button {
+      border: 3px solid $black !important;
+      background: $white !important;
+      color: $black !important;
+      font-family: "Arial Black", "Arial", sans-serif !important;
+      text-transform: uppercase !important;
+      font-weight: 900 !important;
+      box-shadow: 4px 4px 0px $black !important;
+
+      &:hover {
+        background: $lime-green !important;
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0px $black !important;
+      }
+
+      &:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0px $black !important;
+      }
+
+      &.bp5-intent-primary {
+        background: $magenta !important;
+        color: $white !important;
+
+        &:hover {
+          background: $magenta-light !important;
+        }
+      }
+    }
+  }
+
+  .confirmText {
+    color: #000000;
+    font-weight: 600;
+  }
+
+  // Card header titles - simple black text, NOT italic, no effects
+  .hierarchyCard .title,
+  .elintCard .title,
+  .historyCard .title {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    text-shadow: none !important;
+    -webkit-text-stroke: 0px !important;
+    paint-order: initial !important;
+    text-transform: uppercase !important;
+  }
+
+  // Unit card title - BLACK text with lime/green shadow
+  .unitCard .title {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    font-style: italic !important;
+    font-size: var(--font-size-xl) !important;
+    text-shadow: 2px 2px 0px #c1ff3a !important;
+    -webkit-text-stroke: 0px !important;
+    paint-order: initial !important;
+    text-transform: uppercase !important;
+  }
+
+  // Unit card close button - pink rounded square with white X
+  .unitCard .closeButton {
+    background-color: #ff10f0 !important;
+    border: 3px solid #000000 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    box-shadow: 3px 3px 0px #000000 !important;
+
+    &:hover {
+      background-color: #ff3388 !important;
+      box-shadow: 4px 4px 0px #000000 !important;
+      transform: translate(-1px, -1px);
+    }
+
+    &:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0px #000000 !important;
+    }
+  }
+}

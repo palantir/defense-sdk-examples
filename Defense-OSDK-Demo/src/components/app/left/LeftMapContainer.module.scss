@@ -1,0 +1,108 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../../_variables.scss" as vars;
+
+/* ============================================
+   MAP CONTAINER
+   ============================================ */
+
+.mapWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.mapContainer {
+  width: 100%;
+  height: 100%;
+  background-color: vars.$mapBg;
+  z-index: 1;
+
+  // Ensure map tiles and markers are visible
+  :global(.leaflet-container) {
+    background-color: vars.$mapBg;
+  }
+
+  :global(.leaflet-tile) {
+    opacity: 1 !important;
+  }
+
+  :global(.leaflet-marker-icon),
+  :global(.leaflet-marker-shadow) {
+    opacity: 1 !important;
+  }
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: vars.$bgPrimary;
+  opacity: 0.95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border: var(--border-width-thin) solid vars.$borderPrimary;
+}
+
+.comicLoadingText {
+  display: none;
+}
+
+// Global leaflet styles for selectable ELINT
+:global {
+  .elint-selectable {
+    cursor: pointer !important;
+
+    &:hover {
+      opacity: 0.8;
+      filter: brightness(1.2);
+    }
+  }
+
+  // Ensure Leaflet map stays below Blueprint overlays
+  .leaflet-container {
+    z-index: 1;
+    background-color: vars.$mapBg !important;
+  }
+
+  .leaflet-pane {
+    z-index: auto;
+  }
+
+  // Leaflet controls
+  .leaflet-control {
+    border: var(--border-width-thin) solid vars.$borderSecondary !important;
+    border-radius: vars.$borderRadius !important;
+
+    a {
+      background-color: vars.$bgSecondary !important;
+      color: vars.$textPrimary !important;
+      border-bottom: 1px solid vars.$borderTertiary !important;
+      font-family: vars.$fontPrimary !important;
+
+      &:hover {
+        background-color: vars.$bgHover !important;
+        color: vars.$accentPrimary !important;
+      }
+    }
+  }
+}

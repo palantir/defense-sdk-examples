@@ -1,0 +1,166 @@
+/*
+ * (c) Copyright 2026 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use "../../../variables" as vars;
+
+/* ============================================
+   ASSOCIATED ELINT - TERMINAL THEME
+   ============================================ */
+
+.elintCard {
+  background-color: vars.$cardBg;
+  border-radius: vars.$borderRadius;
+  padding: vars.$cardPadding;
+  margin-top: vars.$spaceMd;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: auto;
+
+  /* Devcon theme: yellow borders with pulsing glow */
+
+  /* Katie-classic theme: neutral gray border */
+
+  /* Retro theme: comic book panel with yellow accent */
+
+  /* Synthwave theme: golden neon border */
+}
+
+.elintCard.compact {
+  flex: 0 0 auto;
+  min-height: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: vars.$spaceMd;
+  margin-bottom: vars.$spaceMd;
+  padding-bottom: vars.$spaceSm;
+  border-bottom: var(--border-width-thin) solid vars.$borderTertiary;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  font-family: vars.$fontTitle;
+  text-transform: vars.$textTransformLabel;
+  letter-spacing: var(--letter-spacing-wide);
+
+  /* Devcon theme: yellow title with glow */
+
+  /* Katie-classic theme: normal text color */
+}
+
+.count {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+
+  /* Devcon theme: yellow count badge */
+
+  /* Katie-classic theme: secondary text color */
+}
+
+.loading,
+.error,
+.empty {
+  padding: 12px;
+  text-align: center;
+  color: vars.$secondaryTextColor;
+  font-size: 14px;
+}
+
+.error {
+  color: vars.$errorColor;
+}
+
+.instruction {
+  margin-top: vars.$spaceSm;
+  padding: vars.$spaceSm;
+  background-color: vars.$bgTertiary;
+  border: var(--border-width-thin) solid vars.$borderSecondary;
+  border-radius: vars.$borderRadius;
+  font-size: var(--font-size-xs);
+  color: vars.$textTertiary;
+  font-style: italic;
+  font-family: vars.$fontPrimary;
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 300px;
+  flex: 0 0 auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  font-family: vars.$fontPrimary;
+
+  thead {
+    position: sticky;
+    top: 0;
+    background-color: vars.$bgTertiary;
+    z-index: 1;
+
+    th {
+      text-align: left;
+      padding: vars.$spaceSm;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-xs);
+      text-transform: vars.$textTransformLabel;
+      letter-spacing: var(--letter-spacing-wider);
+      font-family: vars.$fontPrimary;
+
+      /* Devcon theme: yellow header with yellow border */
+
+      /* Katie-classic theme: secondary text with gray border */
+    }
+  }
+
+  tbody {
+    tr {
+      transition: all vars.$transitionBase;
+
+      /* Devcon theme: yellow row borders */
+
+      /* Katie-classic theme: gray row borders */
+
+      &:hover {
+        background-color: vars.$bgHover;
+
+        /* Devcon theme: yellow glow effect on hover */
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: vars.$spaceSm;
+      color: vars.$textPrimary;
+      vertical-align: top;
+      font-size: var(--font-size-xs);
+      font-family: vars.$fontPrimary;
+    }
+  }
+}
